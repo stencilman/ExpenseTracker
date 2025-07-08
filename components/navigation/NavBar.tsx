@@ -1,8 +1,8 @@
 "use client";
 
-import { HelpCircle, Search, User } from "lucide-react";
+import { HelpCircle, User } from "lucide-react";
 import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,16 +20,7 @@ export default function NavBar() {
         <h1 className="text-xl font-bold">Expense Tracker</h1>
       </div>
 
-      <div className="flex-1 max-w-md mx-4">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search expenses, reports..."
-            className="w-full pl-8 bg-slate-50"
-          />
-        </div>
-      </div>
+      <div className="flex-1"></div>
 
       <div className="flex items-center space-x-2">
         <NotificationsDropdown />

@@ -60,7 +60,7 @@ export default function ReportItem({
       </div>
       <div className="text-right flex items-center justify-end gap-2">
         {status && (
-          <>
+          <div className="flex flex-col">
             <div
               className={`${getStatusClasses(status.color).bg} ${
                 getStatusClasses(status.color).text
@@ -73,7 +73,7 @@ export default function ReportItem({
                 {status.additionalInfo}
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
