@@ -33,15 +33,15 @@ export default function ReportsSummaryCard() {
                 <div>0 Reports</div>
               </div>
 
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-4 text-sm text-muted-foreground mb-2">
+              <div className="">
+                <div className="grid grid-cols-4 text-sm text-muted-foreground mb-2 border-b">
                   <div>REPORT DETAILS</div>
                   <div className="text-right">TOTAL</div>
                   <div className="text-right">TO BE REIMBURSED</div>
                   <div className="text-right">STATUS</div>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 mt-4">
                   <div className="mb-4">
                     <ReportItem
                       icon={Calendar}
@@ -58,7 +58,7 @@ export default function ReportsSummaryCard() {
                     />
                   </div>
 
-                  <div className="border-t pt-4">
+                  <div className="pt-4">
                     <ReportItem
                       icon={FileText}
                       title="Bhive Passes and Trial Interview expense"
@@ -81,7 +81,7 @@ export default function ReportsSummaryCard() {
                 <div className="text-blue-500 font-medium">Reports</div>
                 <div>0 Reports</div>
               </div>
-              <div className="border-t pt-4 text-center text-muted-foreground py-8">
+              <div className="pt-4 text-center text-muted-foreground py-8">
                 No unsubmitted reports found
               </div>
             </TabsContent>

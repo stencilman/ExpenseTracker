@@ -21,10 +21,6 @@ export default function Dashboard() {
       <div className="mt-6">
         <ReportsSummaryCard />
       </div>
-
-      <div className="mt-6">
-        <RecentTripCard />
-      </div>
     </div>
   );
 }
