@@ -4,7 +4,7 @@ import { Home, FileText, Receipt, Settings, ChevronLeft, ChevronRight, Menu } fr
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 export default function SideNav() {
   const pathname = usePathname();

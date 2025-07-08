@@ -1,7 +1,7 @@
 "use client";
 
 import { HelpCircle, User } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from "@/components/ui/button";
 
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
   DropdownMenuItem,
-} from "../ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu";
 import NotificationsDropdown from "../notification/NotificationsDropdown";
 
 export default function NavBar() {
