@@ -10,21 +10,21 @@ import Link from "next/link";
 export default function QuickAddTasks() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [draggedFiles, setDraggedFiles] = useState<File[]>([]);
-  
+
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Open drawer when files are dragged over
     if (e.type === "dragover" && !drawerOpen) {
       setDrawerOpen(true);
     }
   };
-  
+
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Store dropped files to pass to the drawer
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const newFiles = Array.from(e.dataTransfer.files);
@@ -77,7 +77,6 @@ export default function QuickAddTasks() {
         </div>
       </CardContent>
 
-      {/* Receipt Upload Drawer */}
       <ReceiptUploadDrawer
         isOpen={drawerOpen}
         onClose={() => {
