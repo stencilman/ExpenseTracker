@@ -10,6 +10,7 @@ import {
   SortingState,
   getSortedRowModel,
   RowSelectionState,
+  VisibilityState,
 } from "@tanstack/react-table";
 
 import {
@@ -24,13 +25,15 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface DataTableProps<TData, TValue> {
+export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   showPagination?: boolean;
   pageSize?: number;
   enableRowSelection?: boolean;
   onSelectedRowsChange?: (selectedRows: TData[]) => void;
+  columnVisibility?: VisibilityState;
+  className?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -40,9 +43,12 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   enableRowSelection = false,
   onSelectedRowsChange,
+  columnVisibility = {},
+  className = "",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const [visibility, setVisibility] = React.useState<VisibilityState>(columnVisibility);
 
   // Create a column for selection checkboxes if row selection is enabled
   const selectionColumn: ColumnDef<TData, any> = {
@@ -78,14 +84,17 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: setVisibility,
     state: {
       sorting,
       rowSelection,
+      columnVisibility: visibility,
     },
     initialState: {
       pagination: {
         pageSize: pageSize,
       },
+      columnVisibility: columnVisibility,
     },
     enableRowSelection,
   });
@@ -111,7 +120,7 @@ export function DataTable<TData, TValue>({
   }, [table, rowSelection, onSelectedRowsChange, enableRowSelection]);
 
   return (
-    <div className="space-y-4">
+    <div className={`space-y-4 ${className}`}>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -150,7 +159,7 @@ export function DataTable<TData, TValue>({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={columns.length + (enableRowSelection ? 1 : 0)}
                   className="h-24 text-center"
                 >
                   No results.
