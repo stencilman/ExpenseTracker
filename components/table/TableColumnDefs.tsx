@@ -193,3 +193,57 @@ export const getReportsPageColumns = (): ColumnDef<Report>[] => [
     ),
   },
 ];
+
+// Example of how to create columns for an expenses table
+export interface Expense {
+  id: string;
+  expenseDetails: string;
+  merchant: string;
+  amount: string;
+  reportName: string;
+  date: string;
+  category: string;
+  status?: {
+    label: string;
+    color: "green" | "orange" | "blue" | "red";
+  };
+}
+
+export const getExpensesPageColumns = (): ColumnDef<Expense>[] => [
+  {
+    accessorKey: "expenseDetails",
+    header: "EXPENSE DETAILS",
+    cell: ({ row }) => <div>{row.original.expenseDetails}</div>,
+  },
+  {
+    accessorKey: "merchant",
+    header: "MERCHANT",
+    cell: ({ row }) => <div>{row.original.merchant}</div>,
+  },
+  {
+    accessorKey: "amount",
+    header: () => <div className="text-right">AMOUNT</div>,
+    cell: ({ row }) => <div className="text-right">{row.original.amount}</div>,
+  },
+  {
+    accessorKey: "reportName",
+    header: "REPORT NAME",
+    cell: ({ row }) => <div>{row.original.reportName}</div>,
+  },
+  {
+    accessorKey: "status",
+    header: () => <div className="text-right">STATUS</div>,
+    cell: ({ row }) => (
+      <StatusCell
+        status={
+          row.original.status
+            ? {
+                label: row.original.status.label,
+                color: row.original.status.color,
+              }
+            : undefined
+        }
+      />
+    ),
+  },
+];
