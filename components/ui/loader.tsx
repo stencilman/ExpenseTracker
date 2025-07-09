@@ -8,6 +8,7 @@ interface LoaderProps {
   text?: string;
   fullScreen?: boolean;
   className?: string;
+  colorClass?: string;
 }
 
 export function Loader({
@@ -15,6 +16,7 @@ export function Loader({
   text,
   fullScreen = false,
   className,
+  colorClass = "text-blue-600",
 }: LoaderProps) {
   const sizeClasses = {
     sm: "h-4 w-4",
@@ -29,9 +31,7 @@ export function Loader({
         className
       )}
     >
-      <Loader2
-        className={cn("animate-spin text-blue-600", sizeClasses[size])}
-      />
+      <Loader2 className={cn("animate-spin", colorClass, sizeClasses[size])} />
       {text && <p className="text-sm text-slate-600">{text}</p>}
     </div>
   );
