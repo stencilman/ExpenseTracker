@@ -56,7 +56,7 @@ export default function QuickAddTasks() {
           </Button>
 
           <Link
-            href="/expenses"
+            href="/user/expenses"
             className="flex flex-col items-center text-center h-auto py-4 hover:bg-slate-50 rounded-none"
           >
             <div className="mb-4 p-4 bg-blue-50">
@@ -66,7 +66,7 @@ export default function QuickAddTasks() {
           </Link>
 
           <Link
-            href="/reports"
+            href="/user/reports"
             className="flex flex-col items-center text-center h-auto py-4 hover:bg-slate-50 rounded-none"
           >
             <div className="mb-4 p-4 bg-orange-50">

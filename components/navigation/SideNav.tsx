@@ -3,7 +3,7 @@
 import { Home, FileText, Receipt, Settings, ChevronLeft, ChevronRight, Menu } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
 interface SideNavProps {
@@ -13,21 +13,32 @@ interface SideNavProps {
 export default function SideNav({ onNavItemClick }: SideNavProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  
+  // Use useEffect to ensure client-side only rendering for collapsed state
+  const [mounted, setMounted] = useState(false);
+  
+  // Only run on client-side to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const toggleSidebar = () => {
     setCollapsed(!collapsed);
   };
 
   const navItems = [
-    { name: "Home", href: "/", icon: Home },
-    { name: "Reports", href: "/reports", icon: FileText },
-    { name: "Expenses", href: "/expenses", icon: Receipt },
-    { name: "Settings", href: "/settings", icon: Settings },
+    { name: "Home", href: "/user/dashboard", icon: Home },
+    { name: "Reports", href: "/user/reports", icon: FileText },
+    { name: "Expenses", href: "/user/expenses", icon: Receipt },
+    { name: "Settings", href: "/user/settings", icon: Settings },
   ];
 
+  // Use client-side rendering for the collapsed state
+  const sidebarWidth = mounted ? (collapsed ? 'w-16' : 'w-64') : 'w-64';
+  
   return (
     <div 
-      className={`${collapsed ? 'w-16' : 'w-64'} h-screen bg-slate-50 border-r transition-all duration-300 relative`}
+      className={`${sidebarWidth} h-screen bg-slate-50 border-r transition-all duration-300 relative`}
     >
       <Button 
         variant="ghost" 
@@ -41,7 +52,10 @@ export default function SideNav({ onNavItemClick }: SideNavProps) {
       <div className={`${collapsed ? 'p-3' : 'p-6'}`}>
         <nav className="space-y-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            // Check if the current path starts with the nav item's href
+            // This ensures consistent active state between server and client
+            const isActive = pathname === item.href || 
+              (item.href !== "/user/dashboard" && pathname?.startsWith(item.href));
             return (
               <Link
                 key={item.name}
