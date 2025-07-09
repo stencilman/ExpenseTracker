@@ -9,11 +9,11 @@ export default function Dashboard() {
     <div className="flex flex-col p-4 sm:p-6 max-w-7xl mx-auto">
       <Header />
 
-      <div className="mt-4 flex flex-col md:flex-row gap-4 sm:gap-6">
-        <div className="w-full md:w-1/3">
+      <div className="mt-4 flex flex-col xl:flex-row gap-4 sm:gap-6">
+        <div className="w-full xl:w-1/3">
           <PendingTasksCard />
         </div>
-        <div className="w-full md:w-2/3 mt-4 md:mt-0">
+        <div className="w-full xl:w-2/3 mt-4 lg:mt-0">
           <QuickAddTasks />
         </div>
       </div>
