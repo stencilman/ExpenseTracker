@@ -6,7 +6,11 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function SideNav() {
+interface SideNavProps {
+  onNavItemClick?: () => void;
+}
+
+export default function SideNav({ onNavItemClick }: SideNavProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
 
@@ -28,7 +32,7 @@ export default function SideNav() {
       <Button 
         variant="ghost" 
         size="icon" 
-        className="absolute -right-3 top-4 bg-white border shadow-sm z-10 rounded-full h-6 w-6 p-0"
+        className="absolute -right-3 top-4 bg-white border shadow-sm z-10 rounded-full h-6 w-6 p-0 hidden md:flex"
         onClick={toggleSidebar}
       >
         {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
@@ -42,6 +46,7 @@ export default function SideNav() {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={onNavItemClick}
                 className={`flex items-center ${collapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-md transition-colors ${
                   isActive
                     ? "bg-slate-200 text-slate-900"

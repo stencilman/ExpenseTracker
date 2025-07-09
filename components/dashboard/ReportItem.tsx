@@ -39,8 +39,8 @@ export default function ReportItem({
   };
 
   return (
-    <div className="grid grid-cols-4 items-center">
-      <div className="flex items-start gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-4 items-center gap-y-4 md:gap-y-0 py-2 md:py-0">
+      <div className="flex items-start gap-3 col-span-2 md:col-span-1">
         <div className="mt-1">
           <Icon className="h-5 w-5 text-muted-foreground" />
         </div>
@@ -55,7 +55,7 @@ export default function ReportItem({
           ({expenseCount} expense{expenseCount !== 1 ? "s" : ""})
         </div>
       </div>
-      <div className="text-right">
+      <div className="hidden md:block text-right">
         <div>{toBeReimbursed}</div>
       </div>
       <div className="text-right flex items-center justify-end gap-2">
@@ -64,7 +64,7 @@ export default function ReportItem({
             <div
               className={`${getStatusClasses(status.color).bg} ${
                 getStatusClasses(status.color).text
-              } text-xs px-2 py-1 rounded-md`}
+              } text-xs px-2 py-1 rounded-md whitespace-nowrap`}
             >
               {status.label}
             </div>

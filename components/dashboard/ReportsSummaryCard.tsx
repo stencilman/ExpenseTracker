@@ -12,20 +12,31 @@ export default function ReportsSummaryCard() {
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="most-recent" className="w-full">
-            <TabsList className="w-full mb-4">
-              <TabsTrigger value="most-recent" className="flex-1">
-                Most Recent
-              </TabsTrigger>
-              <TabsTrigger value="unsubmitted-reports" className="flex-1">
-                Unsubmitted Reports
-              </TabsTrigger>
-              <TabsTrigger value="awaiting-approvals" className="flex-1">
-                Awaiting Approval
-              </TabsTrigger>
-              <TabsTrigger value="awaiting-reimbursements" className="flex-1">
-                Awaiting Reimbursement
-              </TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto">
+              <TabsList className="min-w-full">
+                <TabsTrigger value="most-recent" className="min-w-[150px]">
+                  Most Recent
+                </TabsTrigger>
+                <TabsTrigger
+                  value="unsubmitted-reports"
+                  className="min-w-[150px]"
+                >
+                  Unsubmitted
+                </TabsTrigger>
+                <TabsTrigger
+                  value="awaiting-approvals"
+                  className="min-w-[150px]"
+                >
+                  Awaiting Approval
+                </TabsTrigger>
+                <TabsTrigger
+                  value="awaiting-reimbursements"
+                  className="min-w-[150px]"
+                >
+                  Awaiting Payment
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             <TabsContent value="most-recent">
               <div className="flex justify-between mb-4">
@@ -34,10 +45,12 @@ export default function ReportsSummaryCard() {
               </div>
 
               <div className="">
-                <div className="grid grid-cols-4 text-sm text-muted-foreground mb-2 border-b">
+                <div className="grid grid-cols-2 md:grid-cols-4 text-sm text-muted-foreground mb-2 border-b">
                   <div>REPORT DETAILS</div>
-                  <div className="text-right">TOTAL</div>
-                  <div className="text-right">TO BE REIMBURSED</div>
+                  <div className="text-right md:text-right">TOTAL</div>
+                  <div className="hidden md:block text-right">
+                    TO BE REIMBURSED
+                  </div>
                   <div className="text-right">STATUS</div>
                 </div>
 

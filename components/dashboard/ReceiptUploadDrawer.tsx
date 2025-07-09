@@ -100,8 +100,8 @@ export default function ReceiptUploadDrawer({
           </div>
         </DrawerHeader>
 
-        <div className="py-8 px-6 flex-grow overflow-hidden">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 h-full">
+        <div className="py-4 sm:py-8 px-4 sm:px-6 flex-grow overflow-hidden">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-8 h-full">
             <div
               className={`border-2 border-dashed rounded-xl h-full md:col-span-3 flex flex-col items-center justify-center p-8 text-center transition-all duration-200 ${
                 dragActive
@@ -119,7 +119,7 @@ export default function ReceiptUploadDrawer({
               <h3 className="text-xl font-medium mb-3">
                 Drag and drop receipts here
               </h3>
-              <p className="text-base text-muted-foreground mb-6 max-w-xs">
+              <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-xs">
                 Supports JPG, PNG, and PDF files up to 10MB each
               </p>
               <input
@@ -175,7 +175,7 @@ export default function ReceiptUploadDrawer({
                             <File className="h-5 w-5 text-blue-600" />
                           </div>
                           <div className="overflow-hidden">
-                            <p className="font-medium truncate max-w-[250px]">
+                            <p className="font-medium truncate max-w-[150px] sm:max-w-[250px]">
                               {file.name}
                             </p>
                             <p className="text-xs text-muted-foreground">
