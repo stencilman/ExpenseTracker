@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
+import { useState } from "react";
 import { ExpensesTable } from "@/components/expenses/ExpensesTable";
 import { Expense } from "@/components/table/TableColumnDefs";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import AddNewExpense from "@/components/expenses/AddNewExpense";
 
 export default function ExpensesPage() {
   const allExpenses: Expense[] = [
@@ -64,17 +66,28 @@ export default function ExpensesPage() {
   ];
 
   const [selectedExpenses, setSelectedExpenses] = React.useState<Expense[]>([]);
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
 
   const handleSelectedRowsChange = (expenses: Expense[]) => {
     setSelectedExpenses(expenses);
+  };
+  
+  const handleOpenAddExpense = () => {
+    setIsAddExpenseOpen(true);
+  };
+
+  const handleCloseAddExpense = () => {
+    setIsAddExpenseOpen(false);
   };
 
   return (
     <div className="p-4 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Expenses</h1>
-        <Button variant="outline">New Expense</Button>
+        <Button variant="outline" onClick={handleOpenAddExpense}>New Expense</Button>
       </div>
+      
+      <AddNewExpense isOpen={isAddExpenseOpen} onClose={handleCloseAddExpense} />
 
       <Tabs defaultValue="unreported-expenses" className="w-full">
         <div className="overflow-x-auto">
