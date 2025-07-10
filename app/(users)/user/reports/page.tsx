@@ -1,8 +1,9 @@
 "use client";
 
 import { Report, ReportsTable } from "@/components/table/ReportsTable";
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import AddReportDialog from "@/components/reports/AddReportDialog";
 
 export default function ReportsPage() {
   const recentReports: Report[] = [
@@ -36,6 +37,7 @@ export default function ReportsPage() {
   ];
 
   const [selectedReports, setSelectedReports] = React.useState<Report[]>([]);
+  const [isAddReportOpen, setIsAddReportOpen] = useState(false);
 
   const handleSelectedRowsChange = (reports: Report[]) => {
     setSelectedReports(reports);
@@ -45,7 +47,8 @@ export default function ReportsPage() {
     <div className="p-4 space-y-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Reports</h1>
-        <Button variant="outline">New Report</Button>
+        <Button variant="outline" onClick={() => setIsAddReportOpen(true)}>New Report</Button>
+        <AddReportDialog open={isAddReportOpen} onOpenChange={setIsAddReportOpen} />
       </div>
       
       <ReportsTable
