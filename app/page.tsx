@@ -2,20 +2,24 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { LoginForm } from "@/components/auth/login-form";
 
 export default function Home() {
-  const router = useRouter();
+  // const router = useRouter();
 
-  useEffect(() => {
-    router.push("/user/dashboard");
-  }, [router]);
+  // useEffect(() => {
+  //   router.push("/user/dashboard");
+  // }, [router]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <h2 className="text-2xl font-semibold">Redirecting...</h2>
-        <p className="text-muted-foreground mt-2">Please wait while we redirect you to the dashboard.</p>
-      </div>
+    // <div className="flex items-center justify-center min-h-screen">
+    //   <div className="text-center">
+    //     <h2 className="text-2xl font-semibold">Redirecting...</h2>
+    //     <p className="text-muted-foreground mt-2">Please wait while we redirect you to the dashboard.</p>
+    //   </div>
+    // </div>
+    <div className="w-full min-h-[calc(100vh-64px)] flex justify-center items-center my-[50px] md:my-0">
+      <LoginForm />
     </div>
   );
 }
