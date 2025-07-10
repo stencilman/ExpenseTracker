@@ -200,7 +200,7 @@ export interface Expense {
   expenseDetails: string;
   merchant: string;
   amount: string;
-  reportName: string;
+  reportName?: string;
   date: string;
   category: string;
   status?: {
@@ -209,41 +209,59 @@ export interface Expense {
   };
 }
 
-export const getExpensesPageColumns = (): ColumnDef<Expense>[] => [
-  {
-    accessorKey: "expenseDetails",
-    header: "EXPENSE DETAILS",
-    cell: ({ row }) => <div>{row.original.expenseDetails}</div>,
-  },
-  {
-    accessorKey: "merchant",
-    header: "MERCHANT",
-    cell: ({ row }) => <div>{row.original.merchant}</div>,
-  },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">AMOUNT</div>,
-    cell: ({ row }) => <div className="text-right">{row.original.amount}</div>,
-  },
-  {
-    accessorKey: "reportName",
-    header: "REPORT NAME",
-    cell: ({ row }) => <div>{row.original.reportName}</div>,
-  },
-  {
-    accessorKey: "status",
-    header: () => <div className="text-right">STATUS</div>,
-    cell: ({ row }) => (
-      <StatusCell
-        status={
-          row.original.status
-            ? {
-                label: row.original.status.label,
-                color: row.original.status.color,
-              }
-            : undefined
-        }
-      />
-    ),
-  },
-];
+export interface ExpenseColumnOptions {
+  includeReportName?: boolean;
+  // Add other flags here as needed, e.g., includeActions?: boolean;
+}
+
+export const getExpensesPageColumns = (
+  options: ExpenseColumnOptions = {}
+): ColumnDef<Expense>[] => {
+  const { includeReportName = false } = options;
+  return [
+    {
+      accessorKey: "expenseDetails",
+      header: "EXPENSE DETAILS",
+      cell: ({ row }) => (
+        <div className="w-full">{row.original.expenseDetails}</div>
+      ),
+    },
+    {
+      accessorKey: "merchant",
+      header: "MERCHANT",
+      cell: ({ row }) => <div className="w-full">{row.original.merchant}</div>,
+    },
+    {
+      accessorKey: "amount",
+      header: () => <div className="text-right w-full">AMOUNT</div>,
+      cell: ({ row }) => (
+        <div className="text-right w-full">{row.original.amount}</div>
+      ),
+    },
+    {
+      accessorKey: "reportName",
+      header: "REPORT NAME",
+      cell: ({ row }) => (
+        <div className="w-full">{row.original.reportName || "-"}</div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: () => <div className="text-right w-full">STATUS</div>,
+      cell: ({ row }) => (
+        <div className="flex justify-end w-full">
+          <StatusCell
+            status={
+              row.original.status
+                ? {
+                    label: row.original.status.label,
+                    color: row.original.status.color,
+                  }
+                : undefined
+            }
+          />
+        </div>
+      ),
+    },
+  ];
+};

@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { ExpensesTable } from "@/components/table/ExpensesTable";
+import { ExpensesTable } from "@/components/expenses/ExpensesTable";
 import { Expense } from "@/components/table/TableColumnDefs";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export default function ExpensesPage() {
-  const expenses: Expense[] = [
+  const allExpenses: Expense[] = [
     {
       id: "EXP-001",
       expenseDetails: "Bhive Passes and Trial Interview expense",
@@ -35,6 +36,33 @@ export default function ExpensesPage() {
     },
   ];
 
+  const unreportedExpenses: Expense[] = [
+    {
+      id: "EXP-001",
+      expenseDetails: "Bhive Passes and Trial Interview expense",
+      merchant: "Bhive Workspace",
+      amount: "Rs.3,486.00",
+      date: "2025-05-16",
+      category: "Travel",
+      status: {
+        label: "AWAITING APPROVAL",
+        color: "orange",
+      },
+    },
+    {
+      id: "EXP-002",
+      expenseDetails: "Client Meeting Lunch",
+      merchant: "The Oberoi Restaurant",
+      amount: "Rs.2,150.00",
+      date: "2025-05-18",
+      category: "Meals",
+      status: {
+        label: "APPROVED",
+        color: "green",
+      },
+    },
+  ];
+
   const [selectedExpenses, setSelectedExpenses] = React.useState<Expense[]>([]);
 
   const handleSelectedRowsChange = (expenses: Expense[]) => {
@@ -48,12 +76,34 @@ export default function ExpensesPage() {
         <Button variant="outline">New Expense</Button>
       </div>
 
-      <ExpensesTable
-        data={expenses}
-        enableRowSelection={true}
-        onSelectedRowsChange={handleSelectedRowsChange}
-        showPagination={true}
-      />
+      <Tabs defaultValue="unreported-expenses" className="w-full">
+        <div className="overflow-x-auto">
+          <TabsList className="min-w-full">
+            <TabsTrigger value="unreported-expenses" className="min-w-[150px]">
+              Unreported Expenses
+            </TabsTrigger>
+            <TabsTrigger value="all-expenses" className="min-w-[150px]">
+              All Expenses
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="unreported-expenses">
+          <ExpensesTable
+            data={unreportedExpenses}
+            enableRowSelection={true}
+            onSelectedRowsChange={handleSelectedRowsChange}
+            showPagination={true}
+          />
+        </TabsContent>
+        <TabsContent value="all-expenses">
+          <ExpensesTable
+            data={allExpenses}
+            enableRowSelection={true}
+            onSelectedRowsChange={handleSelectedRowsChange}
+            showPagination={true}
+          />
+        </TabsContent>
+      </Tabs>
 
       {selectedExpenses.length > 0 && (
         <div className="flex justify-end mt-4">
