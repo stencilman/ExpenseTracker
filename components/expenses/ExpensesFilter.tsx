@@ -253,36 +253,32 @@ export function ExpensesFilter({
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <Command>
-                  <CommandInput placeholder="Search categories..." />
-                  <CommandEmpty>No category found.</CommandEmpty>
-                  <CommandGroup>
-                    {categories.map((category) => (
-                      <CommandItem
-                        key={category}
-                        value={category}
-                        onSelect={() => {
-                          setSelectedCategories(
-                            selectedCategories.includes(category)
-                              ? selectedCategories.filter((c) => c !== category)
-                              : [...selectedCategories, category]
-                          );
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedCategories.includes(category)
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        {category}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
+              <PopoverContent className="w-[200px] p-0" align="start">
+                <div className="p-2">
+                  {categories.map((category) => (
+                    <div 
+                      key={category}
+                      className="flex items-center space-x-2 hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1.5 text-sm cursor-pointer"
+                      onClick={() => {
+                        setSelectedCategories((prev) => {
+                          const isSelected = prev.includes(category);
+                          if (isSelected) {
+                            return prev.filter((c) => c !== category);
+                          } else {
+                            return [...prev, category];
+                          }
+                        });
+                      }}
+                    >
+                      <div className="flex h-4 w-4 items-center justify-center rounded-sm border border-primary">
+                        {selectedCategories.includes(category) && (
+                          <Check className="h-3 w-3" />
+                        )}
+                      </div>
+                      <span>{category}</span>
+                    </div>
+                  ))}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
@@ -308,36 +304,32 @@ export function ExpensesFilter({
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <Command>
-                  <CommandInput placeholder="Search merchants..." />
-                  <CommandEmpty>No merchant found.</CommandEmpty>
-                  <CommandGroup>
-                    {merchants.map((merchant) => (
-                      <CommandItem
-                        key={merchant}
-                        value={merchant}
-                        onSelect={() => {
-                          setSelectedMerchants(
-                            selectedMerchants.includes(merchant)
-                              ? selectedMerchants.filter((m) => m !== merchant)
-                              : [...selectedMerchants, merchant]
-                          );
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedMerchants.includes(merchant)
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        {merchant}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
+              <PopoverContent className="w-[200px] p-0" align="start">
+                <div className="p-2">
+                  {merchants.map((merchant) => (
+                    <div 
+                      key={merchant}
+                      className="flex items-center space-x-2 hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1.5 text-sm cursor-pointer"
+                      onClick={() => {
+                        setSelectedMerchants((prev) => {
+                          const isSelected = prev.includes(merchant);
+                          if (isSelected) {
+                            return prev.filter((m) => m !== merchant);
+                          } else {
+                            return [...prev, merchant];
+                          }
+                        });
+                      }}
+                    >
+                      <div className="flex h-4 w-4 items-center justify-center rounded-sm border border-primary">
+                        {selectedMerchants.includes(merchant) && (
+                          <Check className="h-3 w-3" />
+                        )}
+                      </div>
+                      <span>{merchant}</span>
+                    </div>
+                  ))}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
@@ -363,36 +355,32 @@ export function ExpensesFilter({
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[200px] p-0">
-                <Command>
-                  <CommandInput placeholder="Search statuses..." />
-                  <CommandEmpty>No status found.</CommandEmpty>
-                  <CommandGroup>
-                    {statuses.map((status) => (
-                      <CommandItem
-                        key={status}
-                        value={status}
-                        onSelect={() => {
-                          setSelectedStatuses(
-                            selectedStatuses.includes(status)
-                              ? selectedStatuses.filter((s) => s !== status)
-                              : [...selectedStatuses, status]
-                          );
-                        }}
-                      >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selectedStatuses.includes(status)
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                        {status}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </Command>
+              <PopoverContent className="w-[200px] p-0" align="start">
+                <div className="p-2">
+                  {statuses.map((status) => (
+                    <div 
+                      key={status}
+                      className="flex items-center space-x-2 hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1.5 text-sm cursor-pointer"
+                      onClick={() => {
+                        setSelectedStatuses((prev) => {
+                          const isSelected = prev.includes(status);
+                          if (isSelected) {
+                            return prev.filter((s) => s !== status);
+                          } else {
+                            return [...prev, status];
+                          }
+                        });
+                      }}
+                    >
+                      <div className="flex h-4 w-4 items-center justify-center rounded-sm border border-primary">
+                        {selectedStatuses.includes(status) && (
+                          <Check className="h-3 w-3" />
+                        )}
+                      </div>
+                      <span>{status}</span>
+                    </div>
+                  ))}
+                </div>
               </PopoverContent>
             </Popover>
           </div>
