@@ -1,7 +1,8 @@
 "use client";
 
-import { X, Upload, File } from "lucide-react";
+import { X, File } from "lucide-react";
 import { useState, useEffect } from "react";
+import { DropZone } from "@/components/ui/drop-zone";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -23,7 +24,6 @@ export default function ReceiptUploadDrawer({
   onClose,
   initialFiles = [],
 }: ReceiptUploadDrawerProps) {
-  const [dragActive, setDragActive] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
 
   // Handle initialFiles when they change
@@ -44,32 +44,8 @@ export default function ReceiptUploadDrawer({
     }
   }, [isOpen]);
 
-  const handleDrag = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const newFiles = Array.from(e.dataTransfer.files);
-      setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const newFiles = Array.from(e.target.files);
-      setFiles((prevFiles) => [...prevFiles, ...newFiles]);
-    }
+  const handleFilesDrop = (newFiles: File[]) => {
+    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
   };
 
   const removeFile = (index: number) => {
@@ -102,45 +78,14 @@ export default function ReceiptUploadDrawer({
 
         <div className="py-4 sm:py-8 px-4 sm:px-6 flex-grow overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 sm:gap-8 h-full">
-            <div
-              className={`border-2 border-dashed rounded-xl h-full md:col-span-3 flex flex-col items-center justify-center p-8 text-center transition-all duration-200 ${
-                dragActive
-                  ? "border-blue-500 bg-blue-50 scale-[1.02]"
-                  : "border-gray-300 hover:border-blue-400 hover:bg-blue-50/50"
-              }`}
-              onDragEnter={handleDrag}
-              onDragOver={handleDrag}
-              onDragLeave={handleDrag}
-              onDrop={handleDrop}
-            >
-              <div className="p-6 bg-blue-50 rounded-full mb-6">
-                <Upload className="h-14 w-14 text-blue-500" />
-              </div>
-              <h3 className="text-xl font-medium mb-3">
-                Drag and drop receipts here
-              </h3>
-              <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-xs">
-                Supports JPG, PNG, and PDF files up to 10MB each
-              </p>
-              <input
-                type="file"
-                multiple
-                accept="image/jpeg,image/png,application/pdf"
-                className="hidden"
-                id="receipt-upload"
-                onChange={handleFileChange}
-              />
-              <Button
-                variant="outline"
-                size="lg"
-                className="px-8"
-                onClick={() =>
-                  document.getElementById("receipt-upload")?.click()
-                }
-              >
-                Browse Files
-              </Button>
-            </div>
+            <DropZone
+              className="h-full md:col-span-3"
+              onFilesDrop={handleFilesDrop}
+              title="Drag and drop receipts here"
+              description="Supports JPG, PNG, and PDF files up to 10MB each"
+              buttonText="Browse Files"
+              acceptedFileTypes="image/jpeg,image/png,application/pdf"
+            />
 
             <div className="flex flex-col h-full">
               {files.length > 0 ? (

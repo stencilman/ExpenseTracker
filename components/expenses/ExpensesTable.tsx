@@ -14,7 +14,6 @@ interface ExpensesTableProps {
   enableRowSelection?: boolean;
   onSelectedRowsChange?: (selectedRows: Expense[]) => void;
   className?: string;
-  variant?: "dashboard" | "page";
 }
 
 export function ExpensesTable({
@@ -23,9 +22,10 @@ export function ExpensesTable({
   enableRowSelection = false,
   onSelectedRowsChange,
   className = "",
-  variant = "page",
 }: ExpensesTableProps) {
-  const [selectedExpense, setSelectedExpense] = React.useState<Expense | null>(null);
+  const [selectedExpense, setSelectedExpense] = React.useState<Expense | null>(
+    null
+  );
   const [detailOpen, setDetailOpen] = React.useState(false);
 
   const handleSelectedRowsChange = React.useCallback(
@@ -39,17 +39,15 @@ export function ExpensesTable({
 
   // Custom column definition with click handler for expense details
   const columns = React.useMemo(() => {
-    const baseColumns = getExpensesPageColumns({
-      includeReportName: variant === "page"
-    });
-    
+    const baseColumns = getExpensesPageColumns();
+
     // Modify the expense details column to make it clickable
-    const enhancedColumns = baseColumns.map(column => {
-      if ('accessorKey' in column && column.accessorKey === "expenseDetails") {
+    const enhancedColumns = baseColumns.map((column) => {
+      if ("accessorKey" in column && column.accessorKey === "expenseDetails") {
         return {
           ...column,
           cell: ({ row }: { row: any }) => (
-            <div 
+            <div
               className="w-full cursor-pointer hover:text-primary hover:underline"
               onClick={() => {
                 setSelectedExpense(row.original);
@@ -63,9 +61,9 @@ export function ExpensesTable({
       }
       return column;
     });
-    
+
     return enhancedColumns;
-  }, [variant]);
+  }, []);
 
   return (
     <>
@@ -77,9 +75,9 @@ export function ExpensesTable({
         onSelectedRowsChange={handleSelectedRowsChange}
         className={className}
       />
-      
+
       {selectedExpense && (
-        <ExpenseDetail 
+        <ExpenseDetail
           expense={selectedExpense}
           open={detailOpen}
           onOpenChange={setDetailOpen}
