@@ -373,7 +373,7 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
                 <h3 className="text-lg font-medium">Attach Receipt</h3>
                 <div className="relative flex-1 flex flex-col">
                   <DropZone
-                    className="flex-1 h-full"
+                    className="flex-1 h-full pb-[140px] sm:pb-[100px]"
                     onFilesDrop={handleFilesDrop}
                     title="Drag and drop receipt here"
                     description="Supports JPG, PNG, and PDF files"
@@ -381,8 +381,8 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
                   />
 
                   {files.length > 0 && (
-                    <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg p-3 shadow-lg">
-                      <div className="flex items-center justify-between mb-2">
+                    <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg p-3 shadow-lg  h-[120px]">
+                      <div className="flex items-center justify-between sticky top-0 bg-white/90 z-10">
                         <h4 className="text-sm font-medium">
                           Uploaded Files ({files.length})
                         </h4>
@@ -395,7 +395,7 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="flex gap-2 overflow-x-auto pb-2 pt-2">
+                      <div className="flex flex-wrap gap-2 pb-2 pt-2">
                         {files.map((file, index) => (
                           <div
                             key={index}
@@ -435,7 +435,7 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
                             <Button
                               variant="outline"
                               size="sm"
-                              className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full bg-red-500 hover:bg-red-600 text-white border-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full bg-red-500 hover:bg-red-600 text-white border-red-500 group-hover:opacity-100 transition-opacity"
                               onClick={() => removeFile(index)}
                             >
                               <X className="h-3 w-3" />
