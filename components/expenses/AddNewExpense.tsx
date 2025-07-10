@@ -5,11 +5,13 @@ import { useState } from "react";
 import { X, CalendarIcon, FileText, Image, File } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-// UI Components
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { DropZone } from "@/components/ui/drop-zone";
@@ -20,7 +22,15 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -35,16 +45,49 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 
+// Define the form schema with Zod
+const expenseFormSchema = z.object({
+  report: z.string().min(1, { message: "Report is required" }),
+  date: z.date(),
+  merchant: z.string().min(1, { message: "Merchant is required" }),
+  category: z.string().min(1, { message: "Please select a category" }),
+  currency: z.string(),
+  amount: z
+    .number()
+    .min(0.01, { message: "Amount must be greater than 0" })
+    .nonnegative({ message: "Amount cannot be negative" }),
+  claimReimbursement: z.boolean(),
+  description: z.string().optional(),
+  reference: z.string().optional(),
+});
+
+// Infer the type from the schema
+type ExpenseFormValues = z.infer<typeof expenseFormSchema>;
+
 interface AddNewExpenseProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
-  const [activeTab, setActiveTab] = useState("add-expense");
   const [files, setFiles] = useState<File[]>([]);
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [claimReimbursement, setClaimReimbursement] = useState(true);
+
+  // Initialize the form with react-hook-form and zod resolver
+  const form = useForm<ExpenseFormValues>({
+    resolver: zodResolver(expenseFormSchema),
+    defaultValues: {
+      report: "",
+      date: new Date(),
+      merchant: "",
+      category: "",
+      currency: "INR",
+      amount: 0,
+      claimReimbursement: true,
+      description: "",
+      reference: "",
+    },
+    mode: "onChange",
+  });
 
   const handleFilesDrop = (newFiles: File[]) => {
     setFiles((prevFiles) => [...prevFiles, ...newFiles]);
@@ -54,10 +97,10 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = form.handleSubmit((values) => {
+    console.log(values);
     onClose();
-  };
+  });
 
   const getFileIcon = (file: File) => {
     if (file.type.startsWith("image/")) {
@@ -99,152 +142,230 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="md:col-span-1">
-              <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Report Selection */}
-                <div className="space-y-2">
-                  <Label htmlFor="report">Report</Label>
-                  <Select>
-                    <SelectTrigger id="report">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">None</SelectItem>
-                      <SelectItem value="report1">Q2 Travel Report</SelectItem>
-                      <SelectItem value="report2">Office Supplies</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <Form {...form}>
+                <form onSubmit={onSubmit} className="space-y-4">
+                  {/* Report Input */}
+                  <FormField
+                    control={form.control}
+                    name="report"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Report</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter report name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Expense Date */}
-                <div className="space-y-2">
-                  <Label htmlFor="date">Expense Date *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !date && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {date ? format(date, "PPP") : <span>Pick a date</span>}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={date}
-                        onSelect={setDate}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                  {/* Expense Date */}
+                  <FormField
+                    control={form.control}
+                    name="date"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Expense Date *</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Merchant */}
-                <div className="space-y-2">
-                  <Label htmlFor="merchant">Merchant *</Label>
-                  <Select>
-                    <SelectTrigger id="merchant">
-                      <SelectValue placeholder="Select or type to add" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="amazon">Amazon</SelectItem>
-                      <SelectItem value="uber">Uber</SelectItem>
-                      <SelectItem value="starbucks">Starbucks</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  {/* Merchant Input */}
+                  <FormField
+                    control={form.control}
+                    name="merchant"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Merchant *</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Enter merchant name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Category */}
-                <div className="space-y-2">
-                  <Label htmlFor="category">Category *</Label>
-                  <Select>
-                    <SelectTrigger id="category">
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="meals">
-                        Meals & Entertainment
-                      </SelectItem>
-                      <SelectItem value="travel">Travel</SelectItem>
-                      <SelectItem value="office">Office Supplies</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  {/* Category */}
+                  <FormField
+                    control={form.control}
+                    name="category"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Category *</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          defaultValue={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select a category" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="meals">
+                              Meals & Entertainment
+                            </SelectItem>
+                            <SelectItem value="travel">Travel</SelectItem>
+                            <SelectItem value="office">
+                              Office Supplies
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {/* Amount */}
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount *</Label>
-                  <div className="flex">
-                    <Select defaultValue="INR">
-                      <SelectTrigger className="w-[80px]">
-                        <SelectValue placeholder="INR" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="INR">INR</SelectItem>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      id="amount"
-                      type="number"
-                      placeholder="0.00"
-                      className="flex-1 ml-2"
+                  {/* Amount */}
+                  <div className="grid grid-cols-4 gap-2">
+                    <FormField
+                      control={form.control}
+                      name="currency"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col ">
+                          <FormLabel className="">Currency</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || "INR"}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="INR">INR</SelectItem>
+                              <SelectItem value="USD">USD</SelectItem>
+                              <SelectItem value="EUR">EUR</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="amount"
+                      render={({
+                        field: { value, onChange, ...fieldProps },
+                      }) => (
+                        <FormItem className="col-span-3">
+                          <FormLabel>Amount *</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              placeholder="0.00"
+                              step="0.01"
+                              value={value || ""}
+                              onChange={(e) =>
+                                onChange(e.target.valueAsNumber || 0)
+                              }
+                              {...fieldProps}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
                   </div>
-                  <div className="flex items-center mt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                    >
-                      Itemize
+
+                  {/* Claim Reimbursement */}
+                  <FormField
+                    control={form.control}
+                    name="claimReimbursement"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>Claim reimbursement</FormLabel>
+                          <FormDescription>
+                            Check this if you want to claim reimbursement for
+                            this expense
+                          </FormDescription>
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Description */}
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter expense description"
+                            className="resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Reference */}
+                  <FormField
+                    control={form.control}
+                    name="reference"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Reference</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Enter reference number"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button variant="outline" type="button" onClick={onClose}>
+                      Cancel
                     </Button>
+                    <Button type="submit">Save and Close</Button>
                   </div>
-                </div>
-
-                {/* Claim Reimbursement */}
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="reimbursement"
-                    checked={claimReimbursement}
-                    onCheckedChange={(checked) =>
-                      setClaimReimbursement(checked as boolean)
-                    }
-                  />
-                  <Label
-                    htmlFor="reimbursement"
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    Claim reimbursement
-                  </Label>
-                </div>
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Enter expense description"
-                  />
-                </div>
-
-                {/* Reference */}
-                <div className="space-y-2">
-                  <Label htmlFor="reference">Reference</Label>
-                  <Input id="reference" placeholder="Enter reference number" />
-                </div>
-
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" type="button" onClick={onClose}>
-                    Cancel
-                  </Button>
-                  <Button type="submit">Save and Close</Button>
-                </div>
-              </form>
+                </form>
+              </Form>
             </div>
 
             <div className="md:col-span-2 h-full">
