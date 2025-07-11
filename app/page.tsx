@@ -13,5 +13,5 @@ export default function Home() {
     router.push("/user/dashboard");
   }, [router, startLoading]);
 
-  return <div className="min-h-screen" />;
+  return <div className="" />;
 }

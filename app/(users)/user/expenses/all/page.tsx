@@ -1,0 +1,26 @@
+"use client";
+import { useLoading } from "@/components/providers/loading-provider";
+import { useEffect } from "react";
+import { usePathname } from "next/navigation";
+import AllExpensesTableView from "@/components/expenses/AllExpensesTable";
+
+export default function AllExpensesPage() {
+  const pathname = usePathname();
+  const { stopLoading } = useLoading();
+
+  // Check if we're on a specific expense detail page
+  const isDetailView = pathname.split("/").length > 5;
+
+  console.log("isDetailView", isDetailView);
+
+  useEffect(() => {
+    stopLoading();
+  }, [stopLoading]);
+
+  // If we're in detail view, don't render anything as the layout handles it
+  if (isDetailView) {
+    return null;
+  }
+
+  return <AllExpensesTableView />;
+}

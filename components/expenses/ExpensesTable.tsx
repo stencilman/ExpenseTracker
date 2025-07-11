@@ -12,7 +12,8 @@ interface ExpensesTableProps {
   data: Expense[];
   showPagination?: boolean;
   enableRowSelection?: boolean;
-  onSelectedRowsChange?: (selectedRows: Expense[]) => void;
+  onSelectedRowsChange?: (selectedRows: string[]) => void;
+  onRowClick?: (expenseId: string) => void;
   className?: string;
 }
 
@@ -21,6 +22,7 @@ export function ExpensesTable({
   showPagination = false,
   enableRowSelection = false,
   onSelectedRowsChange,
+  onRowClick,
   className = "",
 }: ExpensesTableProps) {
   const [selectedExpense, setSelectedExpense] = React.useState<Expense | null>(
@@ -31,7 +33,7 @@ export function ExpensesTable({
   const handleSelectedRowsChange = React.useCallback(
     (selectedRows: Expense[]) => {
       if (onSelectedRowsChange) {
-        onSelectedRowsChange(selectedRows);
+        onSelectedRowsChange(selectedRows.map(row => row.id));
       }
     },
     [onSelectedRowsChange]
@@ -50,8 +52,12 @@ export function ExpensesTable({
             <div
               className="w-full cursor-pointer hover:text-primary hover:underline"
               onClick={() => {
-                setSelectedExpense(row.original);
-                setDetailOpen(true);
+                if (onRowClick) {
+                  onRowClick(row.original.id);
+                } else {
+                  setSelectedExpense(row.original);
+                  setDetailOpen(true);
+                }
               }}
             >
               {row.original.expenseDetails}
@@ -63,7 +69,7 @@ export function ExpensesTable({
     });
 
     return enhancedColumns;
-  }, []);
+  }, [onRowClick]);
 
   return (
     <>

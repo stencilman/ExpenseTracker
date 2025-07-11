@@ -83,7 +83,9 @@ export function ExpensesFilter({
   const [selectedCategories, setSelectedCategories] = React.useState<string[]>(
     []
   );
-  const [selectedMerchants, setSelectedMerchants] = React.useState<string[]>([]);
+  const [selectedMerchants, setSelectedMerchants] = React.useState<string[]>(
+    []
+  );
   const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
 
   const handleApplyFilters = () => {
@@ -96,7 +98,8 @@ export function ExpensesFilter({
               max: amountRange.max ? parseFloat(amountRange.max) : undefined,
             }
           : undefined,
-      categories: selectedCategories.length > 0 ? selectedCategories : undefined,
+      categories:
+        selectedCategories.length > 0 ? selectedCategories : undefined,
       merchants: selectedMerchants.length > 0 ? selectedMerchants : undefined,
       status: selectedStatuses.length > 0 ? selectedStatuses : undefined,
     };
@@ -112,7 +115,7 @@ export function ExpensesFilter({
     setSelectedCategories([]);
     setSelectedMerchants([]);
     setSelectedStatuses([]);
-    
+
     const emptyFilters: FilterOptions = {};
     setFilters(emptyFilters);
     onFilterChange(emptyFilters);
@@ -180,7 +183,7 @@ export function ExpensesFilter({
                       if (range) {
                         setDateRange({
                           from: range.from,
-                          to: range.to || range.from
+                          to: range.to || range.from,
                         });
                       } else {
                         setDateRange({ from: undefined, to: undefined });
@@ -256,7 +259,7 @@ export function ExpensesFilter({
               <PopoverContent className="w-[200px] p-0" align="start">
                 <div className="p-2">
                   {categories.map((category) => (
-                    <div 
+                    <div
                       key={category}
                       className="flex items-center space-x-2 hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1.5 text-sm cursor-pointer"
                       onClick={() => {
@@ -307,7 +310,7 @@ export function ExpensesFilter({
               <PopoverContent className="w-[200px] p-0" align="start">
                 <div className="p-2">
                   {merchants.map((merchant) => (
-                    <div 
+                    <div
                       key={merchant}
                       className="flex items-center space-x-2 hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1.5 text-sm cursor-pointer"
                       onClick={() => {
@@ -358,7 +361,7 @@ export function ExpensesFilter({
               <PopoverContent className="w-[200px] p-0" align="start">
                 <div className="p-2">
                   {statuses.map((status) => (
-                    <div 
+                    <div
                       key={status}
                       className="flex items-center space-x-2 hover:bg-accent hover:text-accent-foreground rounded-md px-2 py-1.5 text-sm cursor-pointer"
                       onClick={() => {

@@ -5,13 +5,15 @@ import { Expense } from "@/components/table/TableColumnDefs";
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { FileIcon, ChevronRight, Download, Trash2 } from "lucide-react";
+import { FileIcon, ChevronRight, Download, Trash2, X } from "lucide-react";
 
 interface ExpenseDetailProps {
   expense: Expense;
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  mode?: 'dialog' | 'page';
+  onClose?: () => void;
 }
 
 export default function ExpenseDetail({
@@ -19,13 +21,40 @@ export default function ExpenseDetail({
   trigger,
   open,
   onOpenChange,
+  mode = 'dialog',
+  onClose,
 }: ExpenseDetailProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[900px] p-0 overflow-hidden min-h-[700px] lg:min-h-[500px] max-h-[90vh] overflow-y-auto">
-        <DialogTitle className="sr-only">{expense.expenseDetails}</DialogTitle>
-        <div className="flex flex-col md:flex-row h-full">
+  // Content to be rendered in both dialog and page modes
+  const expenseDetailContent = (
+    <>
+      {mode === 'dialog' && (
+        <div className="absolute right-4 top-4 z-50">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => onOpenChange?.(false)} 
+            className="bg-white hover:bg-gray-100 shadow-sm border"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+      {mode === 'page' && (
+        <div className="flex justify-end mb-4">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onClose} 
+            className="hover:bg-gray-100"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+      
+      {/* Main content */}
+
+      <div className="flex flex-col md:flex-row h-full">
           {/* Left side - PDF preview */}
           <div className="w-full md:w-1/3 bg-gray-50 p-4 md:p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r">
             <div className="bg-red-500 text-white p-3 md:p-4 rounded-lg mb-3 md:mb-4">
@@ -46,7 +75,7 @@ export default function ExpenseDetail({
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-6 gap-4 sm:gap-0">
               <div>
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
-                  <span>{new Date(expense.date).toLocaleDateString()}</span>
+                  <span>{new Date(expense.date).toISOString().split('T')[0]}</span>
                 </div>
                 <h2 className="text-lg md:text-xl font-semibold mt-1 md:mt-2">
                   {expense.expenseDetails}
@@ -113,8 +142,27 @@ export default function ExpenseDetail({
               </TabsContent>
             </Tabs>
           </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
+  );
+
+  // Render in dialog mode
+  if (mode === 'dialog') {
+    return (
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+        <DialogContent className="sm:max-w-[900px] p-0 overflow-hidden min-h-[700px] lg:min-h-[500px] max-h-[90vh] overflow-y-auto">
+          <DialogTitle className="sr-only">{expense.expenseDetails}</DialogTitle>
+          {expenseDetailContent}
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  // Render in page mode
+  return (
+    <div className="p-4 overflow-auto">
+      {expenseDetailContent}
+    </div>
   );
 }
