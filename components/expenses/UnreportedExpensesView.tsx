@@ -75,7 +75,7 @@ export default function UnreportedExpensesView({
       <div
         className={cn(
           "grid grid-cols-1 gap-4",
-          compact && "overflow-y-auto h-screen"
+          compact && "overflow-y-auto h-[calc(100vh-10rem)]"
         )}
       >
         {processedUnreportedExpenses.map((expense) => (

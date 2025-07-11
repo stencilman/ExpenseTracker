@@ -28,7 +28,9 @@ export default function ExpensesAllLayout({
             <AllExpensesTableView compact={true} />
           </div>
           {/* Detail section - takes 2/3 of the space on desktop */}
-          <div className="lg:w-2/3 border-l lg:pl-4">{children}</div>
+          <div className="lg:w-2/3 border-l lg:pl-4 overflow-x-hidden overflow-y-auto h-[calc(100vh-10rem)]">
+            {children}
+          </div>
         </>
       ) : (
         <div className="w-full">{children}</div>

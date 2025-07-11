@@ -43,5 +43,5 @@ export default function ExpenseDetailPage() {
     router.push("/user/expenses/unreported");
   };
 
-  return <ExpenseDetail expense={expense} mode="page" onClose={handleClose} />;
+  return <ExpenseDetail expense={expense} onClose={handleClose} />;
 }

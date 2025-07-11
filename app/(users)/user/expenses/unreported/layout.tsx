@@ -32,7 +32,9 @@ export default function UnreportedExpensesLayout({
           <div className="lg:w-2/3 border-l lg:pl-4">{children}</div>
         </>
       ) : (
-        <div className="w-full">{children}</div>
+        <div className="w-full h-[calc(100vh-10rem)] overflow-y-auto">
+          {children}
+        </div>
       )}
     </div>
   );

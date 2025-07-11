@@ -38,5 +38,5 @@ export default function ExpenseDetailPage() {
     );
   }
 
-  return <ExpenseDetail expense={expense} mode="page" onClose={handleBack} />;
+  return <ExpenseDetail expense={expense} onClose={handleBack} />;
 }

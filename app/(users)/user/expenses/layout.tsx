@@ -29,7 +29,7 @@ export default function ExpensesLayout({
           exactMatch={false}
         />
 
-        <div className="mt-6">{children}</div>
+        <div className="mt-6 overflow-y-auto">{children}</div>
       </div>
     </ExpensesProvider>
   );
