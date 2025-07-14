@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function ExpensesPage() {
+export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/user/expenses/unreported");
+    router.push("/admin/dashboard");
   }, [router]);
 
   return <div className=""></div>;
