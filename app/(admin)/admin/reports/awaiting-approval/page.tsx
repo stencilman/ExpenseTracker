@@ -49,6 +49,9 @@ export default function AdminReportsAwaitingApprovalPage() {
     <ReportsTable
       data={AllReports}
       onSelectedRowsChange={handleSelectedRowsChange}
+      enableRowSelection={true}
+      showPagination={true}
+      variant="page"
     />
   );
 }

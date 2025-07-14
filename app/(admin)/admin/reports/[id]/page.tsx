@@ -3,14 +3,60 @@
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, MoreHorizontal, X } from "lucide-react";
+import { Check, FileText, MoreHorizontal, X } from "lucide-react";
+import { useState } from "react";
+import ApproveReportDialog from "@/components/admin/ApproveReportDialog";
+import RecordReimbursement from "@/components/admin/RecordReimbursement";
 
 export default function ReportDetailPage() {
   const router = useRouter();
   const { id } = useParams();
+  // Status can be "PENDING", "APPROVED", or "REIMBURSED"
+  const [reportStatus, setReportStatus] = useState("PENDING");
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
 
   const handleClose = () => {
     router.back();
+  };
+
+  const handleApproveClick = () => {
+    if (reportStatus === "PENDING") {
+      setApproveDialogOpen(true);
+    } else if (reportStatus === "APPROVED") {
+      setReimbursementDialogOpen(true);
+    }
+  };
+
+  const handleApprove = () => {
+    setReportStatus("APPROVED");
+    // Add API call to approve report
+    console.log(`Report ${id} approved`);
+  };
+
+  const handleReimbursement = () => {
+    setReportStatus("REIMBURSED");
+    // Add API call to record reimbursement
+    console.log(`Reimbursement recorded for report ${id}`);
+  };
+
+  const handleReject = () => {
+    setReportStatus("REJECTED");
+    // Add API call to reject report
+    console.log(`Report ${id} rejected`);
+  };
+
+  // Determine button text based on status
+  const getApproveButtonText = () => {
+    if (reportStatus === "PENDING") return "Approve";
+    if (reportStatus === "APPROVED") return "Record Reimbursement";
+    return "Approved";
+  };
+
+  // Determine button variant based on status
+  const getApproveButtonVariant = () => {
+    if (reportStatus === "REIMBURSED") return "outline";
+    return "default";
   };
 
   return (
@@ -20,14 +66,47 @@ export default function ReportDetailPage() {
           <div className="bg-gray-100 p-2 rounded-lg">
             <span className="text-sm font-medium text-gray-500">ER-{id}</span>
           </div>
-          <div className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
-            APPROVED
+          <div
+            className={`text-xs font-medium px-2 py-1 rounded ${
+              reportStatus === "PENDING"
+                ? "bg-orange-100 text-orange-800"
+                : reportStatus === "APPROVED"
+                ? "bg-green-100 text-green-800"
+                : reportStatus === "REJECTED"
+                ? "bg-red-100 text-red-800"
+                : "bg-blue-100 text-blue-800"
+            }`}
+          >
+            {reportStatus}
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          {reportStatus !== "REIMBURSED" && (
+            <Button
+              variant={getApproveButtonVariant()}
+              onClick={handleApproveClick}
+              disabled={reportStatus === "REJECTED"}
+              className="flex items-center gap-1"
+            >
+              <Check className="h-4 w-4" />
+              {getApproveButtonText()}
+            </Button>
+          )}
+
+          {reportStatus !== "REJECTED" && reportStatus !== "REIMBURSED" && (
+            <Button
+              variant="outline"
+              onClick={handleReject}
+              className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+            >
+              Reject
+            </Button>
+          )}
+
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-5 w-5" />
           </Button>
+
           <Button variant="ghost" size="icon">
             <MoreHorizontal className="h-5 w-5" />
           </Button>
@@ -44,13 +123,12 @@ export default function ReportDetailPage() {
 
             <Tabs defaultValue="expenses">
               <TabsList className="mb-4">
-                <TabsTrigger value="expenses" className="relative">
+                <TabsTrigger value="expenses" className="relative w-60">
                   EXPENSES
-                  <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 right-0 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     1
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="advances">ADVANCES & REFUNDS</TabsTrigger>
                 <TabsTrigger value="history">HISTORY</TabsTrigger>
               </TabsList>
 
@@ -103,12 +181,6 @@ export default function ReportDetailPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="advances">
-                <div className="text-center py-8 text-gray-500">
-                  No advances or refunds for this report
-                </div>
-              </TabsContent>
-
               <TabsContent value="history">
                 <div className="text-center py-8 text-gray-500">
                   No history available
@@ -152,6 +224,22 @@ export default function ReportDetailPage() {
           </div>
         </div>
       </div>
+
+      <ApproveReportDialog
+        open={approveDialogOpen}
+        onOpenChange={setApproveDialogOpen}
+        onConfirm={handleApprove}
+        reportId={id as string}
+      />
+      
+      <RecordReimbursement
+        open={reimbursementDialogOpen}
+        onOpenChange={setReimbursementDialogOpen}
+        onConfirm={handleReimbursement}
+        reportId={id as string}
+        totalAmount={944.00}
+        totalAdvance={0.00}
+      />
     </div>
   );
 }
