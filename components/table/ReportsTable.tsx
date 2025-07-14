@@ -4,6 +4,7 @@ import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "./DataTable";
 import { Report, getReportsColumns, getReportsPageColumns } from "./TableColumnDefs";
+import { useRouter } from "next/navigation";
 
 export type { Report } from "./TableColumnDefs";
 
@@ -24,6 +25,8 @@ export function ReportsTable({
   variant = "dashboard",
   className = "",
 }: ReportsTableProps) {
+  const router = useRouter();
+
   const handleSelectedRowsChange = React.useCallback(
     (selectedRows: Report[]) => {
       if (onSelectedRowsChange) {
@@ -31,6 +34,14 @@ export function ReportsTable({
       }
     },
     [onSelectedRowsChange]
+  );
+
+  const handleRowClick = React.useCallback(
+    (row: Report) => {
+      // Navigate to the report detail page
+      router.push(`/user/reports/${row.id}`);
+    },
+    [router]
   );
 
   // Get the appropriate columns based on the variant
@@ -45,6 +56,7 @@ export function ReportsTable({
       showPagination={showPagination}
       enableRowSelection={enableRowSelection}
       onSelectedRowsChange={handleSelectedRowsChange}
+      onRowClick={handleRowClick}
       className={className}
     />
   );

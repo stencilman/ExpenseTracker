@@ -32,6 +32,7 @@ export interface DataTableProps<TData, TValue> {
   pageSize?: number;
   enableRowSelection?: boolean;
   onSelectedRowsChange?: (selectedRows: TData[]) => void;
+  onRowClick?: (row: TData) => void;
   columnVisibility?: VisibilityState;
   className?: string;
 }
@@ -43,6 +44,7 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   enableRowSelection = false,
   onSelectedRowsChange,
+  onRowClick,
   columnVisibility = {},
   className = "",
 }: DataTableProps<TData, TValue>) {
@@ -145,6 +147,16 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  onClick={(e) => {
+                    // Only trigger row click if the click wasn't on a checkbox
+                    if (
+                      onRowClick && 
+                      !(e.target as HTMLElement).closest('input[type="checkbox"]')
+                    ) {
+                      onRowClick(row.original);
+                    }
+                  }}
+                  className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
