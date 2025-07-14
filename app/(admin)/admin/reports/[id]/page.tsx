@@ -13,7 +13,8 @@ export default function ReportDetailPage() {
   const { id } = useParams();
   // Status can be "PENDING", "APPROVED", or "REIMBURSED"
   const [reportStatus, setReportStatus] = useState("PENDING");
-  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [dialogAction, setDialogAction] = useState<'approve' | 'reject'>('approve');
   const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
 
   const handleClose = () => {
@@ -22,10 +23,16 @@ export default function ReportDetailPage() {
 
   const handleApproveClick = () => {
     if (reportStatus === "PENDING") {
-      setApproveDialogOpen(true);
+      setDialogAction('approve');
+      setConfirmDialogOpen(true);
     } else if (reportStatus === "APPROVED") {
       setReimbursementDialogOpen(true);
     }
+  };
+
+  const handleRejectClick = () => {
+    setDialogAction('reject');
+    setConfirmDialogOpen(true);
   };
 
   const handleApprove = () => {
@@ -50,12 +57,13 @@ export default function ReportDetailPage() {
   const getApproveButtonText = () => {
     if (reportStatus === "PENDING") return "Approve";
     if (reportStatus === "APPROVED") return "Record Reimbursement";
+    if (reportStatus === "REJECTED") return "Rejected";
     return "Approved";
   };
 
   // Determine button variant based on status
   const getApproveButtonVariant = () => {
-    if (reportStatus === "REIMBURSED") return "outline";
+    if (reportStatus === "REIMBURSED" || reportStatus === "REJECTED") return "outline";
     return "default";
   };
 
@@ -81,22 +89,32 @@ export default function ReportDetailPage() {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {reportStatus !== "REIMBURSED" && (
+          {reportStatus !== "REIMBURSED" && reportStatus !== "REJECTED" && (
             <Button
               variant={getApproveButtonVariant()}
               onClick={handleApproveClick}
-              disabled={reportStatus === "REJECTED"}
               className="flex items-center gap-1"
             >
               <Check className="h-4 w-4" />
               {getApproveButtonText()}
             </Button>
           )}
+          
+          {reportStatus === "REJECTED" && (
+            <Button
+              variant="outline"
+              disabled
+              className="flex items-center gap-1 text-red-500"
+            >
+              <X className="h-4 w-4" />
+              Rejected
+            </Button>
+          )}
 
           {reportStatus !== "REJECTED" && reportStatus !== "REIMBURSED" && (
             <Button
               variant="outline"
-              onClick={handleReject}
+              onClick={handleRejectClick}
               className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
             >
               Reject
@@ -226,10 +244,11 @@ export default function ReportDetailPage() {
       </div>
 
       <ApproveReportDialog
-        open={approveDialogOpen}
-        onOpenChange={setApproveDialogOpen}
-        onConfirm={handleApprove}
+        open={confirmDialogOpen}
+        onOpenChange={setConfirmDialogOpen}
+        onConfirm={dialogAction === 'approve' ? handleApprove : handleReject}
         reportId={id as string}
+        action={dialogAction}
       />
       
       <RecordReimbursement
