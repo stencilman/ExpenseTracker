@@ -9,6 +9,8 @@ export default function AllReportsPage() {
   const allReports: Report[] = [
     {
       id: "1",
+      submitter: "John Doe",
+      approver: "Jane Doe",
       iconType: "calendar",
       title: "May-June",
       dateRange: "30/05/2025 - 30/05/2025",
@@ -23,6 +25,8 @@ export default function AllReportsPage() {
     },
     {
       id: "2",
+      submitter: "John Doe",
+      approver: "Jane Doe",
       iconType: "calendar",
       title: "Bhive Passes and Trial Interview expense",
       dateRange: "16/05/2025 - 16/05/2025",
@@ -37,6 +41,8 @@ export default function AllReportsPage() {
     },
     {
       id: "3",
+      submitter: "John Doe",
+      approver: undefined,
       iconType: "file-text",
       title: "Client Meeting Expenses",
       dateRange: "10/07/2025 - 15/07/2025",

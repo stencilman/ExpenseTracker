@@ -7,6 +7,8 @@ import { Calendar, FileText, Receipt, CreditCard } from "lucide-react";
 // Define the Report type
 export interface Report {
   id: string;
+  submitter: string;
+  approver: string | undefined;
   iconType: "calendar" | "file-text" | "receipt" | "credit-card";
   title: string;
   dateRange: string;
@@ -174,6 +176,51 @@ export const getReportsPageColumns = (): ColumnDef<Report>[] => [
     accessorKey: "status",
     header: () => <div className="text-right">STATUS</div>,
     cell: ({ row }) => <StatusCell status={row.original.status} />,
+  },
+  {
+    accessorKey: "total",
+    header: () => <div className="text-right">TOTAL</div>,
+    cell: ({ row }) => (
+      <TotalCell
+        total={row.original.total}
+        expenseCount={row.original.expenseCount}
+      />
+    ),
+  },
+  {
+    accessorKey: "toBeReimbursed",
+    header: () => <div className="text-right">TO BE REIMBURSED</div>,
+    cell: ({ row }) => (
+      <div className="text-right">{row.original.toBeReimbursed}</div>
+    ),
+  },
+];
+
+export const getAdminReportTableColumns = (): ColumnDef<Report>[] => [
+  {
+    accessorKey: "submitter",
+    header: "SUBMITTER",
+    cell: ({ row }) => <div>{row.original.submitter}</div>,
+  },
+  {
+    accessorKey: "id",
+    header: "ID",
+    cell: ({ row }) => <div>{row.original.id}</div>,
+  },
+  {
+    accessorKey: "reportName",
+    header: "REPORT NAME",
+    cell: ({ row }) => <div>{row.original.title}</div>,
+  },
+  {
+    accessorKey: "status",
+    header: () => <div className="text-right">STATUS</div>,
+    cell: ({ row }) => <StatusCell status={row.original.status} />,
+  },
+  {
+    accessorKey: "approver",
+    header: "APPROVER",
+    cell: ({ row }) => <div>{row.original.approver}</div>,
   },
   {
     accessorKey: "total",

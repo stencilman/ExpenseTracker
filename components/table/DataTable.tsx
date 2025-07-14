@@ -50,7 +50,8 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
-  const [visibility, setVisibility] = React.useState<VisibilityState>(columnVisibility);
+  const [visibility, setVisibility] =
+    React.useState<VisibilityState>(columnVisibility);
 
   // Create a column for selection checkboxes if row selection is enabled
   const selectionColumn: ColumnDef<TData, any> = {
@@ -103,13 +104,15 @@ export function DataTable<TData, TValue>({
 
   // Use a ref to store previous selection to prevent unnecessary updates
   const prevSelectionRef = React.useRef<string>("");
-  
+
   // Notify parent component when selection changes
   React.useEffect(() => {
     if (onSelectedRowsChange && enableRowSelection) {
       // Convert current selection to string for comparison
-      const currentSelectionKey = JSON.stringify(Object.keys(rowSelection).sort());
-      
+      const currentSelectionKey = JSON.stringify(
+        Object.keys(rowSelection).sort()
+      );
+
       // Only update if selection has changed
       if (prevSelectionRef.current !== currentSelectionKey) {
         const selectedRows = table
@@ -150,16 +153,24 @@ export function DataTable<TData, TValue>({
                   onClick={(e) => {
                     // Only trigger row click if the click wasn't on a checkbox
                     if (
-                      onRowClick && 
-                      !(e.target as HTMLElement).closest('input[type="checkbox"]')
+                      onRowClick &&
+                      !(e.target as HTMLElement).closest(
+                        'input[type="checkbox"]'
+                      )
                     ) {
                       onRowClick(row.original);
                     }
                   }}
-                  className={onRowClick ? "cursor-pointer hover:bg-muted/50" : ""}
+                  className={
+                    onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
+                  }
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell 
+                      key={cell.id}
+                      // Stop propagation on the checkbox cell to prevent row click
+                      onClick={cell.column.id === 'select' ? (e) => e.stopPropagation() : undefined}
+                    >
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
