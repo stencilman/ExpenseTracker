@@ -17,15 +17,6 @@ export default function AdminSettingsPage() {
               label: "Organization Profile",
               href: "/admin/settings/organization",
             },
-            { label: "Branding", href: "/admin/settings/branding" },
-            { label: "Currencies", href: "/admin/settings/currencies" },
-            { label: "Taxes", href: "/admin/settings/taxes" },
-            { label: "Tags", href: "/admin/settings/tags" },
-            {
-              label: "Subscription",
-              href: "https://billing.expensetracker.com",
-              external: true,
-            },
           ]}
         />
 
@@ -35,8 +26,6 @@ export default function AdminSettingsPage() {
           items={[
             { label: "Users", href: "/admin/settings/users" },
             { label: "Roles & Permissions", href: "/admin/settings/roles" },
-            { label: "Departments", href: "/admin/settings/departments" },
-            { label: "Policies", href: "/admin/settings/policies" },
           ]}
         />
       </div>
