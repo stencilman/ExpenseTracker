@@ -54,7 +54,7 @@ const users: UserData[] = [
 export default function UsersPage() {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [usersList, setUsersList] = useState<UserData[]>(users);
   const [isAddNewUserDialogOpen, setIsAddNewUserDialogOpen] = useState(false);
 
   const toggleUserSelection = (userId: string) => {
@@ -76,8 +76,37 @@ export default function UsersPage() {
     }
   };
 
+  // Handler for editing a user
+  const handleEditUser = (userId: string, userData: any) => {
+    console.log(`Editing user ${userId}:`, userData);
+    setUsersList(prevUsers => 
+      prevUsers.map(user => 
+        user.id === userId ? { ...user, ...userData } : user
+      )
+    );
+  };
+
+  // Handler for marking a user as inactive
+  const handleMarkInactive = (userId: string) => {
+    console.log(`Marking user ${userId} as inactive`);
+    // In a real app, you would update the user's status in the database
+    // For now, we'll just log it
+  };
+
+  // Handler for deleting a user
+  const handleDeleteUser = (userId: string) => {
+    console.log(`Deleting user ${userId}`);
+    setUsersList(prevUsers => prevUsers.filter(user => user.id !== userId));
+    // Also remove from selection if selected
+    if (selectedUsers.has(userId)) {
+      const newSelected = new Set(selectedUsers);
+      newSelected.delete(userId);
+      setSelectedUsers(newSelected);
+    }
+  };
+
   // Filter users based on search query
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = usersList.filter((user) => {
     if (!searchQuery) return true;
 
     const query = searchQuery.toLowerCase();
@@ -157,6 +186,9 @@ export default function UsersPage() {
               approver={user.approver}
               isSelected={selectedUsers.has(user.id)}
               onToggleSelect={toggleUserSelection}
+              onEditUser={handleEditUser}
+              onMarkInactive={handleMarkInactive}
+              onDeleteUser={handleDeleteUser}
             />
           ))}
         </div>
