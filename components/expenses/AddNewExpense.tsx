@@ -395,7 +395,7 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
                           <X className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="flex flex-wrap gap-2 pb-2 pt-2">
+                      <div className="flex  gap-2 pb-2 pt-2 overflow-x-auto">
                         {files.map((file, index) => (
                           <div
                             key={index}
