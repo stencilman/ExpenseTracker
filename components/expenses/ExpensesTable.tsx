@@ -33,7 +33,7 @@ export function ExpensesTable({
   const handleSelectedRowsChange = React.useCallback(
     (selectedRows: Expense[]) => {
       if (onSelectedRowsChange) {
-        onSelectedRowsChange(selectedRows.map(row => row.id));
+        onSelectedRowsChange(selectedRows.map((row) => row.id));
       }
     },
     [onSelectedRowsChange]

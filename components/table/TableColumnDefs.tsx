@@ -222,18 +222,21 @@ export const getExpensesPageColumns = (
     {
       accessorKey: "expenseDetails",
       header: "EXPENSE DETAILS",
+      size: 180, // Adjusted width for compact view
       cell: ({ row }) => (
-        <div className="w-full">{row.original.expenseDetails}</div>
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">{row.original.expenseDetails}</div>
       ),
     },
     {
       accessorKey: "merchant",
       header: "MERCHANT",
-      cell: ({ row }) => <div className="w-full">{row.original.merchant}</div>,
+      size: 100, // Adjusted width for compact view
+      cell: ({ row }) => <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">{row.original.merchant}</div>,
     },
     {
       accessorKey: "amount",
       header: () => <div className="text-right w-full">AMOUNT</div>,
+      size: 80, // Adjusted width for compact view
       cell: ({ row }) => (
         <div className="text-right w-full">{row.original.amount}</div>
       ),
@@ -241,13 +244,15 @@ export const getExpensesPageColumns = (
     {
       accessorKey: "reportName",
       header: "REPORT NAME",
+      size: 120, // Adjusted width for compact view
       cell: ({ row }) => (
-        <div className="w-full">{row.original.reportName || "-"}</div>
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">{row.original.reportName || "-"}</div>
       ),
     },
     {
       accessorKey: "status",
       header: () => <div className="text-right w-full">STATUS</div>,
+      size: 100, // Adjusted width for compact view
       cell: ({ row }) => (
         <div className="flex justify-end w-full">
           <StatusCell
