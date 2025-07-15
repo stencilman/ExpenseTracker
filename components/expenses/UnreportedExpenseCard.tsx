@@ -56,6 +56,12 @@ export default function UnreportedExpenseCard({
 
   const displayExpense = expense || mockExpense;
 
+  // Handle checkbox click without triggering card navigation
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    // Stop event propagation to prevent the card onClick from firing
+    e.stopPropagation();
+  };
+
   return (
     <Card 
       className={`mb-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer ${compact ? 'compact-card' : ''}`}
@@ -63,7 +69,7 @@ export default function UnreportedExpenseCard({
       <CardContent className="p-3 sm:p-4">
         <div className="flex items-start space-x-3 sm:space-x-4">
           {/* Checkbox */}
-          <div className="flex-shrink-0 mt-1">
+          <div className="flex-shrink-0 mt-1" onClick={handleCheckboxClick}>
             <Checkbox
               id={`expense-${displayExpense.id}`}
               className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
