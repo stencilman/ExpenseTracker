@@ -3,23 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Search,
-  PlusCircle,
-  MoreHorizontal,
-  Mail,
-  User,
-  MoreVertical,
-  ChevronDown,
-} from "lucide-react";
+import { Search, PlusCircle, MoreVertical } from "lucide-react";
 import UserCard from "@/components/admin/settings/user/UserCard";
 import AddNewUserDialog from "@/components/admin/settings/user/AddNewUserDialog";
 
@@ -39,7 +24,7 @@ const users: UserData[] = [
     email: "akash@fastcode.ai",
     role: "SUBMITTER",
     company: "Fast Code AI",
-    approver: "prabal",
+    approver: "Prabal",
   },
   {
     id: "2",
@@ -54,7 +39,7 @@ const users: UserData[] = [
     email: "ashish@fastcode.ai",
     role: "SUBMITTER",
     company: "Fast Code AI",
-    approver: "prabal",
+    approver: "Prabal",
   },
   {
     id: "4",
@@ -62,7 +47,7 @@ const users: UserData[] = [
     email: "dhaval@fastcode.ai",
     role: "SUBMITTER",
     company: "Fast Code AI",
-    approver: "prabal",
+    approver: "Prabal",
   },
 ];
 
@@ -143,7 +128,7 @@ export default function UsersPage() {
           </div>
         </div>
 
-        <div className="bg-white">
+        <div className="bg-white overflow-y-auto max-h-[calc(100vh-15rem)]">
           <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_auto] gap-4 px-4 py-3 border-b text-sm font-medium text-gray-500">
             <div className="flex justify-center">
               <Checkbox
