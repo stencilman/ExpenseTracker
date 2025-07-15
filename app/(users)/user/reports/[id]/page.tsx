@@ -44,9 +44,9 @@ export default function ReportDetailPage() {
 
             <Tabs defaultValue="expenses">
               <TabsList className="mb-4">
-                <TabsTrigger value="expenses" className="relative">
+                <TabsTrigger value="expenses" className="relative w-64">
                   EXPENSES
-                  <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  <span className="absolute -top-1 -right-0 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     1
                   </span>
                 </TabsTrigger>
