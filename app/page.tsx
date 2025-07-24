@@ -2,11 +2,13 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useLoading } from "@/components/providers/loading-provider";
 import { LoginForm } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
   const router = useRouter();
+  const { startLoading } = useLoading();
 
   // useEffect(() => {
   //   router.push("/user/dashboard");

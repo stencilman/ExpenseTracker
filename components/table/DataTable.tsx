@@ -10,6 +10,7 @@ import {
   SortingState,
   getSortedRowModel,
   RowSelectionState,
+  VisibilityState,
 } from "@tanstack/react-table";
 
 import {
@@ -24,13 +25,15 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-interface DataTableProps<TData, TValue> {
+export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   showPagination?: boolean;
   pageSize?: number;
   enableRowSelection?: boolean;
   onSelectedRowsChange?: (selectedRows: TData[]) => void;
+  columnVisibility?: VisibilityState;
+  className?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -40,13 +43,17 @@ export function DataTable<TData, TValue>({
   pageSize = 10,
   enableRowSelection = false,
   onSelectedRowsChange,
+  columnVisibility = {},
+  className = "",
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
+  const [visibility, setVisibility] = React.useState<VisibilityState>(columnVisibility);
 
   // Create a column for selection checkboxes if row selection is enabled
   const selectionColumn: ColumnDef<TData, any> = {
     id: "select",
+    size: 40, // Small fixed width for checkbox column
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -78,14 +85,17 @@ export function DataTable<TData, TValue>({
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onRowSelectionChange: setRowSelection,
+    onColumnVisibilityChange: setVisibility,
     state: {
       sorting,
       rowSelection,
+      columnVisibility: visibility,
     },
     initialState: {
       pagination: {
         pageSize: pageSize,
       },
+      columnVisibility: columnVisibility,
     },
     enableRowSelection,
   });
@@ -111,22 +121,32 @@ export function DataTable<TData, TValue>({
   }, [table, rowSelection, onSelectedRowsChange, enableRowSelection]);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-md border">
-        <Table>
+    <div className={`space-y-4 ${className}`}>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="w-full table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  // Get column width from size property or default to auto
+                  const columnSize = header.column.columnDef.size || "auto";
+                  const width = typeof columnSize === "number" ? `${columnSize}px` : columnSize;
+                  
+                  return (
+                    <TableHead 
+                      key={header.id} 
+                      style={{ width, minWidth: width, maxWidth: width }}
+                      className="overflow-hidden"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -137,20 +157,30 @@ export function DataTable<TData, TValue>({
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    // Get column width from size property or default to auto
+                    const columnSize = cell.column.columnDef.size || "auto";
+                    const width = typeof columnSize === "number" ? `${columnSize}px` : columnSize;
+                    
+                    return (
+                      <TableCell 
+                        key={cell.id}
+                        style={{ width, minWidth: width, maxWidth: width }}
+                        className="overflow-hidden"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={columns.length + (enableRowSelection ? 1 : 0)}
                   className="h-24 text-center"
                 >
                   No results.
