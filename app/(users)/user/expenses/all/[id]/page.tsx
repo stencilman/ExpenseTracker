@@ -15,7 +15,23 @@ export default function ExpenseDetailPage() {
   const { stopLoading: stopPageLoading } = useLoading();
 
   // Find the expense with the matching ID
-  const expense = allExpenses.find((exp) => exp.id === id);
+  // The ID in the URL is numeric, but our UI expenses have string IDs prefixed with "EXP-"
+  const numericId = typeof id === 'string' ? parseInt(id, 10) : Array.isArray(id) ? parseInt(id[0], 10) : 0;
+  const expense = allExpenses.find((exp) => {
+    // Check if the ID matches directly (for string IDs)
+    if (exp.id === id) return true;
+    
+    // Check if the ID matches after removing the "EXP-" prefix
+    if (exp.id.startsWith('EXP-')) {
+      const expNumericId = parseInt(exp.id.replace('EXP-', ''), 10);
+      return expNumericId === numericId;
+    }
+    
+    // For expenses with apiData, check the numeric ID
+    if ('apiData' in exp && exp.apiData?.id === numericId) return true;
+    
+    return false;
+  });
 
   useEffect(() => {
     stopLoading();

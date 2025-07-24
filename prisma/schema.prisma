@@ -22,6 +22,7 @@ model User {
   image         String?
   emailVerified DateTime?
   Account       Account[]
+  expenses      Expense[]
   role          UserRole  @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -46,4 +47,40 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([provider, providerAccountId])
+}
+
+enum ExpenseStatus {
+  UNREPORTED
+  REPORTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+enum ExpenseCategory {
+  TRAVEL
+  MEALS
+  ACCOMMODATION
+  SUPPLIES
+  SERVICES
+  ENTERTAINMENT
+  TRANSPORTATION
+  UTILITIES
+  OFFICE
+  OTHER
+}
+
+model Expense {
+  id          Int             @id @default(autoincrement())
+  amount      Float
+  date        DateTime
+  description String
+  category    ExpenseCategory @default(OTHER)
+  status      ExpenseStatus   @default(UNREPORTED)
+  receiptUrl  String?
+  notes       String?
+  userId      String
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 }

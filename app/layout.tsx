@@ -4,6 +4,7 @@ import "./globals.css";
 import { LoadingProvider } from "@/components/providers/loading-provider";
 import { SessionProvider } from "next-auth/react";
 import { auth } from "@/auth";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,10 @@ export default async function RootLayout({
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          {children}
+          <LoadingProvider>
+            {children}
+          </LoadingProvider>
+          <Toaster />
         </body>
       </html>
     </SessionProvider>

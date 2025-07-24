@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useState } from "react";
+import { useExpenses } from "./ExpensesContext";
 import { X, CalendarIcon, FileText, Image, File } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -71,6 +72,7 @@ interface AddNewExpenseProps {
 
 export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
   const [files, setFiles] = useState<File[]>([]);
+  const { createExpense, isLoading } = useExpenses();
 
   // Initialize the form with react-hook-form and zod resolver
   const form = useForm<ExpenseFormValues>({
@@ -97,9 +99,28 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
     setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
   };
 
-  const onSubmit = form.handleSubmit((values) => {
-    console.log(values);
-    onClose();
+  const onSubmit = form.handleSubmit(async (values) => {
+    try {
+      // Format the data for the API
+      const expenseData = {
+        amount: values.amount,
+        date: values.date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+        description: values.description || values.merchant, // Use merchant as fallback
+        category: values.category,
+        notes: values.reference || '',
+        status: 'UNREPORTED'
+      };
+      
+      // Call the createExpense function from context
+      await createExpense(expenseData);
+      
+      // Reset form and close dialog
+      form.reset();
+      onClose();
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      // Error handling is done in the createExpense function
+    }
   });
 
   const getFileIcon = (file: File) => {
@@ -358,11 +379,14 @@ export default function AddNewExpense({ isOpen, onClose }: AddNewExpenseProps) {
                     )}
                   />
 
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button variant="outline" type="button" onClick={onClose}>
-                      Cancel
+                  <div className="flex justify-end mt-6">
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Saving..." : "Save Expense"}
                     </Button>
-                    <Button type="submit">Save and Close</Button>
                   </div>
                 </form>
               </Form>
