@@ -26,27 +26,11 @@ import { FormError } from "@/components/form-error"; // Component to display for
 import { FormSuccess } from "@/components/form-success"; // Component to display success messages
 import { toast } from "sonner"; // Toast notification library
 
-// Define the schema for registration validation using Zod
-const RegisterSchema = z
-  .object({
-    email: z.string().email({ message: "Email is required" }),
-    password: z.string().min(8, {
-      message: "Password is required and must be at least 8 characters",
-    }),
-    reEnterPassword: z.string().min(8, {
-      message: "Reenter Password is required, must be same as password",
-    }),
-    firstName: z.string().min(1, {
-      message: "First name is required",
-    }),
-    lastName: z.string().min(1, {
-      message: "Last name is required",
-    }),
-  })
-  .refine((data) => data.password === data.reEnterPassword, {
-    message: "Passwords do not match",
-    path: ["reEnterPassword"],
-  });
+import { register } from "@/actions/register";
+import { RegisterSchema } from "@/schemas";
+
+
+
 
 // Registration Form Component
 export const RegisterForm = () => {
@@ -76,66 +60,73 @@ export const RegisterForm = () => {
     setError(""); // Reset error message
 
     startTransition(async () => {
-      try {
-        // Validate form data using Zod
-        const validateFields = RegisterSchema.safeParse(data);
+    
+      register(data).then((result: any) => {
+        setError(result.error);
+        setSuccess(result.success);
+        console.log(result);
+      });
 
-        if (!validateFields.success) {
-          throw new Error("Invalid fields"); // Throw error if validation fails
-        }
+      // try {
+      //   // Validate form data using Zod
+      //   const validateFields = RegisterSchema.safeParse(data);
 
-        const { email, password, reEnterPassword, firstName, lastName } =
-          validateFields.data;
+      //   if (!validateFields.success) {
+      //     throw new Error("Invalid fields"); // Throw error if validation fails
+      //   }
 
-        // Send data to the API
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/users/`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              first_name: firstName,
-              last_name: lastName,
-              email: email,
-              password: password,
-              re_password: reEnterPassword,
-            }),
-          }
-        );
+      //   const { email, password, reEnterPassword, firstName, lastName } =
+      //     validateFields.data;
 
-        if (!response.ok) {
-          const errorData = await response.json();
-          setError(errorData); // Set error state with response data
+      //   // Send data to the API
+      //   const response = await fetch(
+      //     `${process.env.NEXT_PUBLIC_API_URL}/api/users/`,
+      //     {
+      //       method: "POST",
+      //       headers: {
+      //         "Content-Type": "application/json",
+      //       },
+      //       body: JSON.stringify({
+      //         first_name: firstName,
+      //         last_name: lastName,
+      //         email: email,
+      //         password: password,
+      //         re_password: reEnterPassword,
+      //       }),
+      //     }
+      //   );
 
-          throw new Error(
-            errorData?.error ||
-              (Array.isArray(errorData?.email)
-                ? errorData?.email[0]
-                : errorData?.email) ||
-              (Array.isArray(errorData?.password)
-                ? errorData?.password[0]
-                : errorData?.password) ||
-              (Array.isArray(errorData?.re_password)
-                ? errorData?.re_password[0]
-                : errorData?.re_password) ||
-              "Failed to create an account"
-          );
-        }
+      //   if (!response.ok) {
+      //     const errorData = await response.json();
+      //     setError(errorData); // Set error state with response data
 
-        const resp = await response.json();
+      //     throw new Error(
+      //       errorData?.error ||
+      //         (Array.isArray(errorData?.email)
+      //           ? errorData?.email[0]
+      //           : errorData?.email) ||
+      //         (Array.isArray(errorData?.password)
+      //           ? errorData?.password[0]
+      //           : errorData?.password) ||
+      //         (Array.isArray(errorData?.re_password)
+      //           ? errorData?.re_password[0]
+      //           : errorData?.re_password) ||
+      //         "Failed to create an account"
+      //     );
+      //   }
 
-        if (resp) {
-          router.push(`/`); // Redirect to home page upon successful registration
-          toast.success("Account created successfully!"); // Show success toast
-        }
-      } catch (err) {
-        // Handle unexpected errors
-        setError(
-          err instanceof Error ? err.message : "An unexpected error occurred"
-        );
-      }
+      //   const resp = await response.json();
+
+      //   if (resp) {
+      //     router.push(`/`); // Redirect to home page upon successful registration
+      //     toast.success("Account created successfully!"); // Show success toast
+      //   }
+      // } catch (err) {
+      //   // Handle unexpected errors
+      //   setError(
+      //     err instanceof Error ? err.message : "An unexpected error occurred"
+      //   );
+      // }
     });
   };
 

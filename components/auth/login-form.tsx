@@ -51,54 +51,17 @@ export const LoginForm = () => {
 
     console.log("login Clicked");
     startTransition(async () => {
-      const validateFields = LoginSchema.safeParse(data);
-      login(validateFields).then((result: any) => {
+      const result = await login(data);
+
+      // If we get here, it means there was no redirect
+      // which indicates an authentication error
+      if (result?.error) {
         setError(result.error);
+      }
+
+      if (result?.success) {
         setSuccess(result.success);
-        console.log(result);
-      });
-
-      // if (!validateFields.success) {
-      //   return setError("Invalid fields");
-      // }
-
-      // const { email, password } = validateFields.data;
-
-      // try {
-      //   const response = await fetch(
-      //     `${process.env.NEXT_PUBLIC_API_URL}/api/token/login/`,
-      //     {
-      //       method: "POST",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //       },
-      //       body: JSON.stringify({
-      //         email: email,
-      //         password: password,
-      //       }),
-      //     }
-      //   );
-
-      //   if (response.ok) {
-      //     const result = await response.json();
-
-      //     document.cookie = `auth-token=${result.auth_token}; path=/; max-age=2592000`;
-      //     localStorage.setItem("authToken", result.auth_token);
-
-      //     router.push("/projects");
-      //   } else {
-      //     const errorData = await response.json();
-      //     setError(
-      //       errorData.error ||
-      //         errorData.non_field_errors ||
-      //         "Verification failed!"
-      //     );
-      //   }
-      // } catch (err) {
-      //   setError(
-      //     err instanceof Error ? err.message : "An unexpected error occurred"
-      //   );
-      // }
+      }
     });
   };
 
@@ -123,7 +86,7 @@ export const LoginForm = () => {
                       <Input
                         className="h-11"
                         {...field}
-                        placeholder="autoqra@mail.com"
+                        placeholder="test@mail.com"
                         type="email"
                         disabled={transition}
                       />

@@ -21,7 +21,9 @@ export default function Home() {
     // </div>
     <div className="flex flex-col items-center justify-center h-screen">
       <h1 className="text-2xl font-bold">Expense Tracker</h1>
-      <Button className="mt-4" onClick={() => router.push("/auth/login")}>Login</Button>
+      <Button className="mt-4" onClick={() => router.push("/auth/login")}>
+        Login
+      </Button>
     </div>
   );
 }

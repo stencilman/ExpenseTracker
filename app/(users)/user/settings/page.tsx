@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -10,15 +12,23 @@ import {
   CalendarDays,
   Award,
 } from "lucide-react";
+import { useCurrentUser } from "@/hooks/use-current-user";
+import SignoutButton from "@/components/auth/signout-button";
 
 export default function SettingsPage() {
+  const user = useCurrentUser();
+
   return (
     <div className="p-4">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2">
             <User className="h-5 w-5 text-slate-500" />
-            <CardTitle>Personal Details</CardTitle>
+            <CardTitle className="flex items-center gap-2 justify-between w-full">
+              <div>Personal Details</div>
+              {/* signout button */}
+              <SignoutButton />
+            </CardTitle>
           </div>
         </CardHeader>
         <CardContent>
@@ -26,12 +36,12 @@ export default function SettingsPage() {
             <div className="space-y-6">
               <div className="grid grid-cols-2 items-center">
                 <div className="text-sm text-slate-500">Name</div>
-                <div>Sarvochcha</div>
+                <div>{user?.name || "N/A"}</div>
               </div>
 
               <div className="grid grid-cols-2 items-center">
                 <div className="text-sm text-slate-500">Email Address</div>
-                <div>sarvochcha@fastcode.ai</div>
+                <div>{user?.email}</div>
               </div>
 
               <div className="grid grid-cols-2 items-center">
