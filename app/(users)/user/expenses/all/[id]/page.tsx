@@ -33,7 +33,7 @@ export default function ExpenseDetailPage() {
     }
 
     // For expenses with apiData, check the numeric ID
-    if ("apiData" in exp && exp.apiData?.id === numericId) return true;
+    if ("apiData" in exp && exp.id === numericId) return true;
 
     return false;
   });

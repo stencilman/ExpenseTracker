@@ -211,28 +211,52 @@ export function getExpensesPageColumns(
       accessorKey: "description",
       header: "EXPENSE DETAILS",
       size: 180, // Adjusted width for compact view
-      cell: ({ row }) => (
-        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">{row.original.description}</div>
-      ),
+      cell: ({ row }) => {
+        const expense = row.original;
+        const dateStr =
+          expense.date instanceof Date
+            ? expense.date.toISOString().split("T")[0]
+            : typeof expense.date === "string"
+            ? expense.date.split("T")[0]
+            : "Unknown date";
+
+        return (
+          <div className="flex flex-col w-full">
+            <div className="flex items-center gap-1 text-sm ">
+              <span>{dateStr}</span>
+              <span>-</span>
+              <span>{expense.category}</span>
+            </div>
+            <div className="text-sm font-medium truncate">
+              {expense.description}
+            </div>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "merchant",
       header: "MERCHANT",
       size: 100, // Adjusted width for compact view
-      cell: ({ row }) => <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">{row.original.merchant}</div>,
+      cell: ({ row }) => (
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">
+          {row.original.merchant}
+        </div>
+      ),
     },
     {
       accessorKey: "amount",
       header: () => <div className="text-right w-full">AMOUNT</div>,
       size: 80, // Adjusted width for compact view
       cell: ({ row }) => (
-        <div className="text-right w-full">{typeof row.original.amount === 'number' ? 
-          new Intl.NumberFormat('en-IN', {
-            style: 'currency',
-            currency: 'INR',
-            minimumFractionDigits: 2,
-          }).format(row.original.amount) : 
-          row.original.amount}
+        <div className="text-right w-full">
+          {typeof row.original.amount === "number"
+            ? new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                minimumFractionDigits: 2,
+              }).format(row.original.amount)
+            : row.original.amount}
         </div>
       ),
     },
@@ -241,7 +265,9 @@ export function getExpensesPageColumns(
       header: "REPORT NAME",
       size: 120, // Adjusted width for compact view
       cell: ({ row }) => (
-        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">{row.original.reportName || "-"}</div>
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">
+          {row.original.reportName || "-"}
+        </div>
       ),
     },
     {
@@ -264,4 +290,4 @@ export function getExpensesPageColumns(
       ),
     },
   ];
-};
+}

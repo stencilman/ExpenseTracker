@@ -39,37 +39,10 @@ export function ExpensesTable({
     [onSelectedRowsChange]
   );
 
-  // Custom column definition with click handler for expense details
+  // Use the base columns directly since row click is now handled at the table level
   const columns = React.useMemo(() => {
-    const baseColumns = getExpensesPageColumns();
-
-    // Modify the description column to make it clickable
-    const enhancedColumns = baseColumns.map((column) => {
-      if ("accessorKey" in column && column.accessorKey === "description") {
-        return {
-          ...column,
-          cell: ({ row }: { row: any }) => (
-            <div
-              className="w-full cursor-pointer hover:text-primary hover:underline"
-              onClick={() => {
-                if (onRowClick) {
-                  onRowClick(row.original.id);
-                } else {
-                  setSelectedExpense(row.original);
-                  setDetailOpen(true);
-                }
-              }}
-            >
-              {row.original.description}
-            </div>
-          ),
-        };
-      }
-      return column;
-    });
-
-    return enhancedColumns;
-  }, [onRowClick]);
+    return getExpensesPageColumns();
+  }, []);
 
   return (
     <>
@@ -79,6 +52,14 @@ export function ExpensesTable({
         showPagination={showPagination}
         enableRowSelection={enableRowSelection}
         onSelectedRowsChange={handleSelectedRowsChange}
+        onRowClick={(row) => {
+          if (onRowClick) {
+            onRowClick(row.id.toString());
+          } else {
+            setSelectedExpense(row);
+            setDetailOpen(true);
+          }
+        }}
         className={className}
       />
 

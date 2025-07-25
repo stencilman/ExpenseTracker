@@ -31,13 +31,8 @@ import { SortOption } from "../expenses/ExpensesSort";
 import { toast } from "sonner";
 import { ExpenseCategory, ExpenseStatus } from "@prisma/client";
 
-// Extend the ExpenseWithUI type to include apiData for internal use
-interface ExtendedExpense extends ExpenseWithUI {
-  apiData?: Expense;
-}
-
 // Function to convert API expense to UI expense format
-function convertApiExpenseToUiExpense(apiExpense: Expense): ExtendedExpense {
+function convertApiExpenseToUiExpense(apiExpense: Expense): ExpenseWithUI {
   // Determine status display properties
   const statusDisplay = getStatusDisplay(apiExpense.status);
 
@@ -46,68 +41,39 @@ function convertApiExpenseToUiExpense(apiExpense: Expense): ExtendedExpense {
     ...apiExpense,
     statusDisplay,
     reportName: undefined, // This would be populated from report data if available
-    apiData: apiExpense,
   };
 }
 
-// Fallback data in case API fails
-const fallbackExpensesData: Expense[] = [
-  {
-    id: 1,
-    description: "Bhive Passes and Trial Interview expense",
-    merchant: "Bhive Workspace",
-    amount: 3486.0,
-    date: new Date("2025-05-16"),
-    category: "TRAVEL" as ExpenseCategory,
-    status: "REPORTED" as ExpenseStatus,
-    userId: "user1",
-    createdAt: new Date("2025-05-16"),
-    updatedAt: new Date("2025-05-16"),
-  },
-  {
-    id: 2,
-    description: "Client Meeting Lunch",
-    merchant: "The Oberoi Restaurant",
-    amount: 2150.0,
-    date: new Date("2025-05-18"),
-    category: "MEALS" as ExpenseCategory,
-    status: "APPROVED" as ExpenseStatus,
-    userId: "user1",
-    createdAt: new Date("2025-05-18"),
-    updatedAt: new Date("2025-05-18"),
-  },
-];
-
 export interface ExpensesContextType {
-  allExpenses: ExtendedExpense[];
-  unreportedExpenses: ExtendedExpense[];
+  allExpenses: ExpenseWithUI[];
+  unreportedExpenses: ExpenseWithUI[];
   filters: FilterOptions;
   setFilters: (filters: FilterOptions) => void;
   sort: SortOption | null;
   setSort: (sort: SortOption | null) => void;
   sortConfig: SortOption | null;
   setSortConfig: (sort: SortOption | null) => void;
-  selectedExpenses: ExtendedExpense[];
-  setSelectedExpenses: (expenses: ExtendedExpense[]) => void;
+  selectedExpenses: ExpenseWithUI[];
+  setSelectedExpenses: (expenses: ExpenseWithUI[]) => void;
   isAddExpenseOpen: boolean;
   setIsAddExpenseOpen: (isOpen: boolean) => void;
   categories: string[];
   merchants: string[];
   statuses: string[];
-  filterExpenses: (expenses: ExtendedExpense[]) => ExtendedExpense[];
-  sortExpenses: (expenses: ExtendedExpense[]) => ExtendedExpense[];
-  processedAllExpenses: ExtendedExpense[];
-  processedUnreportedExpenses: ExtendedExpense[];
+  filterExpenses: (expenses: ExpenseWithUI[]) => ExpenseWithUI[];
+  sortExpenses: (expenses: ExpenseWithUI[]) => ExpenseWithUI[];
+  processedAllExpenses: ExpenseWithUI[];
+  processedUnreportedExpenses: ExpenseWithUI[];
   isLoading: boolean;
   startLoading: () => void;
   stopLoading: () => void;
   error: string | null;
-  fetchExpenses: (filters?: Record<string, any>) => Promise<ExtendedExpense[]>;
-  createExpense: (expenseData: Record<string, any>) => Promise<ExtendedExpense>;
+  fetchExpenses: (filters?: Record<string, any>) => Promise<ExpenseWithUI[]>;
+  createExpense: (expenseData: Record<string, any>) => Promise<ExpenseWithUI>;
   updateExpense: (
     id: string,
     expenseData: Record<string, any>
-  ) => Promise<ExtendedExpense>;
+  ) => Promise<ExpenseWithUI>;
   deleteExpense: (id: string) => Promise<boolean>;
 }
 
@@ -123,10 +89,10 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
   const stopLoading = () => setIsLoading(false);
 
   // State for expense data
-  const [allExpenses, setAllExpenses] = useState<ExtendedExpense[]>([]);
-  const [unreportedExpenses, setUnreportedExpenses] = useState<
-    ExtendedExpense[]
-  >([]);
+  const [allExpenses, setAllExpenses] = useState<ExpenseWithUI[]>([]);
+  const [unreportedExpenses, setUnreportedExpenses] = useState<ExpenseWithUI[]>(
+    []
+  );
   const [error, setError] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -185,7 +151,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
         // Update state
         setAllExpenses(uiExpenses);
         setUnreportedExpenses(
-          uiExpenses.filter((expense: ExtendedExpense) => !expense.reportName)
+          uiExpenses.filter((expense: ExpenseWithUI) => !expense.reportName)
         );
 
         return uiExpenses;
@@ -193,20 +159,6 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
         console.error("Error fetching expenses:", error);
         setError(error.message || "Failed to fetch expenses");
         toast.error("Failed to fetch expenses");
-
-        // Use fallback data if API fails
-        if (!isInitialized) {
-          // Convert API expenses to UI expenses with additional properties
-          const uiExpenses = fallbackExpensesData.map((expense) =>
-            convertApiExpenseToUiExpense(expense)
-          );
-          setAllExpenses(uiExpenses);
-          // Filter unreported expenses based on status
-          setUnreportedExpenses(
-            uiExpenses.filter((expense) => expense.status === "UNREPORTED")
-          );
-          setIsInitialized(true);
-        }
 
         throw error;
       } finally {
@@ -293,7 +245,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
         // Convert IDs to strings for comparison to avoid type mismatch errors
         const idStr = String(id);
         setAllExpenses((prev) =>
-          prev.map((expense: ExtendedExpense) =>
+          prev.map((expense: ExpenseWithUI) =>
             String(expense.id) === idStr ? updatedExpense : expense
           )
         );
@@ -302,16 +254,16 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
           // If expense was unreported and is now reported (has a report ID), remove it
           if (updatedExpense.status !== "UNREPORTED") {
             return prev.filter(
-              (expense: ExtendedExpense) => String(expense.id) !== String(id)
+              (expense: ExpenseWithUI) => String(expense.id) !== String(id)
             );
           }
           // If expense was unreported and is still unreported, update it
           else if (
             prev.some(
-              (expense: ExtendedExpense) => String(expense.id) === String(id)
+              (expense: ExpenseWithUI) => String(expense.id) === String(id)
             )
           ) {
-            return prev.map((expense: ExtendedExpense) =>
+            return prev.map((expense: ExpenseWithUI) =>
               String(expense.id) === String(id) ? updatedExpense : expense
             );
           }
@@ -358,10 +310,10 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       // Convert IDs to strings for comparison to avoid type mismatch errors
       const idStr = String(id);
       setAllExpenses((prev) =>
-        prev.filter((expense: ExtendedExpense) => String(expense.id) !== idStr)
+        prev.filter((expense: ExpenseWithUI) => String(expense.id) !== idStr)
       );
       setUnreportedExpenses((prev) =>
-        prev.filter((expense: ExtendedExpense) => String(expense.id) !== idStr)
+        prev.filter((expense: ExpenseWithUI) => String(expense.id) !== idStr)
       );
 
       toast.success("Expense deleted successfully");
@@ -392,26 +344,20 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<FilterOptions>({});
   const [sort, setSort] = useState<SortOption | null>(null);
   const [sortConfig, setSortConfig] = useState<SortOption | null>(null);
-  const [selectedExpenses, setSelectedExpenses] = useState<ExtendedExpense[]>(
-    []
-  );
+  const [selectedExpenses, setSelectedExpenses] = useState<ExpenseWithUI[]>([]);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
 
   // Get unique categories from expenses
   const categories = useMemo(() => {
     return [
-      ...new Set(
-        allExpenses.map((expense: ExtendedExpense) => expense.category)
-      ),
+      ...new Set(allExpenses.map((expense: ExpenseWithUI) => expense.category)),
     ];
   }, [allExpenses]);
 
   // Get unique merchants from expenses
   const merchants = useMemo(() => {
     return [
-      ...new Set(
-        allExpenses.map((expense: ExtendedExpense) => expense.merchant)
-      ),
+      ...new Set(allExpenses.map((expense: ExpenseWithUI) => expense.merchant)),
     ];
   }, [allExpenses]);
 
@@ -420,8 +366,8 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
     return [
       ...new Set(
         allExpenses
-          .filter((expense: ExtendedExpense) => expense.status)
-          .map((expense: ExtendedExpense) => {
+          .filter((expense: ExpenseWithUI) => expense.status)
+          .map((expense: ExpenseWithUI) => {
             // Use statusDisplay if available, otherwise use the getStatusDisplay helper
             return (
               expense.statusDisplay?.label ||
@@ -435,7 +381,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
 
   // Apply filters to the expense data
   const filterExpenses = useCallback(
-    (expenses: ExtendedExpense[]) => {
+    (expenses: ExpenseWithUI[]) => {
       let filteredData = [...expenses];
 
       // Apply date range filter
@@ -512,7 +458,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
 
   // Apply sorting to the expense data
   const sortExpenses = useCallback(
-    (expenses: ExtendedExpense[]) => {
+    (expenses: ExpenseWithUI[]) => {
       if (!sort) return expenses;
 
       return [...expenses].sort((a, b) => {
@@ -534,8 +480,8 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
                 : parseFloat(String(b.amount).replace(/[^\d.]/g, ""));
             break;
           default:
-            valueA = a[sort.field as keyof ExtendedExpense] as string;
-            valueB = b[sort.field as keyof ExtendedExpense] as string;
+            valueA = a[sort.field as keyof ExpenseWithUI] as string;
+            valueB = b[sort.field as keyof ExpenseWithUI] as string;
         }
 
         if (sort.direction === "asc") {
