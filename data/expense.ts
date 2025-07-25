@@ -107,6 +107,12 @@ export async function getExpenseById(id: number, userId: string) {
  */
 export async function createExpense(data: ExpenseCreate, userId: string) {
   try {
+    console.log("Creating expense with data:", JSON.stringify({
+      ...data,
+      date: new Date(data.date),
+      userId,
+    }));
+    
     const expense = await db.expense.create({
       data: {
         ...data,
@@ -115,9 +121,28 @@ export async function createExpense(data: ExpenseCreate, userId: string) {
       },
     });
     return expense;
-  } catch (error) {
+  } catch (error: any) {
+    // Log detailed error information
     console.error("Failed to create expense:", error);
-    throw new Error("Failed to create expense");
+    
+    // Check for specific Prisma errors
+    if (error.code) {
+      console.error(`Prisma error code: ${error.code}`);
+      
+      // Handle common Prisma error codes
+      if (error.code === 'P2002') {
+        throw new Error(`Unique constraint violation on field(s): ${error.meta?.target}`);
+      } else if (error.code === 'P2003') {
+        throw new Error(`Foreign key constraint violation on field: ${error.meta?.field_name}`);
+      } else if (error.code === 'P2025') {
+        throw new Error(`Record not found: ${error.meta?.cause}`);
+      } else {
+        throw new Error(`Database error (${error.code}): ${error.message}`);
+      }
+    }
+    
+    // If it's not a recognized Prisma error, throw a generic error with the message
+    throw new Error(`Failed to create expense: ${error.message || 'Unknown database error'}`);
   }
 }
 

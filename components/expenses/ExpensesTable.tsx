@@ -3,13 +3,13 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "../table/DataTable";
-import { Expense, getExpensesPageColumns } from "../table/TableColumnDefs";
+import { getExpensesPageColumns } from "../table/TableColumnDefs";
+import { ExpenseWithUI } from "@/types/expense";
 import ExpenseDetail from "./ExpenseDetail";
-
-export type { Expense } from "../table/TableColumnDefs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface ExpensesTableProps {
-  data: Expense[];
+  data: ExpenseWithUI[];
   showPagination?: boolean;
   enableRowSelection?: boolean;
   onSelectedRowsChange?: (selectedRows: string[]) => void;
@@ -25,15 +25,15 @@ export function ExpensesTable({
   onRowClick,
   className = "",
 }: ExpensesTableProps) {
-  const [selectedExpense, setSelectedExpense] = React.useState<Expense | null>(
+  const [selectedExpense, setSelectedExpense] = React.useState<ExpenseWithUI | null>(
     null
   );
   const [detailOpen, setDetailOpen] = React.useState(false);
 
   const handleSelectedRowsChange = React.useCallback(
-    (selectedRows: Expense[]) => {
+    (selectedRows: ExpenseWithUI[]) => {
       if (onSelectedRowsChange) {
-        onSelectedRowsChange(selectedRows.map((row) => row.id));
+        onSelectedRowsChange(selectedRows.map((row) => row.id.toString()));
       }
     },
     [onSelectedRowsChange]
@@ -43,9 +43,9 @@ export function ExpensesTable({
   const columns = React.useMemo(() => {
     const baseColumns = getExpensesPageColumns();
 
-    // Modify the expense details column to make it clickable
+    // Modify the description column to make it clickable
     const enhancedColumns = baseColumns.map((column) => {
-      if ("accessorKey" in column && column.accessorKey === "expenseDetails") {
+      if ("accessorKey" in column && column.accessorKey === "description") {
         return {
           ...column,
           cell: ({ row }: { row: any }) => (
@@ -60,7 +60,7 @@ export function ExpensesTable({
                 }
               }}
             >
-              {row.original.expenseDetails}
+              {row.original.description}
             </div>
           ),
         };
@@ -82,12 +82,15 @@ export function ExpensesTable({
         className={className}
       />
 
-      {selectedExpense && (
-        <ExpenseDetail
-          expense={selectedExpense}
-          open={detailOpen}
-          onOpenChange={setDetailOpen}
-        />
+      {selectedExpense && detailOpen && (
+        <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+          <DialogContent>
+            <ExpenseDetail
+              expense={selectedExpense}
+              onClose={() => setDetailOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );

@@ -23,6 +23,8 @@ model User {
   emailVerified DateTime?
   Account       Account[]
   expenses      Expense[]
+  reports       Report[]                // Reports created by this user
+  approvedReports Report[] @relation("ReportApprovals") // Reports approved by this user
   role          UserRole  @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -73,14 +75,60 @@ enum ExpenseCategory {
 model Expense {
   id          Int             @id @default(autoincrement())
   amount      Float
+  merchant    String
   date        DateTime
-  description String
+  description String?
   category    ExpenseCategory @default(OTHER)
   status      ExpenseStatus   @default(UNREPORTED)
   receiptUrl  String?
   notes       String?
   userId      String
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Report relation (optional - an expense can exist without being in a report)
+  reportId    Int?
+  report      Report?         @relation(fields: [reportId], references: [id])
+  
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
+}
+
+enum ReportStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+model Report {
+  id              Int           @id @default(autoincrement())
+  title           String
+  description     String?
+  status          ReportStatus  @default(PENDING)
+  submittedAt     DateTime?
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  reimbursedAt    DateTime?
+  totalAmount     Float         @default(0)
+  
+  // Foreign keys
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  expenses        Expense[]
+  
+  // Approval information
+  approvedBy      String?
+  approvedById    String?
+  approver        User?         @relation("ReportApprovals", fields: [approvedById], references: [id])
+  
+  // Reimbursement details
+  reimbursementMethod String?
+  reimbursementRef    String?
+  reimbursementNotes  String?
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }

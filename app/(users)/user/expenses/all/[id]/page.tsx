@@ -15,16 +15,21 @@ export default function ExpenseDetailPage() {
   const { stopLoading: stopPageLoading } = useLoading();
 
   // Find the expense with the matching ID
-  // The ID in the URL is numeric, but our UI expenses have string IDs prefixed with "EXP-"
-  const numericId = typeof id === 'string' ? parseInt(id, 10) : Array.isArray(id) ? parseInt(id[0], 10) : 0;
+  // The ID in the URL can be numeric or string, and our UI expenses may have string IDs prefixed with "EXP-"
+  const idString = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : '';
+  const numericId = parseInt(idString, 10);
+  
   const expense = allExpenses.find((exp) => {
-    // Check if the ID matches directly (for string IDs)
-    if (exp.id === id) return true;
+    // Convert both IDs to strings for comparison
+    const expIdStr = String(exp.id);
     
-    // Check if the ID matches after removing the "EXP-" prefix
-    if (exp.id.startsWith('EXP-')) {
-      const expNumericId = parseInt(exp.id.replace('EXP-', ''), 10);
-      return expNumericId === numericId;
+    // Check if the ID matches directly (for string IDs)
+    if (expIdStr === idString) return true;
+    
+    // Check if the ID matches after removing the "EXP-" prefix for string IDs
+    if (expIdStr.startsWith('EXP-')) {
+      const expNumericId = parseInt(expIdStr.replace('EXP-', ''), 10);
+      return !isNaN(numericId) && expNumericId === numericId;
     }
     
     // For expenses with apiData, check the numeric ID

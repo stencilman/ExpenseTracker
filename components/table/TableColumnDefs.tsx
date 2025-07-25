@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Calendar, FileText, Receipt, CreditCard } from "lucide-react";
+import { ExpenseWithUI } from "@/types/expense";
 
 // Define the Report type
 export interface Report {
@@ -194,37 +195,24 @@ export const getReportsPageColumns = (): ColumnDef<Report>[] => [
   },
 ];
 
-// Example of how to create columns for an expenses table
-export interface Expense {
-  id: string;
-  expenseDetails: string;
-  merchant: string;
-  amount: string;
-  reportName?: string;
-  date: string;
-  category: string;
-  status?: {
-    label: string;
-    color: "green" | "orange" | "blue" | "red";
-  };
-}
+// Using the shared Expense type from types/expense.ts
 
 export interface ExpenseColumnOptions {
   includeReportName?: boolean;
-  // Add other flags here as needed, e.g., includeActions?: boolean;
 }
 
-export const getExpensesPageColumns = (
+// Define the columns for the expenses table
+export function getExpensesPageColumns(
   options: ExpenseColumnOptions = {}
-): ColumnDef<Expense>[] => {
+): ColumnDef<ExpenseWithUI>[] {
   const { includeReportName = false } = options;
   return [
     {
-      accessorKey: "expenseDetails",
+      accessorKey: "description",
       header: "EXPENSE DETAILS",
       size: 180, // Adjusted width for compact view
       cell: ({ row }) => (
-        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">{row.original.expenseDetails}</div>
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">{row.original.description}</div>
       ),
     },
     {
@@ -238,7 +226,14 @@ export const getExpensesPageColumns = (
       header: () => <div className="text-right w-full">AMOUNT</div>,
       size: 80, // Adjusted width for compact view
       cell: ({ row }) => (
-        <div className="text-right w-full">{row.original.amount}</div>
+        <div className="text-right w-full">{typeof row.original.amount === 'number' ? 
+          new Intl.NumberFormat('en-IN', {
+            style: 'currency',
+            currency: 'INR',
+            minimumFractionDigits: 2,
+          }).format(row.original.amount) : 
+          row.original.amount}
+        </div>
       ),
     },
     {
@@ -257,10 +252,10 @@ export const getExpensesPageColumns = (
         <div className="flex justify-end w-full">
           <StatusCell
             status={
-              row.original.status
+              row.original.statusDisplay
                 ? {
-                    label: row.original.status.label,
-                    color: row.original.status.color,
+                    label: row.original.statusDisplay.label,
+                    color: row.original.statusDisplay.color,
                   }
                 : undefined
             }

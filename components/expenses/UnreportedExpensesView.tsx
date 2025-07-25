@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ExpensesFilter } from "@/components/expenses/ExpensesFilter";
 import { ExpensesSort } from "@/components/expenses/ExpensesSort";
 import UnreportedExpenseCard from "@/components/expenses/UnreportedExpenseCard";
-import AddNewExpense from "@/components/expenses/AddNewExpense";
+import AddOrEditExpense from "@/components/expenses/AddOrEditExpense";
 import { DropZone } from "@/components/ui/drop-zone";
 import { cn } from "@/lib/utils";
 
@@ -33,8 +33,8 @@ export default function UnreportedExpensesView({
   } = useExpenses();
 
   // Handle card click to navigate to expense detail
-  const handleCardClick = (expenseId: string) => {
-    router.push(`/user/expenses/unreported/${expenseId}`);
+  const handleCardClick = (id: string | number) => {
+    router.push(`/user/expenses/unreported/${id}`);
   };
 
   useEffect(() => {
@@ -74,8 +74,8 @@ export default function UnreportedExpensesView({
 
       <div
         className={cn(
-          "grid grid-cols-1 gap-4",
-          compact && "overflow-y-auto h-[calc(100vh-10rem)]"
+          "flex flex-col overflow-y-auto ",
+          compact && "h-[calc(100vh-10rem)]"
         )}
       >
         {processedUnreportedExpenses.map((expense) => (
@@ -86,6 +86,7 @@ export default function UnreportedExpensesView({
             compact={compact}
           />
         ))}
+
         {processedUnreportedExpenses.length === 0 && (
           <div className="text-center p-8 border rounded-lg">
             <p className="text-gray-500">No unreported expenses found</p>
@@ -94,9 +95,10 @@ export default function UnreportedExpensesView({
       </div>
 
       {isAddExpenseOpen && (
-        <AddNewExpense
+        <AddOrEditExpense
           isOpen={isAddExpenseOpen}
           onClose={() => setIsAddExpenseOpen(false)}
+          mode="add"
         />
       )}
     </div>

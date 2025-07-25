@@ -15,13 +15,26 @@ export default function ExpenseDetailPage() {
   const { id } = useParams();
   const { stopLoading } = useLoading();
   const { unreportedExpenses } = useExpenses();
+  const router = useRouter(); // Move useRouter to the top level
 
-  // Find the expense by ID
-  const expense = unreportedExpenses.find((exp) => exp.id === id);
+  // Find the expense by ID - handle both string and number IDs
+  const expense = unreportedExpenses.find((exp) => {
+    // Convert both to string for comparison to handle both number and string IDs
+    return String(exp.id) === String(id);
+  });
+  
+  console.log("Looking for expense with ID:", id);
+  console.log("Available expense IDs:", unreportedExpenses.map(exp => exp.id));
+  console.log("Found expense:", expense);
 
   useEffect(() => {
     stopLoading();
   }, [stopLoading]);
+
+  // Define handleClose at the top level, not conditionally
+  const handleClose = () => {
+    router.push("/user/expenses/unreported");
+  };
 
   if (!expense) {
     return (
@@ -36,12 +49,6 @@ export default function ExpenseDetailPage() {
       </div>
     );
   }
-
-  const router = useRouter();
-
-  const handleClose = () => {
-    router.push("/user/expenses/unreported");
-  };
 
   return <ExpenseDetail expense={expense} onClose={handleClose} />;
 }

@@ -25,70 +25,27 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { Expense } from "@/components/table/TableColumnDefs";
+import { Expense, ExpenseWithUI, getStatusDisplay } from "@/types/expense";
 import { FilterOptions } from "./ExpensesFilter";
 import { SortOption } from "./ExpensesSort";
 import { toast } from "sonner";
 import { ExpenseCategory, ExpenseStatus } from "@prisma/client";
 
-// API expense type from backend
-interface ApiExpense {
-  id: number;
-  amount: number;
-  date: string;
-  description: string;
-  category: ExpenseCategory;
-  status: ExpenseStatus;
-  notes?: string;
-  receiptUrl?: string;
-  userId: string;
-  reportId?: number | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Extend the Expense type to include apiData for internal use
-interface ExtendedExpense extends Expense {
-  apiData?: ApiExpense;
+// Extend the ExpenseWithUI type to include apiData for internal use
+interface ExtendedExpense extends ExpenseWithUI {
+  apiData?: Expense;
 }
 
 // Function to convert API expense to UI expense format
-function convertApiExpenseToUiExpense(apiExpense: ApiExpense): ExtendedExpense {
-  // Format amount as currency string
-  const formattedAmount = `Rs.${apiExpense.amount.toLocaleString('en-IN', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })}`;  
+function convertApiExpenseToUiExpense(apiExpense: Expense): ExtendedExpense {
+  // Determine status display properties
+  const statusDisplay = getStatusDisplay(apiExpense.status);
 
-  // Map status to UI status format with color
-  let statusColor: "blue" | "green" | "red" | "orange" = "blue";
-  switch (apiExpense.status) {
-    case ExpenseStatus.APPROVED:
-      statusColor = "green";
-      break;
-    case ExpenseStatus.REJECTED:
-      statusColor = "red";
-      break;
-    case ExpenseStatus.REPORTED:
-      statusColor = "orange";
-      break;
-    default:
-      statusColor = "blue";
-  }
-
+  // Return the UI-formatted expense with all required fields
   return {
-    id: `EXP-${apiExpense.id}`,
-    expenseDetails: apiExpense.description,
-    merchant: apiExpense.notes || "Unknown", // Using notes as merchant for now
-    amount: formattedAmount,
-    reportName: apiExpense.reportId ? `Report-${apiExpense.reportId}` : undefined,
-    date: apiExpense.date,
-    category: apiExpense.category,
-    status: {
-      label: apiExpense.status,
-      color: statusColor,
-    },
-    // Store original API expense data for reference
+    ...apiExpense,
+    statusDisplay,
+    reportName: undefined, // This would be populated from report data if available
     apiData: apiExpense,
   };
 }
@@ -96,30 +53,28 @@ function convertApiExpenseToUiExpense(apiExpense: ApiExpense): ExtendedExpense {
 // Fallback data in case API fails
 const fallbackExpensesData: Expense[] = [
   {
-    id: "EXP-001",
-    expenseDetails: "Bhive Passes and Trial Interview expense",
+    id: 1,
+    description: "Bhive Passes and Trial Interview expense",
     merchant: "Bhive Workspace",
-    amount: "Rs.3,486.00",
-    reportName: "May-June Travel",
-    date: "2025-05-16",
-    category: "Travel",
-    status: {
-      label: "AWAITING APPROVAL",
-      color: "orange",
-    },
+    amount: 3486.00,
+    date: new Date("2025-05-16"),
+    category: "TRAVEL" as ExpenseCategory,
+    status: "REPORTED" as ExpenseStatus,
+    userId: "user1",
+    createdAt: new Date("2025-05-16"),
+    updatedAt: new Date("2025-05-16"),
   },
   {
-    id: "EXP-002",
-    expenseDetails: "Client Meeting Lunch",
+    id: 2,
+    description: "Client Meeting Lunch",
     merchant: "The Oberoi Restaurant",
-    amount: "Rs.2,150.00",
-    reportName: "May-June Business",
-    date: "2025-05-18",
-    category: "Meals",
-    status: {
-      label: "APPROVED",
-      color: "green",
-    },
+    amount: 2150.00,
+    date: new Date("2025-05-18"),
+    category: "MEALS" as ExpenseCategory,
+    status: "APPROVED" as ExpenseStatus,
+    userId: "user1",
+    createdAt: new Date("2025-05-18"),
+    updatedAt: new Date("2025-05-18"),
   },
 ];
 
@@ -227,8 +182,11 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       
       // Use fallback data if API fails
       if (!isInitialized) {
-        setAllExpenses(fallbackExpensesData);
-        setUnreportedExpenses(fallbackExpensesData.filter(expense => !expense.reportName));
+        // Convert API expenses to UI expenses with additional properties
+        const uiExpenses = fallbackExpensesData.map(expense => convertApiExpenseToUiExpense(expense));
+        setAllExpenses(uiExpenses);
+        // Filter unreported expenses based on status
+        setUnreportedExpenses(uiExpenses.filter(expense => expense.status === "UNREPORTED"));
         setIsInitialized(true);
       }
       
@@ -308,18 +266,20 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       const updatedExpense = convertApiExpenseToUiExpense(data);
       
       // Update state
+      // Convert IDs to strings for comparison to avoid type mismatch errors
+      const idStr = String(id);
       setAllExpenses(prev => prev.map((expense: ExtendedExpense) => 
-        expense.id === id ? updatedExpense : expense
+        String(expense.id) === idStr ? updatedExpense : expense
       ));
       
       setUnreportedExpenses(prev => {
-        // If expense was unreported and is now reported, remove it
-        if (updatedExpense.reportName) {
-          return prev.filter((expense: ExtendedExpense) => expense.id !== id);
+        // If expense was unreported and is now reported (has a report ID), remove it
+        if (updatedExpense.status !== "UNREPORTED") {
+          return prev.filter((expense: ExtendedExpense) => String(expense.id) !== String(id));
         }
         // If expense was unreported and is still unreported, update it
-        else if (prev.some((expense: ExtendedExpense) => expense.id === id)) {
-          return prev.map((expense: ExtendedExpense) => expense.id === id ? updatedExpense : expense);
+        else if (prev.some((expense: ExtendedExpense) => String(expense.id) === String(id))) {
+          return prev.map((expense: ExtendedExpense) => String(expense.id) === String(id) ? updatedExpense : expense);
         }
         // If expense was reported and is now unreported, add it
         else if (!updatedExpense.reportName) {
@@ -359,8 +319,10 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       }
       
       // Update state
-      setAllExpenses(prev => prev.filter((expense: ExtendedExpense) => expense.id !== id));
-      setUnreportedExpenses(prev => prev.filter((expense: ExtendedExpense) => expense.id !== id));
+      // Convert IDs to strings for comparison to avoid type mismatch errors
+      const idStr = String(id);
+      setAllExpenses(prev => prev.filter((expense: ExtendedExpense) => String(expense.id) !== idStr));
+      setUnreportedExpenses(prev => prev.filter((expense: ExtendedExpense) => String(expense.id) !== idStr));
       
       toast.success('Expense deleted successfully');
       return true;
@@ -407,7 +369,11 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       ...new Set(
         allExpenses
           .filter((expense: ExtendedExpense) => expense.status)
-          .map((expense: ExtendedExpense) => expense.status?.label || "")
+          .map((expense: ExtendedExpense) => {
+            // Use statusDisplay if available, otherwise use the getStatusDisplay helper
+            return expense.statusDisplay?.label || 
+              (expense.status ? getStatusDisplay(expense.status).label : "");
+          })
           .filter(Boolean)
       ),
     ] as string[];
@@ -437,9 +403,10 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
       filters.amountRange?.max !== undefined
     ) {
       filteredData = filteredData.filter((expense) => {
-        // Convert amount string (e.g., "Rs.3,486.00") to number
-        const amountStr = expense.amount.replace(/[^\d.]/g, "");
-        const amount = parseFloat(amountStr);
+        // Get amount as number (it's already a number in the updated Expense type)
+        const amount = typeof expense.amount === 'number' 
+          ? expense.amount 
+          : parseFloat(String(expense.amount).replace(/[^\d.]/g, ""));
 
         const min = filters.amountRange?.min;
         const max = filters.amountRange?.max;
@@ -472,10 +439,15 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
 
     // Apply status filter
     if (filters.status?.length) {
-      filteredData = filteredData.filter(
-        (expense) =>
-          expense.status && filters.status?.includes(expense.status.label)
-      );
+      filteredData = filteredData.filter((expense) => {
+        if (!expense.status) return false;
+        
+        // Get the status display label
+        const statusLabel = expense.statusDisplay?.label || 
+          (expense.status ? getStatusDisplay(expense.status).label : "");
+          
+        return filters.status?.includes(statusLabel);
+      });
     }
     return filteredData;
   }, [filters]);
@@ -494,8 +466,12 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
           valueB = new Date(b.date).getTime();
           break;
         case "amount":
-          valueA = parseFloat(a.amount.replace(/[^\d.]/g, ""));
-          valueB = parseFloat(b.amount.replace(/[^\d.]/g, ""));
+          valueA = typeof a.amount === 'number' 
+            ? a.amount 
+            : parseFloat(String(a.amount).replace(/[^\d.]/g, ""));
+          valueB = typeof b.amount === 'number' 
+            ? b.amount 
+            : parseFloat(String(b.amount).replace(/[^\d.]/g, ""));
           break;
         default:
           valueA = a[sort.field as keyof ExtendedExpense] as string;

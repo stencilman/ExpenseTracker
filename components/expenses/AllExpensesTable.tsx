@@ -7,7 +7,7 @@ import { ExpensesTable } from "@/components/expenses/ExpensesTable";
 import { Button } from "@/components/ui/button";
 import { ExpensesFilter } from "@/components/expenses/ExpensesFilter";
 import { ExpensesSort } from "@/components/expenses/ExpensesSort";
-import AddNewExpense from "@/components/expenses/AddNewExpense";
+import AddOrEditExpense from "@/components/expenses/AddOrEditExpense";
 
 interface AllExpensesTableViewProps {
   compact?: boolean;
@@ -69,9 +69,10 @@ export default function AllExpensesTableView({
         showPagination={true}
       />
       {isAddExpenseOpen && (
-        <AddNewExpense
+        <AddOrEditExpense
           isOpen={isAddExpenseOpen}
           onClose={() => setIsAddExpenseOpen(false)}
+          mode="add"
         />
       )}
     </div>

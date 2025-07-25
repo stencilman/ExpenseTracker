@@ -79,11 +79,20 @@ export async function POST(req: Request) {
     // Check authentication
     const session = await auth();
     if (!session?.user?.id) {
-      return errorResponse("Unauthorized", 401);
+      return errorResponse("Unauthorized: No valid user session found", 401);
     }
     
-    // Parse and validate request body
-    const body = await req.json();
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+      console.log("Received expense data:", JSON.stringify(body));
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError);
+      return errorResponse("Invalid JSON in request body", 400);
+    }
+    
+    // Validate request body against schema
     const validation = ExpenseCreateSchema.safeParse(body);
     
     if (!validation.success) {
@@ -96,12 +105,36 @@ export async function POST(req: Request) {
       );
     }
     
-    // Create expense
-    const expense = await createExpense(validation.data, session.user.id);
+    // Log validated data
+    console.log("Validated expense data:", JSON.stringify(validation.data));
     
-    return jsonResponse(expense, 201);
+    // Check required fields based on Prisma schema
+    const requiredFields = ['amount', 'merchant', 'date', 'category'];
+    const missingFields = requiredFields.filter(field => !validation.data[field as keyof typeof validation.data]);
+    
+    if (missingFields.length > 0) {
+      return errorResponse(
+        `Missing required fields: ${missingFields.join(', ')}`,
+        400
+      );
+    }
+    
+    // Create expense
+    try {
+      const expense = await createExpense(validation.data, session.user.id);
+      return jsonResponse(expense, 201);
+    } catch (dbError: any) {
+      console.error("Database error creating expense:", dbError);
+      return errorResponse(
+        `Database error: ${dbError.message || 'Unknown database error'}`,
+        500
+      );
+    }
   } catch (error: any) {
     console.error("Error in POST /api/expenses:", error);
-    return errorResponse(error.message || "Failed to create expense", 500);
+    return errorResponse(
+      `Server error: ${error.message || "Unknown error"} (Check server logs for details)`,
+      500
+    );
   }
 }
