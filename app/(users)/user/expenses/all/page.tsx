@@ -1,5 +1,5 @@
 "use client";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import AllExpensesTableView from "@/components/expenses/AllExpensesTable";

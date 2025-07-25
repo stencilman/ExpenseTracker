@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { LoginForm } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
 

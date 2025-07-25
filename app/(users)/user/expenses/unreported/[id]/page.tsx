@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useExpenses } from "@/components/expenses/ExpensesContext";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useExpenses } from "@/components/providers/ExpenseProvider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,9 +22,12 @@ export default function ExpenseDetailPage() {
     // Convert both to string for comparison to handle both number and string IDs
     return String(exp.id) === String(id);
   });
-  
+
   console.log("Looking for expense with ID:", id);
-  console.log("Available expense IDs:", unreportedExpenses.map(exp => exp.id));
+  console.log(
+    "Available expense IDs:",
+    unreportedExpenses.map((exp) => exp.id)
+  );
   console.log("Found expense:", expense);
 
   useEffect(() => {

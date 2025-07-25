@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useExpenses } from "@/components/expenses/ExpensesContext";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useExpenses } from "@/components/providers/ExpenseProvider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import ExpenseDetail from "@/components/expenses/ExpenseDetail";
@@ -16,25 +16,25 @@ export default function ExpenseDetailPage() {
 
   // Find the expense with the matching ID
   // The ID in the URL can be numeric or string, and our UI expenses may have string IDs prefixed with "EXP-"
-  const idString = typeof id === 'string' ? id : Array.isArray(id) ? id[0] : '';
+  const idString = typeof id === "string" ? id : Array.isArray(id) ? id[0] : "";
   const numericId = parseInt(idString, 10);
-  
+
   const expense = allExpenses.find((exp) => {
     // Convert both IDs to strings for comparison
     const expIdStr = String(exp.id);
-    
+
     // Check if the ID matches directly (for string IDs)
     if (expIdStr === idString) return true;
-    
+
     // Check if the ID matches after removing the "EXP-" prefix for string IDs
-    if (expIdStr.startsWith('EXP-')) {
-      const expNumericId = parseInt(expIdStr.replace('EXP-', ''), 10);
+    if (expIdStr.startsWith("EXP-")) {
+      const expNumericId = parseInt(expIdStr.replace("EXP-", ""), 10);
       return !isNaN(numericId) && expNumericId === numericId;
     }
-    
+
     // For expenses with apiData, check the numeric ID
-    if ('apiData' in exp && exp.apiData?.id === numericId) return true;
-    
+    if ("apiData" in exp && exp.apiData?.id === numericId) return true;
+
     return false;
   });
 

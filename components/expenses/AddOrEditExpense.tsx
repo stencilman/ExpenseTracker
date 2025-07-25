@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useState, useEffect } from "react";
-import { useExpenses } from "./ExpensesContext";
+import { useExpenses } from "../providers/ExpenseProvider";
 import { X, CalendarIcon, FileText, Image, File } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";

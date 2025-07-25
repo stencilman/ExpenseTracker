@@ -1,8 +1,8 @@
 "use client";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useExpenses } from "@/components/expenses/ExpensesContext";
+import { useExpenses } from "@/components/providers/ExpenseProvider";
 import { ExpensesTable } from "@/components/expenses/ExpensesTable";
 import { Button } from "@/components/ui/button";
 import { ExpensesFilter } from "@/components/expenses/ExpensesFilter";

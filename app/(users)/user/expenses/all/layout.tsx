@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import AllExpensesTableView from "@/components/expenses/AllExpensesTable";
 
 export default function ExpensesAllLayout({

@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useExpenses } from "@/components/expenses/ExpensesContext";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useExpenses } from "@/components/providers/ExpenseProvider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { Button } from "@/components/ui/button";
 import { ExpensesFilter } from "@/components/expenses/ExpensesFilter";
 import { ExpensesSort } from "@/components/expenses/ExpensesSort";

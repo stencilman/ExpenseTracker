@@ -4,7 +4,7 @@ import Header from "@/components/dashboard/Header";
 import PendingTasksCard from "@/components/dashboard/PendingTasksCard";
 import QuickAddTasks from "@/components/dashboard/QuickAddTasks";
 import ReportsSummaryCard from "@/components/dashboard/ReportsSummaryCard";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import { useEffect } from "react";
 
 export default function Dashboard() {

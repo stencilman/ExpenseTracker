@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Expense, ExpenseWithUI } from "@/types/expense";
 import { ExpenseCategory, ExpenseStatus } from "@prisma/client";
-import { useExpenses } from "./ExpensesContext";
+import { useExpenses } from "../providers/ExpenseProvider";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
