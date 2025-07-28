@@ -1,10 +1,21 @@
+"use client";
+
 import Header from "@/components/dashboard/Header";
 import PendingTasksCard from "@/components/dashboard/PendingTasksCard";
 import QuickAddTasks from "@/components/dashboard/QuickAddTasks";
-import RecentTripCard from "@/components/dashboard/RecentTripCard";
 import ReportsSummaryCard from "@/components/dashboard/ReportsSummaryCard";
+import { useLoading } from "@/components/providers/LoadingProvider";
+import { useEffect } from "react";
 
 export default function Dashboard() {
+  const { stopLoading } = useLoading();
+
+  // Stop loading when dashboard is mounted.
+  // Will be modified once data fetching is implemented.
+  useEffect(() => {
+    stopLoading();
+  }, []);
+
   return (
     <div className="flex flex-col p-4 sm:p-6 max-w-7xl mx-auto">
       <Header />

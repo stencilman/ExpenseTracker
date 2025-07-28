@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Calendar, FileText, Receipt, CreditCard } from "lucide-react";
+import { ExpenseWithUI } from "@/types/expense";
 
 // Define the Report type
 export interface Report {
@@ -193,3 +194,100 @@ export const getReportsPageColumns = (): ColumnDef<Report>[] => [
     ),
   },
 ];
+
+// Using the shared Expense type from types/expense.ts
+
+export interface ExpenseColumnOptions {
+  includeReportName?: boolean;
+}
+
+// Define the columns for the expenses table
+export function getExpensesPageColumns(
+  options: ExpenseColumnOptions = {}
+): ColumnDef<ExpenseWithUI>[] {
+  const { includeReportName = false } = options;
+  return [
+    {
+      accessorKey: "description",
+      header: "EXPENSE DETAILS",
+      size: 180, // Adjusted width for compact view
+      cell: ({ row }) => {
+        const expense = row.original;
+        const dateStr =
+          expense.date instanceof Date
+            ? expense.date.toISOString().split("T")[0]
+            : typeof expense.date === "string"
+            ? expense.date.split("T")[0]
+            : "Unknown date";
+
+        return (
+          <div className="flex flex-col w-full">
+            <div className="flex items-center gap-1 text-sm ">
+              <span>{dateStr}</span>
+              <span>-</span>
+              <span>{expense.category}</span>
+            </div>
+            <div className="text-sm font-medium truncate">
+              {expense.description}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "merchant",
+      header: "MERCHANT",
+      size: 100, // Adjusted width for compact view
+      cell: ({ row }) => (
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">
+          {row.original.merchant}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "amount",
+      header: () => <div className="text-right w-full">AMOUNT</div>,
+      size: 80, // Adjusted width for compact view
+      cell: ({ row }) => (
+        <div className="text-right w-full">
+          {typeof row.original.amount === "number"
+            ? new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                minimumFractionDigits: 2,
+              }).format(row.original.amount)
+            : row.original.amount}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "reportName",
+      header: "REPORT NAME",
+      size: 120, // Adjusted width for compact view
+      cell: ({ row }) => (
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">
+          {row.original.reportName || "-"}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: () => <div className="text-right w-full">STATUS</div>,
+      size: 100, // Adjusted width for compact view
+      cell: ({ row }) => (
+        <div className="flex justify-end w-full">
+          <StatusCell
+            status={
+              row.original.statusDisplay
+                ? {
+                    label: row.original.statusDisplay.label,
+                    color: row.original.statusDisplay.color,
+                  }
+                : undefined
+            }
+          />
+        </div>
+      ),
+    },
+  ];
+}
