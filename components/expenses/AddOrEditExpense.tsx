@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useExpenses } from "../providers/ExpenseProvider";
-import { X, CalendarIcon, FileText, Image, File } from "lucide-react";
+import { X, CalendarIcon, FileText, Image, File, Download } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -78,6 +78,13 @@ interface AddOrEditExpenseProps {
   initialFiles?: File[]; // Optional: initial files to populate the dropzone
 }
 
+// Interface for existing receipts from the server
+interface ExistingReceipt {
+  url: string;
+  name: string;
+  isPdf: boolean;
+}
+
 export default function AddOrEditExpense({
   isOpen,
   onClose,
@@ -86,7 +93,10 @@ export default function AddOrEditExpense({
   initialFiles = [],
 }: AddOrEditExpenseProps) {
   const [files, setFiles] = useState<File[]>(initialFiles);
+  const [existingReceipts, setExistingReceipts] = useState<ExistingReceipt[]>([]);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
+  const [initialFormValues, setInitialFormValues] = useState<any>(null);
+  const [hasChanges, setHasChanges] = useState(false);
   const { createExpense, updateExpense, isLoading } = useExpenses();
   const isEditMode = mode === "edit" && expense;
 
@@ -126,8 +136,8 @@ export default function AddOrEditExpense({
   useEffect(() => {
     if (isOpen) {
       if (isEditMode) {
-        // Populate form with existing expense data for editing
-        form.reset({
+        // Create the initial form values object
+        const initialValues = {
           date: new Date(expense.date),
           merchant: expense.merchant,
           category: expense.category,
@@ -138,10 +148,38 @@ export default function AddOrEditExpense({
           currency: (expense as any).currency || "INR",
           report: (expense as any).report || "",
           claimReimbursement: (expense as any).claimReimbursement ?? true,
-        });
+        };
+        
+        // Store the initial values for comparison
+        setInitialFormValues(initialValues);
+        
+        // Reset the form with these values
+        form.reset(initialValues);
+        
+        // Process existing receipt URLs if available
+        if (expense.receiptUrls && expense.receiptUrls.length > 0) {
+          const receipts = expense.receiptUrls.map((url, index) => {
+            // Extract filename from URL or use a default name
+            const urlParts = url.split('/');
+            const fileName = urlParts[urlParts.length - 1] || `receipt-${index + 1}`;
+            const isPdf = fileName.toLowerCase().endsWith('.pdf');
+            
+            return {
+              url,
+              name: fileName,
+              isPdf
+            };
+          });
+          setExistingReceipts(receipts);
+        } else {
+          setExistingReceipts([]);
+        }
+        
+        // Reset the hasChanges flag
+        setHasChanges(false);
       } else {
         // Reset form to default values for adding a new expense
-        form.reset({
+        const defaultValues = {
           report: "",
           date: new Date(),
           merchant: "",
@@ -152,18 +190,56 @@ export default function AddOrEditExpense({
           claimReimbursement: true,
           description: "",
           reference: "",
-        });
+        };
+        
+        form.reset(defaultValues);
+        setInitialFormValues(null); // No initial values in add mode
+        setExistingReceipts([]);
+        setHasChanges(false); // Reset changes flag
       }
     }
   }, [isOpen, isEditMode, expense, form, categories]);
 
   const handleFilesDrop = (newFiles: File[]) => {
-    setFiles((prevFiles) => [...prevFiles, ...newFiles]);
+    setFiles((prevFiles) => {
+      const updatedFiles = [...prevFiles, ...newFiles];
+      // Mark as changed if we have files in edit mode
+      if (isEditMode) setHasChanges(true);
+      return updatedFiles;
+    });
   };
 
   const removeFile = (index: number) => {
-    setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index));
+    setFiles((prevFiles) => {
+      const updatedFiles = prevFiles.filter((_, i) => i !== index);
+      // Mark as changed if we're in edit mode
+      if (isEditMode) setHasChanges(true);
+      return updatedFiles;
+    });
   };
+  
+  const removeExistingReceipt = (index: number) => {
+    setExistingReceipts((prevReceipts) => {
+      const updatedReceipts = prevReceipts.filter((_, i) => i !== index);
+      // Always mark as changed when removing existing receipts
+      if (isEditMode) setHasChanges(true);
+      return updatedReceipts;
+    });
+  };
+  
+  // Helper function to get proxy URL for S3 files
+  const getProxyUrl = useCallback((url: string) => {
+    if (!url) return '';
+    // If it's already a proxy URL, return as is
+    if (url.includes('/api/files/')) return url;
+    
+    // Extract the key from the S3 URL
+    const urlParts = url.split('/');
+    const key = urlParts[urlParts.length - 1];
+    
+    // Return the proxy URL
+    return `/api/files/${key}`;
+  }, []);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
@@ -185,8 +261,10 @@ export default function AddOrEditExpense({
         notes: values.reference || "",
       };
 
-      // Upload receipts to S3 if there are any files
-      let receiptUrls: string[] = [];
+      // Combine existing receipts (that weren't removed) with new uploads
+      let receiptUrls: string[] = existingReceipts.map(receipt => receipt.url);
+      
+      // Upload new receipts to S3 if there are any files
       if (files.length > 0) {
         // Upload each file and collect the URLs
         for (const file of files) {
@@ -209,10 +287,8 @@ export default function AddOrEditExpense({
         }
       }
 
-      // Add the receipt URLs to the expense data if available
-      if (receiptUrls.length > 0) {
-        expenseData.receiptUrls = receiptUrls;
-      }
+      // Add the receipt URLs to the expense data
+      expenseData.receiptUrls = receiptUrls;
 
       if (isEditMode) {
         await updateExpense(expense.id.toString(), expenseData);
@@ -234,6 +310,7 @@ export default function AddOrEditExpense({
   const handleClose = () => {
     form.reset();
     setFiles([]);
+    setExistingReceipts([]);
     onClose();
   };
 
@@ -248,6 +325,53 @@ export default function AddOrEditExpense({
   const getFilePreview = (file: File): string | null => {
     return file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
   };
+  
+  // Watch form values to detect changes
+  const formValues = form.watch();
+  
+  // Effect to detect changes in form values
+  useEffect(() => {
+    if (isEditMode && initialFormValues) {
+      // Compare current form values with initial values
+      const formChanged = Object.keys(initialFormValues).some(key => {
+        // Special handling for date comparison
+        if (key === 'date') {
+          const initialDate = new Date(initialFormValues.date).toDateString();
+          const currentDate = new Date(formValues.date).toDateString();
+          return initialDate !== currentDate;
+        }
+        
+        // Type-safe comparison for specific fields
+        switch(key) {
+          case 'merchant':
+            return initialFormValues.merchant !== formValues.merchant;
+          case 'category':
+            return initialFormValues.category !== formValues.category;
+          case 'amount':
+            return initialFormValues.amount !== formValues.amount;
+          case 'description':
+            return initialFormValues.description !== formValues.description;
+          case 'reference':
+            return initialFormValues.reference !== formValues.reference;
+          case 'currency':
+            return initialFormValues.currency !== formValues.currency;
+          case 'report':
+            return initialFormValues.report !== formValues.report;
+          case 'claimReimbursement':
+            return initialFormValues.claimReimbursement !== formValues.claimReimbursement;
+          default:
+            return false;
+        }
+      });
+      
+      // Check if files or receipts have changed
+      const filesChanged = files.length > 0;
+      const receiptsChanged = existingReceipts.length !== (expense?.receiptUrls?.length || 0);
+      
+      // Update the hasChanges state
+      setHasChanges(formChanged || filesChanged || receiptsChanged);
+    }
+  }, [formValues, files, existingReceipts, isEditMode, initialFormValues, expense]);
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -494,7 +618,11 @@ export default function AddOrEditExpense({
                 {/* FIX: Added missing self-closing tag `/>` */}
 
                 <div className="flex justify-end pt-2">
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    disabled={isLoading || (isEditMode && !hasChanges)}
+                  >
                     {isLoading
                       ? "Saving..."
                       : isEditMode
@@ -513,30 +641,73 @@ export default function AddOrEditExpense({
                       className="flex-1 h-full pb-[140px] sm:pb-[100px]"
                       onFilesDrop={handleFilesDrop}
                     />
-                    {files.length > 0 && (
+                    {(files.length > 0 || existingReceipts.length > 0) && (
                       <div className="absolute bottom-4 left-4 right-4 bg-white/90 backdrop-blur-sm border rounded-lg p-3 shadow-lg h-[120px]">
                         <div className="flex items-center justify-between">
                           <h4 className="text-sm font-medium">
-                            Uploaded Files ({files.length})
+                            Receipts ({files.length + existingReceipts.length})
                           </h4>
                           <Button
                             variant="ghost"
                             size="sm"
                             className="h-6 w-6 p-0"
-                            onClick={() => setFiles([])}
+                            onClick={() => {
+                              setFiles([]);
+                              setExistingReceipts([]);
+                            }}
                           >
                             <X className="h-4 w-4" />
                           </Button>
                         </div>
                         <div className="flex gap-2 pb-2 pt-2 overflow-x-auto">
+                          {/* Existing receipts */}
+                          {existingReceipts.map((receipt, index) => {
+                            const proxyUrl = getProxyUrl(receipt.url);
+                            return (
+                              <div
+                                key={`existing-${index}`}
+                                className="relative flex-shrink-0 group"
+                              >
+                                <div className="w-16 h-16 bg-gray-100 rounded-lg border-2 border-blue-200 flex items-center justify-center overflow-hidden">
+                                  {!receipt.isPdf ? (
+                                    <img
+                                      src={proxyUrl}
+                                      alt={receipt.name}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  ) : (
+                                    <div className="flex flex-col items-center justify-center p-1">
+                                      <FileText className="h-6 w-6 text-red-500" />
+                                      <span className="text-xs mt-1 text-gray-600 truncate w-12 text-center">
+                                        PDF
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full opacity-0 group-hover:opacity-100"
+                                  onClick={() => removeExistingReceipt(index)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 rounded-b-lg truncate">
+                                  Receipt #{index + 1}
+                                </div>
+                              </div>
+                            );
+                          })}
+                          
+                          {/* New files */}
                           {files.map((file, index) => {
                             const previewUrl = getFilePreview(file);
                             return (
                               <div
-                                key={index}
+                                key={`new-${index}`}
                                 className="relative flex-shrink-0 group"
                               >
-                                <div className="w-16 h-16 bg-gray-100 rounded-lg border-2 flex items-center justify-center overflow-hidden">
+                                <div className="w-16 h-16 bg-gray-100 rounded-lg border-2 border-green-200 flex items-center justify-center overflow-hidden">
                                   {previewUrl ? (
                                     <img
                                       src={previewUrl}
