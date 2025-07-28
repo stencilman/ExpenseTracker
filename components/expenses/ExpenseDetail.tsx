@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import AddOrEditExpense from "./AddOrEditExpense";
+import HistoryItemCard from "./HistoryItemCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -583,75 +584,15 @@ export default function ExpenseDetail({
                     </div>
                     <div className="space-y-4">
                       {historyData.map((event) => (
-                        <div
+                        <HistoryItemCard
                           key={event.id}
-                          className="border-l-2 border-gray-200 pl-4 py-2"
-                        >
-                          <div className="flex items-start">
-                            {/* Event icon based on type */}
-                            <div className="mr-3 mt-0.5">
-                              {event.eventType === "CREATED" && (
-                                <FileText className="h-5 w-5 text-blue-500" />
-                              )}
-                              {event.eventType === "ADDED_TO_REPORT" && (
-                                <FileIcon className="h-5 w-5 text-orange-500" />
-                              )}
-                              {event.eventType === "APPROVED" && (
-                                <CheckCircle className="h-5 w-5 text-green-500" />
-                              )}
-                              {event.eventType === "REJECTED" && (
-                                <XCircle className="h-5 w-5 text-red-500" />
-                              )}
-                              {event.eventType === "REIMBURSED" && (
-                                <CreditCard className="h-5 w-5 text-green-700" />
-                              )}
-                            </div>
-
-                            {/* Event content */}
-                            <div className="flex-1">
-                              <div className="flex flex-col sm:flex-row sm:justify-between">
-                                <h4 className="font-medium text-gray-900">
-                                  {event.eventType === "CREATED" &&
-                                    "Expense Created"}
-                                  {event.eventType === "ADDED_TO_REPORT" && (
-                                    <>
-                                      Added to Report{" "}
-                                      {event.report?.title && (
-                                        <span className="font-normal">
-                                          ({event.report.title})
-                                        </span>
-                                      )}
-                                    </>
-                                  )}
-                                  {event.eventType === "APPROVED" &&
-                                    "Expense Approved"}
-                                  {event.eventType === "REJECTED" &&
-                                    "Expense Rejected"}
-                                  {event.eventType === "REIMBURSED" &&
-                                    "Expense Reimbursed"}
-                                </h4>
-                                <time className="text-xs text-gray-500 mt-1 sm:mt-0">
-                                  {format(
-                                    new Date(event.eventDate),
-                                    "MMM d, yyyy h:mm a"
-                                  )}
-                                </time>
-                              </div>
-
-                              {event.details && (
-                                <p className="mt-1 text-sm text-gray-600">
-                                  {event.details}
-                                </p>
-                              )}
-
-                              {event.performedBy && (
-                                <div className="mt-2 text-xs text-gray-500 flex items-center">
-                                  <span>By {event.performedBy.name}</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
+                          id={event.id}
+                          eventType={event.eventType}
+                          eventDate={event.eventDate}
+                          details={event.details}
+                          performedBy={event.performedBy}
+                          report={event.report}
+                        />
                       ))}
                     </div>
                   </div>
