@@ -49,15 +49,17 @@ Creates a new expense for the authenticated user.
     "description": "Business lunch",
     "merchant": "Restaurant Name",
     "category": "MEALS",
-    "notes": "Client meeting",
-    "receiptUrl": "https://example.com/receipt.jpg" // Optional
+    "currency": "USD",
+    "claimReimbursement": true,
+    "reference": "INVOICE-123",
+    "report": "REPORT-456"
   }
   ```
-- **Response**: Created expense object
+- **Response**: The created expense object
 
 #### `GET /api/expenses/[id]`
 
-Returns a single expense by ID.
+Returns a specific expense by ID.
 
 - **Authentication**: Required
 - **Path Parameters**:
@@ -183,6 +185,42 @@ Uploads a file to S3 and returns the URL.
     "url": "https://expense-tracker-receipts.s3.amazonaws.com/1627484930-receipt.jpg"
   }
   ```
+
+#### `POST /api/uploads/delete`
+
+Deletes a file from S3 storage.
+
+- **Authentication**: Required
+- **Request Body**: JSON object with the file key or URL
+  ```json
+  {
+    "key": "https://expense-tracker-receipts.s3.amazonaws.com/1627484930-receipt.jpg"
+  }
+  ```
+- **Notes**: 
+  - The key can be either the full URL or just the filename
+  - If a full URL is provided, the filename will be extracted automatically
+- **Response**: Success confirmation
+  ```json
+  {
+    "success": true
+  }
+  ```
+
+### File Proxy API
+
+#### `GET /api/files/[key]`
+
+Proxies file requests to S3 and serves the file content. This endpoint allows secure access to S3 files through the application's authentication system.
+
+- **Authentication**: Required
+- **Path Parameters**:
+  - `key`: The file key (filename) in S3
+- **Response**: The file content with appropriate Content-Type header
+- **Notes**:
+  - This endpoint streams the file directly from S3
+  - Content-Type is determined automatically based on the file extension
+  - Used for secure file access without exposing S3 credentials to the client
 
 ## Architecture
 
