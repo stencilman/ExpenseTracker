@@ -75,6 +75,7 @@ interface AddOrEditExpenseProps {
   onClose: () => void;
   expense?: ExpenseWithUI; // Optional: if provided, we're in edit mode
   mode: "add" | "edit";
+  initialFiles?: File[]; // Optional: initial files to populate the dropzone
 }
 
 export default function AddOrEditExpense({
@@ -82,8 +83,9 @@ export default function AddOrEditExpense({
   onClose,
   expense,
   mode,
+  initialFiles = [],
 }: AddOrEditExpenseProps) {
-  const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<File[]>(initialFiles);
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const { createExpense, updateExpense, isLoading } = useExpenses();
   const isEditMode = mode === "edit" && expense;
@@ -166,7 +168,15 @@ export default function AddOrEditExpense({
   const onSubmit = form.handleSubmit(async (values) => {
     try {
       // Format the data payload for the API
-      const expenseData = {
+      const expenseData: {
+        amount: number;
+        date: string;
+        description: string;
+        merchant: string;
+        category: ExpenseCategory;
+        notes: string;
+        receiptUrls?: string[];
+      } = {
         amount: values.amount,
         date: format(values.date, "yyyy-MM-dd"), // Format as YYYY-MM-DD
         description: values.description || "", // Use merchant as fallback
@@ -174,6 +184,35 @@ export default function AddOrEditExpense({
         category: values.category,
         notes: values.reference || "",
       };
+
+      // Upload receipts to S3 if there are any files
+      let receiptUrls: string[] = [];
+      if (files.length > 0) {
+        // Upload each file and collect the URLs
+        for (const file of files) {
+          // Create a FormData object to send the file
+          const formData = new FormData();
+          formData.append("file", file);
+          
+          // Upload the file to S3 via our API
+          const uploadResponse = await fetch("/api/uploads", {
+            method: "POST",
+            body: formData,
+          });
+          
+          if (!uploadResponse.ok) {
+            throw new Error(`Failed to upload receipt: ${uploadResponse.statusText}`);
+          }
+          
+          const uploadResult = await uploadResponse.json();
+          receiptUrls.push(uploadResult.url);
+        }
+      }
+
+      // Add the receipt URLs to the expense data if available
+      if (receiptUrls.length > 0) {
+        expenseData.receiptUrls = receiptUrls;
+      }
 
       if (isEditMode) {
         await updateExpense(expense.id.toString(), expenseData);

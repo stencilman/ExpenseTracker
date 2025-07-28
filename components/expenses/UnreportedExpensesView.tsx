@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useExpenses } from "@/components/providers/ExpenseProvider";
 import { useLoading } from "@/components/providers/LoadingProvider";
@@ -20,6 +20,7 @@ export default function UnreportedExpensesView({
   compact = false,
 }: UnreportedExpensesViewProps) {
   const router = useRouter();
+  const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
   const { stopLoading } = useLoading();
   const {
     processedUnreportedExpenses,
@@ -68,6 +69,19 @@ export default function UnreportedExpensesView({
           title="Drag and drop receipts here to get started"
           onFilesDrop={(files) => {
             console.log(files);
+            // Save the dropped files and open the Add Expense drawer
+            setDroppedFiles(files);
+            setIsAddExpenseOpen(true);
+          }}
+          dragActive={false}
+          // Custom drag handler to open drawer on hover
+          {...{
+            onDragEnter: (e: React.DragEvent<HTMLDivElement>) => {
+              e.preventDefault();
+              e.stopPropagation();
+              // Open the Add Expense drawer when files are hovered
+              setIsAddExpenseOpen(true);
+            }
           }}
         />
       )}
@@ -97,8 +111,12 @@ export default function UnreportedExpensesView({
       {isAddExpenseOpen && (
         <AddOrEditExpense
           isOpen={isAddExpenseOpen}
-          onClose={() => setIsAddExpenseOpen(false)}
+          onClose={() => {
+            setIsAddExpenseOpen(false);
+            setDroppedFiles([]); // Clear dropped files when closing
+          }}
           mode="add"
+          initialFiles={droppedFiles}
         />
       )}
     </div>

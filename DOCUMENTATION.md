@@ -4,6 +4,186 @@
 
 ExpenseTracker is a full-stack web application built with Next.js that allows users to track expenses, manage reports, and handle financial data. The application features role-based access control with user and admin roles, authentication using NextAuth.js, and data persistence with PostgreSQL via Prisma ORM.
 
+## API Documentation
+
+The ExpenseTracker API is organized around RESTful principles. All endpoints return JSON responses and use standard HTTP response codes to indicate success or failure. Authentication is required for all API endpoints using NextAuth.js session tokens.
+
+### Authentication API
+
+#### `GET/POST /api/auth/[...nextauth]`
+
+Handles authentication requests through NextAuth.js. This route is automatically generated and managed by NextAuth.js.
+
+- **Authentication Methods**: Email/Password, Google OAuth
+- **Response**: Session token for authenticated users
+
+### Expenses API
+
+#### `GET /api/expenses`
+
+Returns a list of expenses for the authenticated user with optional filtering and pagination.
+
+- **Authentication**: Required
+- **Query Parameters**:
+  - `page`: Page number (default: 1)
+  - `pageSize`: Number of items per page (default: 10)
+  - `startDate`: Filter expenses after this date (YYYY-MM-DD)
+  - `endDate`: Filter expenses before this date (YYYY-MM-DD)
+  - `search`: Search term for expense description or merchant
+  - `minAmount`: Minimum expense amount
+  - `maxAmount`: Maximum expense amount
+  - `category`: Filter by expense category (e.g., TRAVEL, MEALS, etc.)
+  - `status`: Filter by expense status (e.g., UNREPORTED, REPORTED, etc.)
+- **Response**: JSON array of expense objects with pagination metadata
+
+#### `POST /api/expenses`
+
+Creates a new expense for the authenticated user.
+
+- **Authentication**: Required
+- **Request Body**:
+  ```json
+  {
+    "amount": 123.45,
+    "date": "2025-07-28",
+    "description": "Business lunch",
+    "merchant": "Restaurant Name",
+    "category": "MEALS",
+    "notes": "Client meeting",
+    "receiptUrl": "https://example.com/receipt.jpg" // Optional
+  }
+  ```
+- **Response**: Created expense object
+
+#### `GET /api/expenses/[id]`
+
+Returns a single expense by ID.
+
+- **Authentication**: Required
+- **Path Parameters**:
+  - `id`: Expense ID
+- **Response**: Single expense object
+
+#### `PUT /api/expenses/[id]`
+
+Updates an existing expense.
+
+- **Authentication**: Required
+- **Path Parameters**:
+  - `id`: Expense ID
+- **Request Body**: Same as POST but all fields are optional
+- **Response**: Updated expense object
+
+#### `DELETE /api/expenses/[id]`
+
+Deletes an expense.
+
+- **Authentication**: Required
+- **Path Parameters**:
+  - `id`: Expense ID
+- **Response**: Success message
+
+#### `GET /api/expenses/[id]/history`
+
+Returns the history of events for a specific expense.
+
+- **Authentication**: Required
+- **Path Parameters**:
+  - `id`: Expense ID
+- **Response**: Object containing expense details and an array of history events
+  ```json
+  {
+    "expense": {
+      "id": 123,
+      "description": "Business lunch",
+      "amount": 123.45,
+      "date": "2025-07-28T00:00:00.000Z",
+      "status": "REPORTED"
+    },
+    "history": [
+      {
+        "id": 1,
+        "eventType": "CREATED",
+        "eventDate": "2025-07-28T06:30:00.000Z",
+        "details": "Expense created",
+        "performedBy": {
+          "id": "user-id",
+          "name": "John Doe",
+          "email": "john@example.com",
+          "role": "USER"
+        },
+        "report": null
+      },
+      {
+        "id": 2,
+        "eventType": "ADDED_TO_REPORT",
+        "eventDate": "2025-07-28T07:15:00.000Z",
+        "details": "Added to report",
+        "performedBy": {
+          "id": "user-id",
+          "name": "John Doe",
+          "email": "john@example.com",
+          "role": "USER"
+        },
+        "report": {
+          "id": 45,
+          "title": "July Business Trip",
+          "status": "PENDING"
+        }
+      }
+    ]
+  }
+  ```
+
+#### `GET /api/expenses/categories`
+
+Returns all available expense categories.
+
+- **Authentication**: Required
+- **Response**: Array of expense category strings
+  ```json
+  {
+    "categories": ["TRAVEL", "MEALS", "ACCOMMODATION", "SUPPLIES", "SERVICES", "ENTERTAINMENT", "TRANSPORTATION", "UTILITIES", "OFFICE", "OTHER"]
+  }
+  ```
+
+#### `GET /api/expenses/stats`
+
+Returns expense statistics for the authenticated user.
+
+- **Authentication**: Required
+- **Response**: Object containing expense statistics
+  ```json
+  {
+    "totalExpenses": 42,
+    "totalAmount": 4567.89,
+    "unreportedCount": 5,
+    "unreportedAmount": 345.67,
+    "byCategory": {
+      "MEALS": 1234.56,
+      "TRAVEL": 2345.67
+    },
+    "recentExpenses": [...]
+  }
+  ```
+
+### File Upload API
+
+#### `POST /api/uploads`
+
+Uploads a file to S3 and returns the URL.
+
+- **Authentication**: Required
+- **Request Body**: FormData with a file field named "file"
+- **Supported File Types**: JPEG, PNG, PDF
+- **Maximum File Size**: 10MB
+- **Response**: Object containing the URL of the uploaded file
+  ```json
+  {
+    "url": "https://expense-tracker-receipts.s3.amazonaws.com/1627484930-receipt.jpg"
+  }
+  ```
+
 ## Architecture
 
 ### Tech Stack

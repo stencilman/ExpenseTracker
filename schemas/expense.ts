@@ -11,7 +11,7 @@ export const ExpenseCreateSchema = z.object({
   category: z.enum(Object.values(ExpenseCategory) as [ExpenseCategory, ...ExpenseCategory[]]),
   merchant: z.string().min(1, { message: "Merchant name is required" }),
   notes: z.string().optional(),
-  receiptUrl: z.string().optional(),
+  receiptUrls: z.array(z.string()).optional(),
 });
 
 // Schema for updating an existing expense

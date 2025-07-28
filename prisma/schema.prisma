@@ -81,7 +81,7 @@ model Expense {
   description String?
   category    ExpenseCategory @default(OTHER)
   status      ExpenseStatus   @default(UNREPORTED)
-  receiptUrl  String?
+  receiptUrls String[]
   notes       String?
   userId      String
   user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)

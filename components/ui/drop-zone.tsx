@@ -109,6 +109,7 @@ export function DropZone({
                 onChange={handleFileChange}
               />
               <Button
+                type="button"
                 variant="outline"
                 size="sm"
                 className="px-4 flex-shrink-0"
@@ -133,6 +134,7 @@ export function DropZone({
                 onChange={handleFileChange}
               />
               <Button
+                type="button"
                 variant="outline"
                 size="lg"
                 className="px-8"

@@ -4,10 +4,19 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Expense, ExpenseWithUI } from "@/types/expense";
-import { ExpenseCategory, ExpenseStatus, ExpenseEventType } from "@prisma/client";
+import {
+  ExpenseCategory,
+  ExpenseStatus,
+  ExpenseEventType,
+} from "@prisma/client";
 import { useExpenses } from "../providers/ExpenseProvider";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogHeader,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import {
@@ -39,13 +48,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-// Extended expense interface to handle API data
-interface ExtendedExpense extends ExpenseWithUI {
-  apiData?: Expense;
-}
-
 interface ExpenseDetailProps {
-  expense: ExtendedExpense;
+  expense: ExpenseWithUI;
   onClose: () => void;
 }
 
@@ -80,7 +84,7 @@ interface ExpenseHistoryResponse {
 }
 
 // Helper function to get status classes based on expense status
-const getStatusClasses = (expense: ExtendedExpense): string => {
+const getStatusClasses = (expense: ExpenseWithUI): string => {
   // If we have statusDisplay with color
   if (expense.statusDisplay?.color) {
     switch (expense.statusDisplay.color) {
@@ -96,8 +100,8 @@ const getStatusClasses = (expense: ExtendedExpense): string => {
   }
 
   // If we have apiData with status
-  if (expense.apiData?.status) {
-    switch (expense.apiData.status) {
+  if (expense.status) {
+    switch (expense.status) {
       case ExpenseStatus.APPROVED:
         return "bg-green-100 text-green-800";
       case ExpenseStatus.REJECTED:
@@ -116,15 +120,15 @@ const getStatusClasses = (expense: ExtendedExpense): string => {
 };
 
 // Helper function to get status label based on expense status
-const getStatusLabel = (expense: ExtendedExpense): string => {
+const getStatusLabel = (expense: ExpenseWithUI): string => {
   // If we have statusDisplay with label
   if (expense.statusDisplay?.label) {
     return expense.statusDisplay.label;
   }
 
   // If we have apiData with status
-  if (expense.apiData?.status) {
-    return expense.apiData.status;
+  if (expense.status) {
+    return expense.status;
   }
 
   // Default based on reportName
@@ -135,6 +139,7 @@ export default function ExpenseDetail({
   expense,
   onClose,
 }: ExpenseDetailProps) {
+  // States for component
   const router = useRouter();
   const { deleteExpense } = useExpenses();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -142,6 +147,60 @@ export default function ExpenseDetail({
   const [historyData, setHistoryData] = useState<ExpenseHistoryEvent[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
+  const [selectedReceiptUrl, setSelectedReceiptUrl] = useState<string | null>(
+    expense.receiptUrls && expense.receiptUrls.length > 0
+      ? expense.receiptUrls[0]
+      : null
+  );
+
+  // Helper function to check if a URL is a PDF
+  const isPdfUrl = (url: string): boolean => {
+    if (!url) return false;
+
+    // Check if the URL path ends with .pdf (case insensitive)
+    try {
+      const urlObj = new URL(url);
+      const pathParts = urlObj.pathname.split("/");
+      const filename = pathParts[pathParts.length - 1];
+      return filename.toLowerCase().endsWith(".pdf");
+    } catch (error) {
+      // If URL parsing fails, check the raw string
+      return url.toLowerCase().includes(".pdf");
+    }
+  };
+
+  // Helper function to ensure we're using the proxy URL format
+  const getProperReceiptUrl = (url: string | null | undefined): string => {
+    // If URL is null or undefined, return empty string
+    if (!url) {
+      return "";
+    }
+
+    // If it's already a proxy URL, return it as is
+    if (url.startsWith("/api/files/")) {
+      return url;
+    }
+
+    // If it's an S3 URL, extract the key and convert to proxy URL
+    if (url.includes("amazonaws.com")) {
+      try {
+        // Extract the key from the S3 URL
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split("/");
+        const key = pathParts[pathParts.length - 1]; // Get the filename
+
+        // Return the proxy URL
+        return `/api/files/${encodeURIComponent(key)}`;
+      } catch (error) {
+        console.error("Error parsing S3 URL:", error);
+        return url; // Return original URL if parsing fails
+      }
+    }
+
+    // For any other URL format, return as is
+    return url;
+  };
 
   // Fetch expense history when the history tab is selected
   const fetchExpenseHistory = async (expenseId: number) => {
@@ -168,7 +227,7 @@ export default function ExpenseDetail({
   // Handle tab change to fetch history data when needed
   const handleTabChange = (value: string) => {
     if (value === "history" && historyData.length === 0 && !isLoadingHistory) {
-      const expenseId = expense.apiData?.id || expense.id;
+      const expenseId = expense.id;
       fetchExpenseHistory(expenseId);
     }
   };
@@ -177,7 +236,7 @@ export default function ExpenseDetail({
   const handleDelete = async () => {
     try {
       // Extract the ID from the expense
-      const expenseId = expense.apiData?.id || expense.id;
+      const expenseId = expense.id;
       // Convert to string if needed by the deleteExpense function
       const expenseIdString = String(expenseId);
       await deleteExpense(expenseIdString);
@@ -234,6 +293,54 @@ export default function ExpenseDetail({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* File Preview Dialog */}
+      <Dialog open={isFilePreviewOpen} onOpenChange={setIsFilePreviewOpen}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Receipt Preview</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto p-2 flex items-center justify-center">
+            {selectedReceiptUrl && isPdfUrl(selectedReceiptUrl) ? (
+              <iframe
+                src={`${getProperReceiptUrl(selectedReceiptUrl)}#toolbar=0`}
+                className="w-full h-[70vh]"
+                title="PDF Receipt"
+              />
+            ) : selectedReceiptUrl ? (
+              <img
+                src={getProperReceiptUrl(selectedReceiptUrl)}
+                alt="Receipt"
+                className="max-w-full max-h-[70vh] object-contain"
+              />
+            ) : (
+              <div className="text-center text-gray-500">
+                <FileIcon size={64} className="mx-auto mb-4" />
+                <p>No receipt available</p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            {selectedReceiptUrl && (
+              <Button asChild>
+                <a
+                  href={getProperReceiptUrl(selectedReceiptUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open in New Tab
+                </a>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => setIsFilePreviewOpen(false)}
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="p-4 h-[calc(100vh-10rem)] overflow-y-auto overflow-x-hidden w-full">
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-2">
@@ -287,16 +394,96 @@ export default function ExpenseDetail({
 
         {/* Main content */}
         <div className="flex flex-col md:flex-row h-full max-w-full">
-          {/* Left side - PDF preview */}
+          {/* Left side - Receipt preview */}
           <div className="w-full md:w-1/3 bg-gray-50 p-4 md:p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r min-w-0">
-            <div className="bg-red-500 text-white p-3 md:p-4 rounded-lg mb-3 md:mb-4">
-              <FileIcon size={36} className="md:h-12 md:w-12" />
-            </div>
-            <div className="flex space-x-2 mt-2 md:mt-4">
-              <Button variant="ghost" size="icon">
-                <Download size={16} className="md:h-[18px] md:w-[18px]" />
-              </Button>
-            </div>
+            {expense.receiptUrls && expense.receiptUrls.length > 0 ? (
+              <>
+                <h3 className="text-sm font-medium mb-3">
+                  Receipts ({expense.receiptUrls.length})
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+                  {expense.receiptUrls.map((url, index) => (
+                    <div
+                      key={index}
+                      className="cursor-pointer hover:opacity-90 transition-opacity border rounded-lg p-2 flex flex-col items-center"
+                      onClick={() => {
+                        setSelectedReceiptUrl(url);
+                        setIsFilePreviewOpen(true);
+                      }}
+                    >
+                      <>
+                        {/* Top half: Preview (image or PDF icon) */}
+                        <div className="h-20 w-full rounded-lg overflow-hidden flex items-center justify-center mb-1">
+                          {isPdfUrl(url) ? (
+                            <div className="bg-red-500 text-white h-full w-full flex items-center justify-center">
+                              <FileText size={32} />
+                            </div>
+                          ) : (
+                            <img
+                              src={getProperReceiptUrl(url)}
+                              alt={`Receipt ${index + 1}`}
+                              className="h-full w-full object-contain"
+                              onError={(e) => {
+                                console.error("Image failed to load:", e);
+                                e.currentTarget.onerror = null; // Prevent infinite loop
+                                e.currentTarget.style.display = "none";
+                                // Show error message
+                                const errorDiv = document.createElement("div");
+                                errorDiv.className =
+                                  "text-red-500 text-xs mt-1";
+                                errorDiv.textContent = "Failed to load image";
+                                e.currentTarget.parentNode?.appendChild(
+                                  errorDiv
+                                );
+                              }}
+                            />
+                          )}
+                        </div>
+                        {/* Bottom half: Caption */}
+                        <span className="text-xs mt-1 text-center w-full">
+                          Receipt #{index + 1}
+                        </span>
+                      </>
+                      <div className="flex space-x-1 mt-1 w-full justify-center">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          asChild
+                        >
+                          <a
+                            href={getProperReceiptUrl(url)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            download
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Download size={12} />
+                          </a>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedReceiptUrl(url);
+                            setIsFilePreviewOpen(true);
+                          }}
+                        >
+                          <FileText size={12} />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="bg-gray-200 text-gray-500 p-3 md:p-4 rounded-lg mb-3 md:mb-4">
+                <FileIcon size={36} className="md:h-12 md:w-12" />
+                <p className="text-xs mt-1 text-center">No receipt</p>
+              </div>
+            )}
           </div>
 
           {/* Right side - Expense details */}
@@ -305,22 +492,16 @@ export default function ExpenseDetail({
               <div>
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                   <span>
-                    {expense.apiData
-                      ? new Date(expense.apiData.date)
-                          .toISOString()
-                          .split("T")[0]
-                      : new Date(expense.date).toISOString().split("T")[0]}
+                    {typeof expense.date === "string"
+                      ? expense.date
+                      : format(new Date(expense.date), "PPP")}
                   </span>
                 </div>
                 <h2 className="text-lg md:text-xl font-semibold mt-1 md:mt-2">
-                  {expense.apiData?.description ||
-                    expense.description ||
-                    expense.category ||
-                    "Expense Details"}
+                  {expense.description || expense.category || "Expense Details"}
                 </h2>
                 <div className="text-sm text-muted-foreground mt-1">
-                  Merchant:{" "}
-                  {expense.apiData?.notes || expense.merchant || "Unknown"}
+                  Merchant: {expense.merchant || "Unknown"}
                 </div>
               </div>
               <div className="text-left sm:text-right">
@@ -331,20 +512,19 @@ export default function ExpenseDetail({
                 >
                   {getStatusLabel(expense)}
                 </div>
-                <div className="flex items-center mt-2">
+                <div className="flex items-center justify-end mt-2">
                   <span className="text-sm text-muted-foreground mr-1">
                     REIMBURSABLE
                   </span>
                 </div>
                 <div className="text-xl md:text-2xl font-bold">
                   ₹{" "}
-                  {expense.amount ||
-                    (expense.apiData
-                      ? `Rs.${expense.apiData.amount.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}`
-                      : "0.00")}
+                  {typeof expense.amount === "number"
+                    ? expense.amount.toLocaleString("en-IN", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })
+                    : expense.amount || "0.00"}
                 </div>
               </div>
             </div>
@@ -360,20 +540,14 @@ export default function ExpenseDetail({
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Description
                   </h3>
-                  <p className="mt-1">
-                    {expense.apiData?.description || expense.description || "-"}
-                  </p>
+                  <p className="mt-1">{expense.description || "-"}</p>
                 </div>
 
                 <div>
                   <h3 className="text-sm font-medium text-muted-foreground">
                     Category
                   </h3>
-                  <p className="mt-1">
-                    {expense.apiData
-                      ? expense.apiData.category
-                      : expense.category}
-                  </p>
+                  <p className="mt-1">{expense.category || "-"}</p>
                 </div>
               </TabsContent>
 
@@ -381,17 +555,19 @@ export default function ExpenseDetail({
                 {isLoadingHistory ? (
                   <div className="flex justify-center items-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-muted-foreground">Loading history...</span>
+                    <span className="ml-2 text-muted-foreground">
+                      Loading history...
+                    </span>
                   </div>
                 ) : historyError ? (
                   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                     <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
                     <p>{historyError}</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="mt-4"
-                      onClick={() => fetchExpenseHistory(expense.apiData?.id || expense.id)}
+                      onClick={() => fetchExpenseHistory(expense.id)}
                     >
                       Try Again
                     </Button>
@@ -402,51 +578,72 @@ export default function ExpenseDetail({
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="text-sm font-medium text-muted-foreground mb-2">Expense Timeline</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-2">
+                      Expense Timeline
+                    </div>
                     <div className="space-y-4">
                       {historyData.map((event) => (
-                        <div key={event.id} className="border-l-2 border-gray-200 pl-4 py-2">
+                        <div
+                          key={event.id}
+                          className="border-l-2 border-gray-200 pl-4 py-2"
+                        >
                           <div className="flex items-start">
                             {/* Event icon based on type */}
                             <div className="mr-3 mt-0.5">
-                              {event.eventType === 'CREATED' && (
+                              {event.eventType === "CREATED" && (
                                 <FileText className="h-5 w-5 text-blue-500" />
                               )}
-                              {event.eventType === 'ADDED_TO_REPORT' && (
+                              {event.eventType === "ADDED_TO_REPORT" && (
                                 <FileIcon className="h-5 w-5 text-orange-500" />
                               )}
-                              {event.eventType === 'APPROVED' && (
+                              {event.eventType === "APPROVED" && (
                                 <CheckCircle className="h-5 w-5 text-green-500" />
                               )}
-                              {event.eventType === 'REJECTED' && (
+                              {event.eventType === "REJECTED" && (
                                 <XCircle className="h-5 w-5 text-red-500" />
                               )}
-                              {event.eventType === 'REIMBURSED' && (
+                              {event.eventType === "REIMBURSED" && (
                                 <CreditCard className="h-5 w-5 text-green-700" />
                               )}
                             </div>
-                            
+
                             {/* Event content */}
                             <div className="flex-1">
                               <div className="flex flex-col sm:flex-row sm:justify-between">
                                 <h4 className="font-medium text-gray-900">
-                                  {event.eventType === 'CREATED' && 'Expense Created'}
-                                  {event.eventType === 'ADDED_TO_REPORT' && (
-                                    <>Added to Report {event.report?.title && <span className="font-normal">({event.report.title})</span>}</>
+                                  {event.eventType === "CREATED" &&
+                                    "Expense Created"}
+                                  {event.eventType === "ADDED_TO_REPORT" && (
+                                    <>
+                                      Added to Report{" "}
+                                      {event.report?.title && (
+                                        <span className="font-normal">
+                                          ({event.report.title})
+                                        </span>
+                                      )}
+                                    </>
                                   )}
-                                  {event.eventType === 'APPROVED' && 'Expense Approved'}
-                                  {event.eventType === 'REJECTED' && 'Expense Rejected'}
-                                  {event.eventType === 'REIMBURSED' && 'Expense Reimbursed'}
+                                  {event.eventType === "APPROVED" &&
+                                    "Expense Approved"}
+                                  {event.eventType === "REJECTED" &&
+                                    "Expense Rejected"}
+                                  {event.eventType === "REIMBURSED" &&
+                                    "Expense Reimbursed"}
                                 </h4>
                                 <time className="text-xs text-gray-500 mt-1 sm:mt-0">
-                                  {format(new Date(event.eventDate), 'MMM d, yyyy h:mm a')}
+                                  {format(
+                                    new Date(event.eventDate),
+                                    "MMM d, yyyy h:mm a"
+                                  )}
                                 </time>
                               </div>
-                              
+
                               {event.details && (
-                                <p className="mt-1 text-sm text-gray-600">{event.details}</p>
+                                <p className="mt-1 text-sm text-gray-600">
+                                  {event.details}
+                                </p>
                               )}
-                              
+
                               {event.performedBy && (
                                 <div className="mt-2 text-xs text-gray-500 flex items-center">
                                   <span>By {event.performedBy.name}</span>

@@ -12,7 +12,7 @@ export interface Expense {
   description: string;
   category: ExpenseCategory;
   status: ExpenseStatus;
-  receiptUrl?: string | null;
+  receiptUrls?: string[];
   notes?: string | null;
   userId: string;
   createdAt: Date | string; // Date for client-side, string for API responses
@@ -42,7 +42,7 @@ export interface ExpenseFormValues {
   description: string;
   category: ExpenseCategory;
   notes?: string;
-  receiptUrl?: string;
+  receiptUrls?: string[];
   status?: ExpenseStatus;
 }
 
