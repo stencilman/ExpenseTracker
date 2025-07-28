@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { FileText, MoreHorizontal, X } from "lucide-react";
+import ReportExpenseCard from "@/components/reports/ReportExpenseCard";
 
 export default function ReportDetailPage() {
   const router = useRouter();
@@ -55,33 +56,12 @@ export default function ReportDetailPage() {
               </TabsList>
 
               <TabsContent value="expenses" className="space-y-4">
-                <div className="border rounded-lg overflow-hidden">
-                  <div className="flex items-center p-4 border-b">
-                    <div className="w-12">
-                      <div className="bg-red-500 h-10 w-10 rounded flex items-center justify-center">
-                        <FileText className="h-5 w-5 text-white" />
-                      </div>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <div className="flex items-center">
-                            <span className="text-sm text-gray-500 mr-2">
-                              01/07/2025
-                            </span>
-                            <span className="font-medium">
-                              TUSKER WORKSPACE PRIVATE LIMITED
-                            </span>
-                          </div>
-                          <div className="text-sm text-blue-600">
-                            IT and Internet Expenses
-                          </div>
-                        </div>
-                        <div className="font-bold">Rs.944.00</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <ReportExpenseCard 
+                  date="01/07/2025"
+                  merchant="TUSKER WORKSPACE PRIVATE LIMITED"
+                  category="IT and Internet Expenses"
+                  amount="Rs.944.00"
+                />
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
