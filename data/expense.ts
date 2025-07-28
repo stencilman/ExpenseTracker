@@ -113,12 +113,28 @@ export async function createExpense(data: ExpenseCreate, userId: string) {
       userId,
     }));
     
-    const expense = await db.expense.create({
-      data: {
-        ...data,
-        date: new Date(data.date),
-        userId,
-      },
+    // Create expense with transaction to ensure both expense and history are created atomically
+    const expense = await db.$transaction(async (tx) => {
+      // Create the expense
+      const newExpense = await tx.expense.create({
+        data: {
+          ...data,
+          date: new Date(data.date),
+          userId,
+        },
+      });
+      
+      // Add CREATED event to expense history
+      await tx.expenseHistory.create({
+        data: {
+          eventType: 'CREATED',
+          expenseId: newExpense.id,
+          details: 'Expense created',
+          performedById: userId,
+        },
+      });
+      
+      return newExpense;
     });
     return expense;
   } catch (error: any) {

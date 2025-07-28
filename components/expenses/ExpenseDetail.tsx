@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Expense, ExpenseWithUI } from "@/types/expense";
-import { ExpenseCategory, ExpenseStatus } from "@prisma/client";
+import { ExpenseCategory, ExpenseStatus, ExpenseEventType } from "@prisma/client";
 import { useExpenses } from "../providers/ExpenseProvider";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -18,7 +18,15 @@ import {
   X,
   Edit,
   AlertCircle,
+  Clock,
+  Calendar,
+  FileText,
+  CheckCircle,
+  XCircle,
+  CreditCard,
+  Loader2,
 } from "lucide-react";
+import { format } from "date-fns";
 import AddOrEditExpense from "./AddOrEditExpense";
 import {
   AlertDialog,
@@ -39,6 +47,36 @@ interface ExtendedExpense extends ExpenseWithUI {
 interface ExpenseDetailProps {
   expense: ExtendedExpense;
   onClose: () => void;
+}
+
+// History event interface
+interface ExpenseHistoryEvent {
+  id: number;
+  eventType: ExpenseEventType;
+  eventDate: string;
+  details?: string;
+  performedBy?: {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  } | null;
+  report?: {
+    id: number;
+    title: string;
+    status: string;
+  } | null;
+}
+
+interface ExpenseHistoryResponse {
+  expense: {
+    id: number;
+    description?: string;
+    amount: number;
+    date: string;
+    status: ExpenseStatus;
+  };
+  history: ExpenseHistoryEvent[];
 }
 
 // Helper function to get status classes based on expense status
@@ -98,9 +136,42 @@ export default function ExpenseDetail({
   onClose,
 }: ExpenseDetailProps) {
   const router = useRouter();
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { deleteExpense } = useExpenses();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [historyData, setHistoryData] = useState<ExpenseHistoryEvent[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  // Fetch expense history when the history tab is selected
+  const fetchExpenseHistory = async (expenseId: number) => {
+    setIsLoadingHistory(true);
+    setHistoryError(null);
+
+    try {
+      const response = await fetch(`/api/expenses/${expenseId}/history`);
+
+      if (!response.ok) {
+        throw new Error(`Error fetching history: ${response.statusText}`);
+      }
+
+      const data: ExpenseHistoryResponse = await response.json();
+      setHistoryData(data.history);
+    } catch (error) {
+      console.error("Failed to fetch expense history:", error);
+      setHistoryError("Failed to load expense history. Please try again.");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // Handle tab change to fetch history data when needed
+  const handleTabChange = (value: string) => {
+    if (value === "history" && historyData.length === 0 && !isLoadingHistory) {
+      const expenseId = expense.apiData?.id || expense.id;
+      fetchExpenseHistory(expenseId);
+    }
+  };
 
   // Handle delete expense
   const handleDelete = async () => {
@@ -278,10 +349,9 @@ export default function ExpenseDetail({
               </div>
             </div>
 
-            <Tabs defaultValue="details">
+            <Tabs defaultValue="details" onValueChange={handleTabChange}>
               <TabsList className="mb-4">
                 <TabsTrigger value="details">Details</TabsTrigger>
-                <TabsTrigger value="comments">Comments</TabsTrigger>
                 <TabsTrigger value="history">History</TabsTrigger>
               </TabsList>
 
@@ -307,16 +377,88 @@ export default function ExpenseDetail({
                 </div>
               </TabsContent>
 
-              <TabsContent value="comments">
-                <div className="text-center py-8 text-muted-foreground">
-                  No comments yet
-                </div>
-              </TabsContent>
-
               <TabsContent value="history">
-                <div className="text-center py-8 text-muted-foreground">
-                  No history available
-                </div>
+                {isLoadingHistory ? (
+                  <div className="flex justify-center items-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                    <span className="ml-2 text-muted-foreground">Loading history...</span>
+                  </div>
+                ) : historyError ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                    <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+                    <p>{historyError}</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="mt-4"
+                      onClick={() => fetchExpenseHistory(expense.apiData?.id || expense.id)}
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                ) : historyData.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No history available
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium text-muted-foreground mb-2">Expense Timeline</div>
+                    <div className="space-y-4">
+                      {historyData.map((event) => (
+                        <div key={event.id} className="border-l-2 border-gray-200 pl-4 py-2">
+                          <div className="flex items-start">
+                            {/* Event icon based on type */}
+                            <div className="mr-3 mt-0.5">
+                              {event.eventType === 'CREATED' && (
+                                <FileText className="h-5 w-5 text-blue-500" />
+                              )}
+                              {event.eventType === 'ADDED_TO_REPORT' && (
+                                <FileIcon className="h-5 w-5 text-orange-500" />
+                              )}
+                              {event.eventType === 'APPROVED' && (
+                                <CheckCircle className="h-5 w-5 text-green-500" />
+                              )}
+                              {event.eventType === 'REJECTED' && (
+                                <XCircle className="h-5 w-5 text-red-500" />
+                              )}
+                              {event.eventType === 'REIMBURSED' && (
+                                <CreditCard className="h-5 w-5 text-green-700" />
+                              )}
+                            </div>
+                            
+                            {/* Event content */}
+                            <div className="flex-1">
+                              <div className="flex flex-col sm:flex-row sm:justify-between">
+                                <h4 className="font-medium text-gray-900">
+                                  {event.eventType === 'CREATED' && 'Expense Created'}
+                                  {event.eventType === 'ADDED_TO_REPORT' && (
+                                    <>Added to Report {event.report?.title && <span className="font-normal">({event.report.title})</span>}</>
+                                  )}
+                                  {event.eventType === 'APPROVED' && 'Expense Approved'}
+                                  {event.eventType === 'REJECTED' && 'Expense Rejected'}
+                                  {event.eventType === 'REIMBURSED' && 'Expense Reimbursed'}
+                                </h4>
+                                <time className="text-xs text-gray-500 mt-1 sm:mt-0">
+                                  {format(new Date(event.eventDate), 'MMM d, yyyy h:mm a')}
+                                </time>
+                              </div>
+                              
+                              {event.details && (
+                                <p className="mt-1 text-sm text-gray-600">{event.details}</p>
+                              )}
+                              
+                              {event.performedBy && (
+                                <div className="mt-2 text-xs text-gray-500 flex items-center">
+                                  <span>By {event.performedBy.name}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>
