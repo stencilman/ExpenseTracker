@@ -162,7 +162,13 @@ export default function AddOrEditExpense({
             // Extract filename from URL or use a default name
             const urlParts = url.split('/');
             const fileName = urlParts[urlParts.length - 1] || `receipt-${index + 1}`;
-            const isPdf = fileName.toLowerCase().endsWith('.pdf');
+            
+            // Improved PDF detection logic
+            // Check both filename extension and URL for PDF indicators
+            const isPdf = 
+              fileName.toLowerCase().endsWith('.pdf') || 
+              url.toLowerCase().includes('pdf') || 
+              url.toLowerCase().includes('application/pdf');
             
             return {
               url,
