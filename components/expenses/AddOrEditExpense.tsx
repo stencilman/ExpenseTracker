@@ -218,13 +218,40 @@ export default function AddOrEditExpense({
     });
   };
   
-  const removeExistingReceipt = (index: number) => {
-    setExistingReceipts((prevReceipts) => {
-      const updatedReceipts = prevReceipts.filter((_, i) => i !== index);
-      // Always mark as changed when removing existing receipts
-      if (isEditMode) setHasChanges(true);
-      return updatedReceipts;
-    });
+  const removeExistingReceipt = async (index: number) => {
+    try {
+      const receiptToRemove = existingReceipts[index];
+      if (receiptToRemove) {
+        // Extract the key from the URL
+        const urlParts = receiptToRemove.url.split('/');
+        const key = urlParts[urlParts.length - 1];
+        
+        // Call the API to delete the file from S3
+        const response = await fetch('/api/uploads/delete', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ key: receiptToRemove.url }),
+        });
+        
+        if (!response.ok) {
+          console.error('Failed to delete file from S3:', await response.text());
+          // Continue with UI removal even if S3 deletion fails
+        }
+      }
+      
+      // Update the UI state
+      setExistingReceipts((prevReceipts) => {
+        const updatedReceipts = prevReceipts.filter((_, i) => i !== index);
+        // Always mark as changed when removing existing receipts
+        if (isEditMode) setHasChanges(true);
+        return updatedReceipts;
+      });
+    } catch (error) {
+      console.error('Error removing receipt:', error);
+      toast.error('Failed to remove receipt. Please try again.');
+    }
   };
   
   // Helper function to get proxy URL for S3 files

@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, ListObjectsV2Command, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, ListObjectsV2Command, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Initialize S3 client
@@ -113,10 +113,33 @@ export async function getPresignedUrl(key: string, expiresIn: number = 3600): Pr
 
     try {
         const command = new GetObjectCommand(params);
-        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn });
-        return presignedUrl;
+        return await getSignedUrl(s3Client, command, { expiresIn });
     } catch (error) {
         console.error('Error generating presigned URL:', error);
         throw new Error(`Failed to generate presigned URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
+/**
+ * Delete a file from S3
+ * @param key The key (filename) of the object in S3
+ * @returns Promise that resolves when the file is deleted
+ */
+export async function deleteFileFromS3(key: string): Promise<void> {
+    if (!key) {
+        throw new Error('File key is required');
+    }
+
+    const params = {
+        Bucket: BUCKET_NAME,
+        Key: key
+    };
+
+    try {
+        await s3Client.send(new DeleteObjectCommand(params));
+        console.log(`File ${key} deleted successfully from S3`);
+    } catch (error) {
+        console.error('Error deleting file from S3:', error);
+        throw new Error(`Failed to delete file from S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
