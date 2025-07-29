@@ -329,6 +329,7 @@ export default function ReportDetailPage() {
                   report.expenses.map((expense) => (
                     <ReportExpenseCard
                       key={expense.id}
+                      id={expense.id}
                       date={format(new Date(expense.date), "dd/MM/yyyy")}
                       merchant={expense.merchant}
                       category={expense.category.toString().replace("_", " ")}
