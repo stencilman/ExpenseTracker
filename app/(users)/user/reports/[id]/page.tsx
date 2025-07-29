@@ -17,6 +17,7 @@ import AddReportDialog from "@/components/reports/AddReportDialog";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ExpenseCategory, ReportStatus } from "@prisma/client";
+import { mapReportStatusToDisplay } from "@/lib/report-status-utils";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -178,45 +179,19 @@ export default function ReportDetailPage() {
     )}`;
   };
 
-  // Get status display
-  const getStatusDisplay = (status: ReportStatus) => {
-    switch (status) {
-      case ReportStatus.PENDING:
-        return {
-          text: "DRAFT",
-          bgColor: "bg-gray-100",
-          textColor: "text-gray-800",
-        };
-      case ReportStatus.SUBMITTED:
-        return {
-          text: "SUBMITTED",
-          bgColor: "bg-yellow-100",
-          textColor: "text-yellow-800",
-        };
-      case ReportStatus.APPROVED:
-        return {
-          text: "APPROVED",
-          bgColor: "bg-green-100",
-          textColor: "text-green-800",
-        };
-      case ReportStatus.REJECTED:
-        return {
-          text: "REJECTED",
-          bgColor: "bg-red-100",
-          textColor: "text-red-800",
-        };
-      case ReportStatus.REIMBURSED:
-        return {
-          text: "REIMBURSED",
-          bgColor: "bg-blue-100",
-          textColor: "text-blue-800",
-        };
+  // Helper function to convert status color to Tailwind classes
+  const getStatusClasses = (color: string) => {
+    switch (color) {
+      case "orange":
+        return { bgColor: "bg-orange-100", textColor: "text-orange-800" };
+      case "blue":
+        return { bgColor: "bg-blue-100", textColor: "text-blue-800" };
+      case "green":
+        return { bgColor: "bg-green-100", textColor: "text-green-800" };
+      case "red":
+        return { bgColor: "bg-red-100", textColor: "text-red-800" };
       default:
-        return {
-          text: "PENDING",
-          bgColor: "bg-yellow-100",
-          textColor: "text-yellow-800",
-        };
+        return { bgColor: "bg-gray-100", textColor: "text-gray-800" };
     }
   };
 
@@ -246,8 +221,25 @@ export default function ReportDetailPage() {
     );
   }
 
-  // Get status display for the report
-  const statusDisplay = getStatusDisplay(report.status);
+  // Get status display for the report using the shared utility
+  const statusInfo = mapReportStatusToDisplay(
+    report.status,
+    report.submittedAt,
+    report.approvedAt,
+    report.rejectedAt,
+    report.reimbursedAt
+  );
+
+  // Convert the status color to Tailwind classes
+  const statusClasses = getStatusClasses(statusInfo.color);
+
+  // Create the final status display object
+  const statusDisplay = {
+    text: statusInfo.label,
+    bgColor: statusClasses.bgColor,
+    textColor: statusClasses.textColor,
+    additionalInfo: statusInfo.additionalInfo,
+  };
 
   return (
     <div className="p-4 space-y-4 overflow-y-auto h-[calc(100vh-10rem)]">
