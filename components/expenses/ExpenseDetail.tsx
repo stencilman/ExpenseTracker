@@ -376,7 +376,7 @@ export default function ExpenseDetail({
         </div>
 
         {/* What's next section for unreported expenses */}
-        {!expense.reportName && (
+        {expense.status === ExpenseStatus.UNREPORTED && (
           <div className="bg-white border rounded-lg p-4 mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="bg-slate-100 p-2 rounded-full flex-shrink-0">

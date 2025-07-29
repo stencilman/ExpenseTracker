@@ -14,7 +14,10 @@ export interface Expense {
   status: ExpenseStatus;
   receiptUrls?: string[];
   notes?: string | null;
+  claimReimbursement: boolean; // Whether the user wants to claim reimbursement for this expense
   userId: string;
+  reportId?: number | null; // Optional report association
+  reportName?: string;
   createdAt: Date | string; // Date for client-side, string for API responses
   updatedAt: Date | string; // Date for client-side, string for API responses
 }
@@ -44,6 +47,8 @@ export interface ExpenseFormValues {
   notes?: string;
   receiptUrls?: string[];
   status?: ExpenseStatus;
+  reportId?: number | null;
+  report?: string; // For the report dropdown UI value
 }
 
 /**
@@ -52,7 +57,7 @@ export interface ExpenseFormValues {
 export function formatExpenseForDisplay(expense: Expense): ExpenseWithUI {
   // Create a UI-friendly version of the expense
   const statusDisplay = getStatusDisplay(expense.status);
-  
+
   return {
     ...expense,
     statusDisplay

@@ -67,13 +67,26 @@ export async function getExpenses(
       orderBy: { date: "desc" },
       skip,
       take: pageSize,
+      include: {
+        report: {
+          select: {
+            title: true
+          }
+        }
+      }
     });
+
+    // Add reportName to each expense
+    const expensesWithReportName = expenses.map(expense => ({
+      ...expense,
+      reportName: expense.report?.title || null
+    }));
 
     // Get total count for pagination
     const total = await db.expense.count({ where });
 
     return {
-      expenses,
+      expenses: expensesWithReportName,
       pagination: {
         total,
         page,
@@ -112,7 +125,7 @@ export async function createExpense(data: ExpenseCreate, userId: string) {
       date: new Date(data.date),
       userId,
     }));
-    
+
     // Create expense with transaction to ensure both expense and history are created atomically
     const expense = await db.$transaction(async (tx) => {
       // Create the expense
@@ -123,7 +136,7 @@ export async function createExpense(data: ExpenseCreate, userId: string) {
           userId,
         },
       });
-      
+
       // Add CREATED event to expense history
       await tx.expenseHistory.create({
         data: {
@@ -133,18 +146,18 @@ export async function createExpense(data: ExpenseCreate, userId: string) {
           performedById: userId,
         },
       });
-      
+
       return newExpense;
     });
     return expense;
   } catch (error: any) {
     // Log detailed error information
     console.error("Failed to create expense:", error);
-    
+
     // Check for specific Prisma errors
     if (error.code) {
       console.error(`Prisma error code: ${error.code}`);
-      
+
       // Handle common Prisma error codes
       if (error.code === 'P2002') {
         throw new Error(`Unique constraint violation on field(s): ${error.meta?.target}`);
@@ -156,7 +169,7 @@ export async function createExpense(data: ExpenseCreate, userId: string) {
         throw new Error(`Database error (${error.code}): ${error.message}`);
       }
     }
-    
+
     // If it's not a recognized Prisma error, throw a generic error with the message
     throw new Error(`Failed to create expense: ${error.message || 'Unknown database error'}`);
   }
@@ -180,6 +193,20 @@ export async function updateExpense(id: number, data: ExpenseUpdate, userId: str
     const updateData: any = { ...data };
     if (data.date) {
       updateData.date = new Date(data.date);
+    }
+
+    // If reportId is provided, update status to REPORTED
+    if (updateData.reportId !== undefined) {
+      // If associating with a report, set status to REPORTED
+      if (updateData.reportId) {
+        console.log(`Setting expense ${id} status to REPORTED as it's being associated with report ${updateData.reportId}`);
+        updateData.status = "REPORTED";
+      }
+      // If removing from a report (reportId is null), set status back to UNREPORTED
+      else if (existingExpense.reportId) {
+        console.log(`Setting expense ${id} status to UNREPORTED as it's being removed from a report`);
+        updateData.status = "UNREPORTED";
+      }
     }
 
     const expense = await db.expense.update({

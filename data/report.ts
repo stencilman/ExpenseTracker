@@ -148,7 +148,7 @@ export async function getReportById(id: number, userId?: string) {
         where.userId = userId;
     }
 
-    return db.report.findUnique({
+    const report = await db.report.findUnique({
         where,
         include: {
             user: {
@@ -181,6 +181,28 @@ export async function getReportById(id: number, userId?: string) {
             },
         },
     });
+    
+    // Calculate total amount and non-reimbursable amount from all expenses
+    if (report && report.expenses) {
+        const totalAmount = report.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+        
+        // Calculate non-reimbursable amount (sum of expenses where claimReimbursement is false)
+        const nonReimbursableAmount = report.expenses
+            .filter(expense => expense.claimReimbursement === false)
+            .reduce((sum, expense) => sum + expense.amount, 0);
+        
+        // Calculate amount to be reimbursed (total - non-reimbursable)
+        const amountToBeReimbursed = totalAmount - nonReimbursableAmount;
+        
+        return {
+            ...report,
+            totalAmount,
+            nonReimbursableAmount,
+            amountToBeReimbursed
+        };
+    }
+    
+    return report;
 }
 
 /**

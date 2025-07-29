@@ -3,7 +3,14 @@
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, MoreHorizontal, Pencil, Send, Trash2, X } from "lucide-react";
+import {
+  FileText,
+  MoreHorizontal,
+  Pencil,
+  Send,
+  Trash2,
+  X,
+} from "lucide-react";
 import { Loader } from "@/components/ui/loader";
 import ReportExpenseCard from "@/components/reports/ReportExpenseCard";
 import AddReportDialog from "@/components/reports/AddReportDialog";
@@ -35,6 +42,8 @@ interface ApiReport {
   description?: string;
   status: ReportStatus;
   totalAmount: number;
+  nonReimbursableAmount: number;
+  amountToBeReimbursed: number;
   startDate?: Date;
   endDate?: Date;
   createdAt: Date;
@@ -49,6 +58,7 @@ interface ApiReport {
     category: ExpenseCategory;
     date: Date;
     description?: string;
+    claimReimbursement: boolean;
   }[];
   user: {
     id: string;
@@ -278,9 +288,7 @@ export default function ReportDetailPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() => setEditDialogOpen(true)}
-              >
+              <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
                 <Pencil className="h-4 w-4 mr-2" />
                 Edit Report
               </DropdownMenuItem>
@@ -343,7 +351,10 @@ export default function ReportDetailPage() {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Non-reimbursable Amount</span>
-                      <span className="font-medium">(-) 0.00</span>
+                      <span className="font-medium">
+                        (-) Rs.{report.nonReimbursableAmount.toLocaleString()}
+                        .00
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Applied Advance Amount</span>
@@ -351,7 +362,9 @@ export default function ReportDetailPage() {
                     </div>
                     <div className="flex justify-between text-sm font-medium pt-2 border-t">
                       <span>Amount to be Reimbursed</span>
-                      <span>Rs.{report.totalAmount.toLocaleString()}.00</span>
+                      <span>
+                        Rs.{report.amountToBeReimbursed.toLocaleString()}.00
+                      </span>
                     </div>
                   </div>
                 )}
@@ -412,12 +425,13 @@ export default function ReportDetailPage() {
                 Amount to be Reimbursed
               </div>
               <div className="font-bold">
-                Rs.{report.totalAmount.toLocaleString()}.00
+                Rs.{report.amountToBeReimbursed.toLocaleString()}.00
               </div>
             </div>
             <div className="flex items-center">
               <div className="bg-yellow-100 rounded-full h-6 w-6 flex items-center justify-center mr-2">
                 <span className="text-xs font-bold text-yellow-800">
+                  {/* TODO: Change it to the name of the approver */}
                   {report.user.firstName.charAt(0).toUpperCase()}
                 </span>
               </div>

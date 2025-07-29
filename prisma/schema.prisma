@@ -74,27 +74,28 @@ enum ExpenseCategory {
 }
 
 model Expense {
-  id          Int             @id @default(autoincrement())
-  amount      Float
-  merchant    String
-  date        DateTime
-  description String?
-  category    ExpenseCategory @default(OTHER)
-  status      ExpenseStatus   @default(UNREPORTED)
-  receiptUrls String[]
-  notes       String?
-  userId      String
-  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                Int             @id @default(autoincrement())
+  amount            Float
+  merchant          String
+  date              DateTime
+  description       String?
+  category          ExpenseCategory @default(OTHER)
+  status            ExpenseStatus   @default(UNREPORTED)
+  receiptUrls       String[]
+  notes             String?
+  claimReimbursement Boolean         @default(true)
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   // Report relation (optional - an expense can exist without being in a report)
-  reportId    Int?
-  report      Report?         @relation(fields: [reportId], references: [id])
+  reportId          Int?
+  report            Report?         @relation(fields: [reportId], references: [id])
   
   // History relation
-  history     ExpenseHistory[]
+  history           ExpenseHistory[]
   
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
 }
 
 enum ReportStatus {

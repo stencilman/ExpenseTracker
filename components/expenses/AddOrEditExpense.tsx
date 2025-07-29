@@ -3,7 +3,16 @@
 import * as React from "react";
 import { useState, useEffect, useCallback } from "react";
 import { useExpenses } from "../providers/ExpenseProvider";
-import { X, CalendarIcon, FileText, Image, File, Download } from "lucide-react";
+import {
+  X,
+  CalendarIcon,
+  FileText,
+  Image,
+  File,
+  Download,
+  Check,
+  ChevronsUpDown,
+} from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,6 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DropZone } from "@/components/ui/drop-zone";
 import { ExpenseCategory } from "@prisma/client";
 import { ExpenseWithUI } from "@/types/expense"; // Assuming this type is available
+import { useDebounce } from "@/lib/hooks/use-debounce";
 import {
   Drawer,
   DrawerClose,
@@ -45,6 +55,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Calendar } from "@/components/ui/calendar";
 import { Loader } from "@/components/ui/loader";
 
@@ -94,10 +112,17 @@ export default function AddOrEditExpense({
   initialFiles = [],
 }: AddOrEditExpenseProps) {
   const [files, setFiles] = useState<File[]>(initialFiles);
-  const [existingReceipts, setExistingReceipts] = useState<ExistingReceipt[]>([]);
+  const [existingReceipts, setExistingReceipts] = useState<ExistingReceipt[]>(
+    []
+  );
   const [categories, setCategories] = useState<ExpenseCategory[]>([]);
   const [initialFormValues, setInitialFormValues] = useState<any>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [reports, setReports] = useState<{ id: number; title: string }[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [selectedReportTitle, setSelectedReportTitle] = useState<string>("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { createExpense, updateExpense, isLoading } = useExpenses();
   const isEditMode = mode === "edit" && expense;
 
@@ -116,6 +141,33 @@ export default function AddOrEditExpense({
     };
     fetchCategories();
   }, []);
+
+  // Search for reports based on the debounced search term
+  useEffect(() => {
+    const searchReports = async () => {
+      if (!debouncedSearchTerm) {
+        setReports([]);
+        return;
+      }
+
+      setIsSearching(true);
+      try {
+        const response = await fetch(
+          `/api/reports/search?query=${encodeURIComponent(debouncedSearchTerm)}`
+        );
+        if (!response.ok) throw new Error("Failed to search reports");
+        const data = await response.json();
+        setReports(data.data || []);
+      } catch (error) {
+        console.error("Error searching reports:", error);
+        toast.error("Could not search for reports.");
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    searchReports();
+  }, [debouncedSearchTerm]);
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema) as any, // Type assertion to fix resolver compatibility
@@ -147,41 +199,59 @@ export default function AddOrEditExpense({
           reference: expense.notes || "",
           // Fields not typically edited but kept for schema validity
           currency: (expense as any).currency || "INR",
-          report: (expense as any).report || "",
+          report: expense.reportId ? expense.reportId.toString() : "",
           claimReimbursement: (expense as any).claimReimbursement ?? true,
         };
-        
+
+        // If there's a reportId, fetch the report details to display the title
+        if (expense.reportId) {
+          const fetchReportDetails = async () => {
+            try {
+              const response = await fetch(`/api/reports/${expense.reportId}`);
+              if (response.ok) {
+                const reportData = await response.json();
+                setSelectedReportTitle(reportData.title);
+                console.log("Loaded report title:", reportData.title);
+              }
+            } catch (error) {
+              console.error("Failed to fetch report details:", error);
+            }
+          };
+          fetchReportDetails();
+        }
+
         // Store the initial values for comparison
         setInitialFormValues(initialValues);
-        
+
         // Reset the form with these values
         form.reset(initialValues);
-        
+
         // Process existing receipt URLs if available
         if (expense.receiptUrls && expense.receiptUrls.length > 0) {
           const receipts = expense.receiptUrls.map((url, index) => {
             // Extract filename from URL or use a default name
-            const urlParts = url.split('/');
-            const fileName = urlParts[urlParts.length - 1] || `receipt-${index + 1}`;
-            
+            const urlParts = url.split("/");
+            const fileName =
+              urlParts[urlParts.length - 1] || `receipt-${index + 1}`;
+
             // Improved PDF detection logic
             // Check both filename extension and URL for PDF indicators
-            const isPdf = 
-              fileName.toLowerCase().endsWith('.pdf') || 
-              url.toLowerCase().includes('pdf') || 
-              url.toLowerCase().includes('application/pdf');
-            
+            const isPdf =
+              fileName.toLowerCase().endsWith(".pdf") ||
+              url.toLowerCase().includes("pdf") ||
+              url.toLowerCase().includes("application/pdf");
+
             return {
               url,
               name: fileName,
-              isPdf
+              isPdf,
             };
           });
           setExistingReceipts(receipts);
         } else {
           setExistingReceipts([]);
         }
-        
+
         // Reset the hasChanges flag
         setHasChanges(false);
       } else {
@@ -198,7 +268,7 @@ export default function AddOrEditExpense({
           description: "",
           reference: "",
         };
-        
+
         form.reset(defaultValues);
         setInitialFormValues(null); // No initial values in add mode
         setExistingReceipts([]);
@@ -224,30 +294,33 @@ export default function AddOrEditExpense({
       return updatedFiles;
     });
   };
-  
+
   const removeExistingReceipt = async (index: number) => {
     try {
       const receiptToRemove = existingReceipts[index];
       if (receiptToRemove) {
         // Extract the key from the URL
-        const urlParts = receiptToRemove.url.split('/');
+        const urlParts = receiptToRemove.url.split("/");
         const key = urlParts[urlParts.length - 1];
-        
+
         // Call the API to delete the file from S3
-        const response = await fetch('/api/uploads/delete', {
-          method: 'POST',
+        const response = await fetch("/api/uploads/delete", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({ key: receiptToRemove.url }),
         });
-        
+
         if (!response.ok) {
-          console.error('Failed to delete file from S3:', await response.text());
+          console.error(
+            "Failed to delete file from S3:",
+            await response.text()
+          );
           // Continue with UI removal even if S3 deletion fails
         }
       }
-      
+
       // Update the UI state
       setExistingReceipts((prevReceipts) => {
         const updatedReceipts = prevReceipts.filter((_, i) => i !== index);
@@ -256,21 +329,21 @@ export default function AddOrEditExpense({
         return updatedReceipts;
       });
     } catch (error) {
-      console.error('Error removing receipt:', error);
-      toast.error('Failed to remove receipt. Please try again.');
+      console.error("Error removing receipt:", error);
+      toast.error("Failed to remove receipt. Please try again.");
     }
   };
-  
+
   // Helper function to get proxy URL for S3 files
   const getProxyUrl = useCallback((url: string) => {
-    if (!url) return '';
+    if (!url) return "";
     // If it's already a proxy URL, return as is
-    if (url.includes('/api/files/')) return url;
-    
+    if (url.includes("/api/files/")) return url;
+
     // Extract the key from the S3 URL
-    const urlParts = url.split('/');
+    const urlParts = url.split("/");
     const key = urlParts[urlParts.length - 1];
-    
+
     // Return the proxy URL
     return `/api/files/${key}`;
   }, []);
@@ -285,7 +358,9 @@ export default function AddOrEditExpense({
         merchant: string;
         category: ExpenseCategory;
         notes: string;
+        claimReimbursement: boolean;
         receiptUrls?: string[];
+        reportId?: number;
       } = {
         amount: values.amount,
         date: format(values.date, "yyyy-MM-dd"), // Format as YYYY-MM-DD
@@ -293,11 +368,19 @@ export default function AddOrEditExpense({
         merchant: values.merchant,
         category: values.category,
         notes: values.reference || "",
+        claimReimbursement: values.claimReimbursement,
       };
 
+      // Add reportId if a report was selected
+      if (values.report) {
+        expenseData.reportId = parseInt(values.report, 10);
+      }
+
       // Combine existing receipts (that weren't removed) with new uploads
-      let receiptUrls: string[] = existingReceipts.map(receipt => receipt.url);
-      
+      let receiptUrls: string[] = existingReceipts.map(
+        (receipt) => receipt.url
+      );
+
       // Upload new receipts to S3 if there are any files
       if (files.length > 0) {
         // Upload each file and collect the URLs
@@ -305,17 +388,19 @@ export default function AddOrEditExpense({
           // Create a FormData object to send the file
           const formData = new FormData();
           formData.append("file", file);
-          
+
           // Upload the file to S3 via our API
           const uploadResponse = await fetch("/api/uploads", {
             method: "POST",
             body: formData,
           });
-          
+
           if (!uploadResponse.ok) {
-            throw new Error(`Failed to upload receipt: ${uploadResponse.statusText}`);
+            throw new Error(
+              `Failed to upload receipt: ${uploadResponse.statusText}`
+            );
           }
-          
+
           const uploadResult = await uploadResponse.json();
           receiptUrls.push(uploadResult.url);
         }
@@ -324,7 +409,22 @@ export default function AddOrEditExpense({
       // Add the receipt URLs to the expense data
       expenseData.receiptUrls = receiptUrls;
 
+      // Log the final payload for debugging
+      console.log("Final expense payload:", expenseData);
+
       if (isEditMode) {
+        // Make sure reportId is explicitly included in the payload
+        if (values.report) {
+          console.log("Updating expense with reportId:", expenseData.reportId);
+        } else {
+          // Explicitly set reportId to null to clear any existing association
+          // Use undefined instead of null to match the type definition
+          expenseData.reportId = undefined;
+          console.log(
+            "Explicitly setting reportId to undefined in update payload"
+          );
+        }
+
         await updateExpense(expense.id.toString(), expenseData);
         toast.success("Expense updated successfully!");
       } else {
@@ -359,53 +459,64 @@ export default function AddOrEditExpense({
   const getFilePreview = (file: File): string | null => {
     return file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
   };
-  
+
   // Watch form values to detect changes
   const formValues = form.watch();
-  
+
   // Effect to detect changes in form values
   useEffect(() => {
     if (isEditMode && initialFormValues) {
       // Compare current form values with initial values
-      const formChanged = Object.keys(initialFormValues).some(key => {
+      const formChanged = Object.keys(initialFormValues).some((key) => {
         // Special handling for date comparison
-        if (key === 'date') {
+        if (key === "date") {
           const initialDate = new Date(initialFormValues.date).toDateString();
           const currentDate = new Date(formValues.date).toDateString();
           return initialDate !== currentDate;
         }
-        
+
         // Type-safe comparison for specific fields
-        switch(key) {
-          case 'merchant':
+        switch (key) {
+          case "merchant":
             return initialFormValues.merchant !== formValues.merchant;
-          case 'category':
+          case "category":
             return initialFormValues.category !== formValues.category;
-          case 'amount':
+          case "amount":
             return initialFormValues.amount !== formValues.amount;
-          case 'description':
+          case "description":
             return initialFormValues.description !== formValues.description;
-          case 'reference':
+          case "reference":
             return initialFormValues.reference !== formValues.reference;
-          case 'currency':
+          case "currency":
             return initialFormValues.currency !== formValues.currency;
-          case 'report':
+          case "report":
             return initialFormValues.report !== formValues.report;
-          case 'claimReimbursement':
-            return initialFormValues.claimReimbursement !== formValues.claimReimbursement;
+          case "claimReimbursement":
+            return (
+              initialFormValues.claimReimbursement !==
+              formValues.claimReimbursement
+            );
           default:
             return false;
         }
       });
-      
+
       // Check if files or receipts have changed
       const filesChanged = files.length > 0;
-      const receiptsChanged = existingReceipts.length !== (expense?.receiptUrls?.length || 0);
-      
+      const receiptsChanged =
+        existingReceipts.length !== (expense?.receiptUrls?.length || 0);
+
       // Update the hasChanges state
       setHasChanges(formChanged || filesChanged || receiptsChanged);
     }
-  }, [formValues, files, existingReceipts, isEditMode, initialFormValues, expense]);
+  }, [
+    formValues,
+    files,
+    existingReceipts,
+    isEditMode,
+    initialFormValues,
+    expense,
+  ]);
 
   return (
     <Drawer open={isOpen} onOpenChange={(open) => !open && handleClose()}>
@@ -440,11 +551,82 @@ export default function AddOrEditExpense({
                   control={form.control}
                   name="report"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="flex flex-col">
                       <FormLabel>Report</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter report name" {...field} />
-                      </FormControl>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              role="combobox"
+                              className={cn(
+                                "w-full justify-between",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value
+                                ? selectedReportTitle ||
+                                  reports.find(
+                                    (report) =>
+                                      report.id.toString() === field.value
+                                  )?.title ||
+                                  "Report #" + field.value
+                                : "Select a report"}
+                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[300px] p-0" align="start">
+                          <Command>
+                            <CommandInput
+                              placeholder="Search for reports..."
+                              value={searchTerm}
+                              onValueChange={setSearchTerm}
+                              className="h-9"
+                            />
+                            <CommandList>
+                              <CommandEmpty>
+                                {isSearching ? (
+                                  <div className="py-6 text-center text-sm">
+                                    <Loader
+                                      size="sm"
+                                      className="mx-auto mb-2"
+                                    />
+                                    Searching...
+                                  </div>
+                                ) : (
+                                  "No reports found."
+                                )}
+                              </CommandEmpty>
+                              <CommandGroup>
+                                {reports.map((report) => (
+                                  <CommandItem
+                                    key={report.id}
+                                    value={report.title}
+                                    onSelect={() => {
+                                      console.log("Selected report:", report);
+                                      form.setValue(
+                                        "report",
+                                        report.id.toString()
+                                      );
+                                      // Store the selected report title
+                                      setSelectedReportTitle(report.title);
+                                      setSearchTerm("");
+                                      // Close the popover after selection
+                                      document.body.click();
+                                    }}
+                                  >
+                                    {report.title}
+                                  </CommandItem>
+                                ))}
+                              </CommandGroup>
+                            </CommandList>
+                          </Command>
+                        </PopoverContent>
+                      </Popover>
+                      <FormDescription>
+                        Search and select a report to attach this expense to.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -586,29 +768,27 @@ export default function AddOrEditExpense({
                   />
                 </div>
 
-                {/* Claim Reimbursement - only for 'add' mode */}
-                {!isEditMode && (
-                  <FormField
-                    control={form.control}
-                    name="claimReimbursement"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                        <FormControl>
-                          <Checkbox
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        </FormControl>
-                        <div className="space-y-1 leading-none">
-                          <FormLabel>Claim reimbursement</FormLabel>
-                          <FormDescription>
-                            Check this to claim reimbursement.
-                          </FormDescription>
-                        </div>
-                      </FormItem>
-                    )}
-                  />
-                )}
+                {/* Claim Reimbursement - available in both add and edit modes */}
+                <FormField
+                  control={form.control}
+                  name="claimReimbursement"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>Claim reimbursement</FormLabel>
+                        <FormDescription>
+                          Check this if you want to claim reimbursement for this expense.
+                        </FormDescription>
+                      </div>
+                    </FormItem>
+                  )}
+                />
 
                 {/* Description */}
                 <FormField
@@ -652,9 +832,9 @@ export default function AddOrEditExpense({
                 {/* FIX: Added missing self-closing tag `/>` */}
 
                 <div className="flex justify-end pt-2">
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
+                  <Button
+                    type="submit"
+                    className="w-full"
                     disabled={isLoading || (isEditMode && !hasChanges)}
                   >
                     {isLoading ? (
@@ -737,7 +917,7 @@ export default function AddOrEditExpense({
                               </div>
                             );
                           })}
-                          
+
                           {/* New files */}
                           {files.map((file, index) => {
                             const previewUrl = getFilePreview(file);

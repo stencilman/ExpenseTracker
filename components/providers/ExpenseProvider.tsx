@@ -40,7 +40,7 @@ function convertApiExpenseToUiExpense(apiExpense: Expense): ExpenseWithUI {
   return {
     ...apiExpense,
     statusDisplay,
-    reportName: undefined, // This would be populated from report data if available
+    reportName: apiExpense.reportName,
   };
 }
 

@@ -11,12 +11,14 @@ export const ExpenseCreateSchema = z.object({
   category: z.enum(Object.values(ExpenseCategory) as [ExpenseCategory, ...ExpenseCategory[]]),
   merchant: z.string().min(1, { message: "Merchant name is required" }),
   notes: z.string().optional(),
+  claimReimbursement: z.boolean().default(true),
   receiptUrls: z.array(z.string()).optional(),
 });
 
 // Schema for updating an existing expense
 export const ExpenseUpdateSchema = ExpenseCreateSchema.partial().extend({
   status: z.enum(Object.values(ExpenseStatus) as [ExpenseStatus, ...ExpenseStatus[]]).optional(),
+  reportId: z.number().nullable().optional(),
 });
 
 // Schema for filtering expenses
