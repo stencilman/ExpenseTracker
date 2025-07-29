@@ -44,7 +44,10 @@ export async function POST(
     // Submit report
     const updatedReport = await submitReport(reportId, session.user.id);
     
-    return jsonResponse(updatedReport);
+    // Get the full report with expenses to return
+    const fullReport = await getReportById(reportId, session.user.id);
+    
+    return jsonResponse(fullReport);
   } catch (error) {
     console.error("Error submitting report:", error);
     return errorResponse("Failed to submit report", 500);

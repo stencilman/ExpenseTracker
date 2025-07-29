@@ -100,6 +100,7 @@ model Expense {
 
 enum ReportStatus {
   PENDING
+  SUBMITTED
   APPROVED
   REJECTED
   REIMBURSED

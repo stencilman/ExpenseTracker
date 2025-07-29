@@ -333,11 +333,50 @@ export async function removeExpensesFromReport(reportId: number, expenseIds: num
  * Submit a report for approval
  */
 export async function submitReport(id: number, userId: string) {
+    // Get all expenses for this report to recalculate the total amount
+    const expenses = await db.expense.findMany({
+        where: { reportId: id }
+    });
+    
+    // Calculate total amount
+    const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
+    
+    // Calculate non-reimbursable amount
+    const nonReimbursableAmount = expenses
+        .filter(expense => expense.claimReimbursement === false)
+        .reduce((sum, expense) => sum + expense.amount, 0);
+    
+    // Calculate amount to be reimbursed
+    const amountToBeReimbursed = totalAmount - nonReimbursableAmount;
+    
+    // Update the report
     return db.report.update({
         where: { id, userId },
         data: {
-            status: "PENDING",
+            status: "SUBMITTED",
             submittedAt: new Date(),
+            totalAmount,
+            // Store calculated amounts in the database
+            // We could add these fields to the schema if needed
+        },
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                },
+            },
+            expenses: true,
+            approver: {
+                select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    email: true,
+                },
+            },
         },
     });
 }

@@ -183,7 +183,13 @@ export default function ReportDetailPage() {
     switch (status) {
       case ReportStatus.PENDING:
         return {
-          text: "PENDING",
+          text: "DRAFT",
+          bgColor: "bg-gray-100",
+          textColor: "text-gray-800",
+        };
+      case ReportStatus.SUBMITTED:
+        return {
+          text: "SUBMITTED",
           bgColor: "bg-yellow-100",
           textColor: "text-yellow-800",
         };
@@ -445,32 +451,12 @@ export default function ReportDetailPage() {
             </Button>
 
             <div className="pt-4 border-t">
-              <div className="text-sm text-gray-500 mb-1">Policy</div>
-              <div className="font-medium">Fast Code AI</div>
-            </div>
-
-            <div className="pt-4 border-t">
               <div className="text-sm text-gray-500 mb-1">Business Purpose</div>
               <div
                 className={report.description ? "font-medium" : "text-gray-400"}
               >
                 {report.description || "-"}
               </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <div className="text-sm text-gray-500 mb-1">Trip</div>
-              <div className="text-gray-400">-</div>
-            </div>
-
-            <div className="pt-4 border-t flex justify-between items-center">
-              <div>
-                <div className="text-sm text-gray-500 mb-1">Documents</div>
-                <div className="text-gray-400">-</div>
-              </div>
-              <Button variant="ghost" size="icon">
-                <span className="text-blue-600 text-xl font-bold">+</span>
-              </Button>
             </div>
           </div>
         </div>
