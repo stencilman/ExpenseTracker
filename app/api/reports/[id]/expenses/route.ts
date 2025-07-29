@@ -42,7 +42,8 @@ export async function POST(
     // Add expenses to report
     const updatedReport = await addExpensesToReport(
       reportId,
-      validationResult.data.expenseIds
+      validationResult.data.expenseIds,
+      session.user.id
     );
     
     return jsonResponse(updatedReport);

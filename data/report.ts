@@ -260,25 +260,40 @@ export async function deleteReport(id: number, userId?: string) {
 /**
  * Add expenses to a report
  */
-export async function addExpensesToReport(reportId: number, expenseIds: number[]) {
-    // Update each expense to associate with the report
-    const updatePromises = expenseIds.map((expenseId) =>
-        db.expense.update({
+export async function addExpensesToReport(reportId: number, expenseIds: number[], userId?: string) {
+    // Update each expense to associate with the report and create history entries
+    const updatePromises = expenseIds.map((expenseId) => {
+        // Create a history entry for the expense
+        const historyPromise = db.expenseHistory.create({
+            data: {
+                eventType: "ADDED_TO_REPORT",
+                details: `Added to report #${reportId}`,
+                expenseId,
+                reportId,
+                performedById: userId || undefined,
+            },
+        });
+
+        // Update the expense status
+        const updatePromise = db.expense.update({
             where: { id: expenseId },
             data: {
                 reportId,
                 status: "REPORTED",
             },
-        })
-    );
+        });
+
+        // Return both promises to be executed
+        return Promise.all([historyPromise, updatePromise]);
+    });
 
     // Execute all updates in parallel
-    await Promise.all(updatePromises);
+    await Promise.all(updatePromises.flat());
 
     // Recalculate the total amount for the report
     const expenses = await db.expense.findMany({
         where: { reportId },
-        select: { amount: true },
+        select: { amount: true, id: true },
     });
 
     const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);

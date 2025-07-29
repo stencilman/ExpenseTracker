@@ -13,6 +13,7 @@ export const ExpenseCreateSchema = z.object({
   notes: z.string().optional(),
   claimReimbursement: z.boolean().default(true),
   receiptUrls: z.array(z.string()).optional(),
+  reportId: z.number().nullable().optional(),
 });
 
 // Schema for updating an existing expense

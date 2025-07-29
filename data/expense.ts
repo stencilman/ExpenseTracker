@@ -128,13 +128,22 @@ export async function createExpense(data: ExpenseCreate, userId: string) {
 
     // Create expense with transaction to ensure both expense and history are created atomically
     const expense = await db.$transaction(async (tx) => {
+      // Prepare expense data
+      const expenseData: any = {
+        ...data,
+        date: new Date(data.date),
+        userId,
+      };
+      
+      // If reportId is provided, set status to REPORTED
+      if (data.reportId) {
+        console.log(`Setting new expense status to REPORTED as it's being created with report ${data.reportId}`);
+        expenseData.status = "REPORTED";
+      }
+
       // Create the expense
       const newExpense = await tx.expense.create({
-        data: {
-          ...data,
-          date: new Date(data.date),
-          userId,
-        },
+        data: expenseData,
       });
 
       // Add CREATED event to expense history
@@ -146,6 +155,19 @@ export async function createExpense(data: ExpenseCreate, userId: string) {
           performedById: userId,
         },
       });
+      
+      // If reportId is provided, add ADDED_TO_REPORT event to expense history
+      if (data.reportId) {
+        await tx.expenseHistory.create({
+          data: {
+            eventType: 'ADDED_TO_REPORT',
+            expenseId: newExpense.id,
+            details: `Added to report #${data.reportId}`,
+            reportId: data.reportId,
+            performedById: userId,
+          },
+        });
+      }
 
       return newExpense;
     });
