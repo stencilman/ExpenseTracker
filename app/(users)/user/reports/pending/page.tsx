@@ -82,7 +82,8 @@ export default function PendingReportsPage() {
     const fetchReports = async () => {
       setLoading(true);
       try {
-        const response = await fetch("/api/reports");
+        // Filter by PENDING status
+        const response = await fetch("/api/reports?status=PENDING");
 
         if (!response.ok) {
           throw new Error("Failed to fetch reports");
