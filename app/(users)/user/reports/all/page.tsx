@@ -72,14 +72,18 @@ export default function AllReportsPage() {
             dateRange = `Until ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
           }
           
+          // Calculate the correct total amount based on expenses
+          // This ensures we display the correct total even for unsubmitted reports
+          const totalAmount = report.totalAmount || 0;
+          
           return {
             id: report.id.toString(),
             iconType: "file-text",
             title: report.title,
             dateRange,
-            total: `Rs.${report.totalAmount.toLocaleString()}.00`,
+            total: `Rs.${totalAmount.toLocaleString()}.00`,
             expenseCount: report.expenses.length,
-            toBeReimbursed: `Rs.${report.totalAmount.toLocaleString()}.00`,
+            toBeReimbursed: `Rs.${totalAmount.toLocaleString()}.00`,
             status: statusDisplay,
           };
         });

@@ -29,7 +29,13 @@ export function mapReportStatusToDisplay(
     case ReportStatus.PENDING:
       return {
         label: "PENDING SUBMISSION",
+        color: "orange",
+      };
+    case ReportStatus.SUBMITTED:
+      return {
+        label: "SUBMITTED",
         color: "blue",
+        additionalInfo: submittedAt ? `On ${format(new Date(submittedAt), "dd/MM/yyyy")}` : undefined,
       };
     case ReportStatus.APPROVED:
       return {

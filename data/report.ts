@@ -126,8 +126,24 @@ export async function getReports(
         take: pageSize,
     });
 
+    // Calculate and update the totalAmount for each report based on its expenses
+    const updatedReports = reports.map(report => {
+        // Calculate the sum of all expense amounts
+        const calculatedTotal = report.expenses.reduce((sum, expense) => sum + expense.amount, 0);
+        
+        // If the report has expenses but totalAmount is 0, update it
+        if (report.expenses.length > 0 && report.totalAmount === 0) {
+            return {
+                ...report,
+                totalAmount: calculatedTotal
+            };
+        }
+        
+        return report;
+    });
+
     return {
-        data: reports,
+        data: updatedReports,
         meta: {
             totalCount,
             page,
