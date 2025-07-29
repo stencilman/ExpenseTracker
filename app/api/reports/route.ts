@@ -77,6 +77,15 @@ export async function POST(req: Request) {
     return jsonResponse(report, 201);
   } catch (error) {
     console.error("Error creating report:", error);
+    // Enhanced error logging for debugging
+    if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      return errorResponse(`Failed to create report: ${error.message}`, 500);
+    }
     return errorResponse("Failed to create report", 500);
   }
 }

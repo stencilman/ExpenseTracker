@@ -46,6 +46,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { Loader } from "@/components/ui/loader";
 
 // Define a unified form schema with Zod for both add and edit modes
 const expenseFormSchema = z.object({
@@ -656,11 +657,16 @@ export default function AddOrEditExpense({
                     className="w-full" 
                     disabled={isLoading || (isEditMode && !hasChanges)}
                   >
-                    {isLoading
-                      ? "Saving..."
-                      : isEditMode
-                      ? "Update Expense"
-                      : "Save Expense"}
+                    {isLoading ? (
+                      <>
+                        <Loader size="sm" className="mr-2" />
+                        Saving...
+                      </>
+                    ) : isEditMode ? (
+                      "Update Expense"
+                    ) : (
+                      "Save Expense"
+                    )}
                   </Button>
                 </div>
               </div>

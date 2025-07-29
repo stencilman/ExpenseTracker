@@ -1,57 +1,138 @@
 "use client";
 
 import { Report, ReportsTable } from "@/components/table/ReportsTable";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import AddReportDialog from "@/components/reports/AddReportDialog";
+import { ReportStatus } from "@prisma/client";
+import { format } from "date-fns";
+import { mapReportStatusToDisplay } from "@/lib/report-status-utils";
+import { Loader } from "@/components/ui/loader";
+
+// Define the API report type
+interface ApiReport {
+  id: number;
+  title: string;
+  description?: string;
+  status: ReportStatus;
+  totalAmount: number;
+  startDate?: Date;
+  endDate?: Date;
+  createdAt: Date;
+  submittedAt?: Date;
+  approvedAt?: Date;
+  rejectedAt?: Date;
+  reimbursedAt?: Date;
+  expenses: {
+    id: number;
+  }[];
+}
 
 export default function AllReportsPage() {
-  const allReports: Report[] = [
-    {
-      id: "1",
-      iconType: "calendar",
-      title: "May-June",
-      dateRange: "30/05/2025 - 30/05/2025",
-      total: "Rs.1,995.00",
-      expenseCount: 2,
-      toBeReimbursed: "Rs.1,995.00",
-      status: {
-        label: "AWAITING APPROVAL",
-        color: "orange",
-        additionalInfo: "From 27/06/2025",
-      },
-    },
-    {
-      id: "2",
-      iconType: "calendar",
-      title: "Bhive Passes and Trial Interview expense",
-      dateRange: "16/05/2025 - 16/05/2025",
-      total: "Rs.3,486.00",
-      expenseCount: 2,
-      toBeReimbursed: "Rs.1,995.00",
-      status: {
-        label: "AWAITING APPROVAL",
-        color: "orange",
-        additionalInfo: "From 27/06/2025",
-      },
-    },
-    {
-      id: "3",
-      iconType: "file-text",
-      title: "Client Meeting Expenses",
-      dateRange: "10/07/2025 - 15/07/2025",
-      total: "Rs.2,750.00",
-      expenseCount: 3,
-      toBeReimbursed: "Rs.2,750.00",
-      status: {
-        label: "PENDING SUBMISSION",
-        color: "blue",
-      },
-    },
-  ];
-
-  const [selectedReports, setSelectedReports] = React.useState<Report[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedReports, setSelectedReports] = useState<Report[]>([]);
   const [isAddReportOpen, setIsAddReportOpen] = useState(false);
+
+  // Fetch reports from API
+  useEffect(() => {
+    const fetchReports = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch("/api/reports");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch reports");
+        }
+        
+        const responseData = await response.json();
+        
+        // Check if the response has a data property (paginated response)
+        const reportsArray: ApiReport[] = responseData.data || responseData;
+        
+        // Convert API reports to UI reports format
+        const uiReports: Report[] = reportsArray.map((report) => {
+          // Get status display from utility function
+          const statusDisplay = mapReportStatusToDisplay(
+            report.status,
+            report.submittedAt,
+            report.approvedAt,
+            report.rejectedAt,
+            report.reimbursedAt
+          );
+          
+          // Format date range
+          let dateRange = "No date range";
+          if (report.startDate && report.endDate) {
+            dateRange = `${format(new Date(report.startDate), "dd/MM/yyyy")} - ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
+          } else if (report.startDate) {
+            dateRange = `From ${format(new Date(report.startDate), "dd/MM/yyyy")}`;
+          } else if (report.endDate) {
+            dateRange = `Until ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
+          }
+          
+          return {
+            id: report.id.toString(),
+            iconType: "file-text",
+            title: report.title,
+            dateRange,
+            total: `Rs.${report.totalAmount.toLocaleString()}.00`,
+            expenseCount: report.expenses.length,
+            toBeReimbursed: `Rs.${report.totalAmount.toLocaleString()}.00`,
+            status: statusDisplay,
+          };
+        });
+        
+        setReports(uiReports);
+      } catch (err) {
+        console.error("Error fetching reports:", err);
+        setError("Failed to load reports. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchReports();
+  }, []);
+  
+  // Refresh reports after adding a new one
+  const handleReportAdded = () => {
+    setLoading(true);
+    fetch("/api/reports")
+      .then(response => response.json())
+      .then(responseData => {
+        // Check if the response has a data property (paginated response)
+        const reportsArray: ApiReport[] = responseData.data || responseData;
+        
+        // Same conversion logic as above (simplified for brevity)
+        const uiReports: Report[] = reportsArray.map((report: ApiReport) => ({
+          id: report.id.toString(),
+          iconType: "file-text" as const,
+          title: report.title,
+          dateRange: report.startDate && report.endDate 
+            ? `${format(new Date(report.startDate), "dd/MM/yyyy")} - ${format(new Date(report.endDate), "dd/MM/yyyy")}` 
+            : "No date range",
+          total: `Rs.${report.totalAmount.toLocaleString()}.00`,
+          expenseCount: report.expenses.length,
+          toBeReimbursed: `Rs.${report.totalAmount.toLocaleString()}.00`,
+          status: mapReportStatusToDisplay(
+            report.status,
+            report.submittedAt,
+            report.approvedAt,
+            report.rejectedAt,
+            report.reimbursedAt
+          ),
+        }));
+        setReports(uiReports);
+      })
+      .catch(err => {
+        console.error("Error refreshing reports:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
 
   const handleSelectedRowsChange = (reports: Report[]) => {
     setSelectedReports(reports);
@@ -66,16 +147,30 @@ export default function AllReportsPage() {
         <AddReportDialog
           open={isAddReportOpen}
           onOpenChange={setIsAddReportOpen}
+          onReportAdded={handleReportAdded}
         />
       </div>
 
-      <ReportsTable
-        data={allReports}
-        enableRowSelection={true}
-        onSelectedRowsChange={handleSelectedRowsChange}
-        variant="page"
-        showPagination={true}
-      />
+      {loading ? (
+        <div className="text-center py-8">
+          <Loader size="md" text="Loading reports..." />
+        </div>
+      ) : error ? (
+        <div className="text-center py-8 text-red-500">
+          <div className="text-lg font-medium mb-2">{error}</div>
+          <Button onClick={() => window.location.reload()} variant="outline" size="sm">
+            Try Again
+          </Button>
+        </div>
+      ) : (
+        <ReportsTable
+          data={reports}
+          enableRowSelection={true}
+          onSelectedRowsChange={handleSelectedRowsChange}
+          variant="page"
+          showPagination={true}
+        />
+      )}
 
       {selectedReports.length > 0 && (
         <div className="flex justify-end mt-4">

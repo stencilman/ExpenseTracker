@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Loader } from "@/components/ui/loader";
 import {
   FileIcon,
   ChevronRight,
@@ -555,10 +556,7 @@ export default function ExpenseDetail({
               <TabsContent value="history">
                 {isLoadingHistory ? (
                   <div className="flex justify-center items-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                    <span className="ml-2 text-muted-foreground">
-                      Loading history...
-                    </span>
+                    <Loader size="md" text="Loading history..." />
                   </div>
                 ) : historyError ? (
                   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">

@@ -109,6 +109,8 @@ model Report {
   title           String
   description     String?
   status          ReportStatus  @default(PENDING)
+  startDate       DateTime?
+  endDate         DateTime?
   submittedAt     DateTime?
   approvedAt      DateTime?
   rejectedAt      DateTime?

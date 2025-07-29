@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader } from "@/components/ui/loader";
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -200,7 +201,9 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length + (enableRowSelection ? 1 : 0)}
                   className="h-24 text-center"
                 >
-                  No results.
+                  <div className="flex justify-center items-center">
+                    <span className="text-muted-foreground">No results</span>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

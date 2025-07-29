@@ -18,7 +18,9 @@ export async function POST(
       return errorResponse("Unauthorized", 401);
     }
 
-    const reportId = parseInt(params.id);
+    // Ensure params is properly awaited
+    const { id } = params;
+    const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return errorResponse("Invalid report ID", 400);
     }
