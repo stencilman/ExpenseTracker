@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MoreHorizontal, FileText } from "lucide-react";
+import { AddToReportDialog } from "./AddToReportDialog";
 
 // Mock Expense type for demonstration
 import { ExpenseWithUI, formatExpenseForDisplay } from "@/types/expense";
@@ -19,6 +21,9 @@ export default function UnreportedExpenseCard({
   onClick,
   compact = false,
 }: UnreportedExpenseCardProps) {
+  // State for Add To Report dialog
+  const [isAddToReportOpen, setIsAddToReportOpen] = useState(false);
+
   // Format date helper function
   const formatDate = (dateValue: string | Date) => {
     const date =
@@ -35,12 +40,19 @@ export default function UnreportedExpenseCard({
     // Stop event propagation to prevent the card onClick from firing
     e.stopPropagation();
   };
+  
+  // Handle Add To Report button click
+  const handleAddToReportClick = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    setIsAddToReportOpen(true);
+  };
 
   return (
-    <Card
-      className={`mb-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-24`}
-      onClick={onClick}
-    >
+    <>
+      <Card
+        className={`mb-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-24`}
+        onClick={onClick}
+      >
       {/*
         MODIFICATION 1:
         - Added `h-full` to make CardContent fill the parent Card's height (h-24).
@@ -155,6 +167,7 @@ export default function UnreportedExpenseCard({
                       variant="outline"
                       size="sm"
                       className="text-xs px-1.5 py-0 h-6 border-gray-300 hover:bg-gray-50 whitespace-nowrap"
+                      onClick={handleAddToReportClick}
                     >
                       Add To Report
                     </Button>
@@ -197,6 +210,7 @@ export default function UnreportedExpenseCard({
                       variant="outline"
                       size="sm"
                       className="text-sm px-3 py-1 border-gray-300 hover:bg-gray-50 whitespace-nowrap"
+                      onClick={handleAddToReportClick}
                     >
                       Add To Report
                     </Button>
@@ -216,5 +230,13 @@ export default function UnreportedExpenseCard({
         </div>
       </CardContent>
     </Card>
+
+    {/* Add To Report Dialog */}
+    <AddToReportDialog
+      isOpen={isAddToReportOpen}
+      onClose={() => setIsAddToReportOpen(false)}
+      expenseId={expense.id}
+    />
+    </>
   );
 }

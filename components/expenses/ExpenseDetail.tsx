@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+
 import { Expense, ExpenseWithUI } from "@/types/expense";
 import {
   ExpenseCategory,
@@ -16,9 +17,13 @@ import {
   DialogContent,
   DialogTitle,
   DialogHeader,
+  DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { AddToReportDialog } from "./AddToReportDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+
 import { Loader } from "@/components/ui/loader";
 import {
   FileIcon,
@@ -35,6 +40,7 @@ import {
   XCircle,
   CreditCard,
   Loader2,
+  ChevronsUpDown,
 } from "lucide-react";
 import { format } from "date-fns";
 import AddOrEditExpense from "./AddOrEditExpense";
@@ -143,7 +149,7 @@ export default function ExpenseDetail({
 }: ExpenseDetailProps) {
   // States for component
   const router = useRouter();
-  const { deleteExpense } = useExpenses();
+  const { deleteExpense, updateExpense } = useExpenses();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [historyData, setHistoryData] = useState<ExpenseHistoryEvent[]>([]);
@@ -155,6 +161,7 @@ export default function ExpenseDetail({
       ? expense.receiptUrls[0]
       : null
   );
+  const [isAddToReportOpen, setIsAddToReportOpen] = useState(false);
 
   // Helper function to check if a URL is a PDF
   const isPdfUrl = (url: string): boolean => {
@@ -295,6 +302,16 @@ export default function ExpenseDetail({
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Add to Report Dialog */}
+      <AddToReportDialog
+        expenseId={expense.id}
+        isOpen={isAddToReportOpen}
+        onClose={() => {
+          setIsAddToReportOpen(false);
+          onClose(); // Also close the main detail panel on success
+        }}
+      />
+
       {/* File Preview Dialog */}
       <Dialog open={isFilePreviewOpen} onOpenChange={setIsFilePreviewOpen}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
@@ -343,6 +360,8 @@ export default function ExpenseDetail({
         </DialogContent>
       </Dialog>
 
+
+
       <div className="p-4 h-[calc(100vh-10rem)] overflow-y-auto overflow-x-hidden w-full">
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-2">
@@ -390,7 +409,12 @@ export default function ExpenseDetail({
                 </p>
               </div>
             </div>
-            <Button className="flex-shrink-0">Add To Report</Button>
+            <Button
+              className="flex-shrink-0"
+              onClick={() => setIsAddToReportOpen(true)}
+            >
+              Add To Report
+            </Button>
           </div>
         )}
 
