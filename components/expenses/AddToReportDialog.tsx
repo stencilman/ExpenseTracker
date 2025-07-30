@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -17,6 +18,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
+interface Report {
+  id: string;
+  title: string;
+}
+
 interface AddToReportDialogProps {
   expenseId: string | number;
   isOpen: boolean;
@@ -33,43 +39,37 @@ export function AddToReportDialog({
   const [searchQuery, setSearchQuery] = useState("");
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [isLoading, setIsLoading] = useState(false);
-  const [reports, setReports] = useState<{ id: string; title: string }[]>([]);
+  const [reports, setReports] = useState<Report[]>([]);
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null);
   const [selectedReportTitle, setSelectedReportTitle] = useState<string>("");
 
-  // Fetch reports when the dialog is open and the search query changes
+  // --- NEW: State and Ref for dropdown control ---
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const searchContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Fetch reports when the search query changes
   useEffect(() => {
-    if (!isOpen) {
+    // --- UPDATED: More robust conditions to fetch ---
+    if (!debouncedSearchQuery || debouncedSearchQuery === selectedReportTitle) {
+      setReports([]);
       return;
     }
 
-    console.log("Dialog is open, fetching reports...");
-    
     const fetchReports = async () => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams();
-        if (debouncedSearchQuery) {
-          params.append("query", debouncedSearchQuery);
-        }
-        
-        console.log(`Fetching from: /api/reports/search?${params.toString()}`);
-        const response = await fetch(`/api/reports/search?${params.toString()}`);
-        
+        const response = await fetch(
+          `/api/reports/search?query=${encodeURIComponent(
+            debouncedSearchQuery
+          )}`
+        );
         if (!response.ok) throw new Error("Failed to fetch reports");
-
         const data = await response.json();
-        console.log("API Response:", data);
-        
         const reportsArray = Array.isArray(data) ? data : data.data || [];
-        console.log("Reports array to use:", reportsArray);
-        
         const mappedReports = reportsArray.map((report: any) => ({
           id: report.id.toString(),
           title: report.title,
         }));
-        
-        console.log("Mapped reports to set in state:", mappedReports);
         setReports(mappedReports);
       } catch (error) {
         console.error("Error fetching reports:", error);
@@ -80,15 +80,33 @@ export function AddToReportDialog({
     };
 
     fetchReports();
-  }, [isOpen, debouncedSearchQuery]);
+  }, [debouncedSearchQuery, selectedReportTitle]); // Dependency on selectedReportTitle prevents re-fetch on selection
 
-  // Reset state when the dialog is closed
+  // --- NEW: Effect to handle clicks outside the search container ---
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  // Reset all state when the dialog is closed
   useEffect(() => {
     if (!isOpen) {
-      setReports([]);
       setSearchQuery("");
+      setReports([]);
       setSelectedReportId(null);
       setSelectedReportTitle("");
+      setIsDropdownOpen(false);
+      setIsAddingToReport(false);
     }
   }, [isOpen]);
 
@@ -102,20 +120,16 @@ export function AddToReportDialog({
     try {
       const response = await fetch(`/api/expenses/${expenseId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          reportId: parseInt(selectedReportId),
+          reportId: parseInt(selectedReportId, 10),
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`Error: ${response.status}`);
 
       toast.success(`Expense added to report: ${selectedReportTitle}`);
-      onClose();
+      onClose(); // This will trigger the state reset via the useEffect above
       router.refresh();
     } catch (error) {
       console.error("Failed to add expense to report:", error);
@@ -125,19 +139,12 @@ export function AddToReportDialog({
     }
   };
 
-  // Debug render - log component state
-  console.log("Rendering AddToReportDialog with state:", {
-    isOpen,
-    reports: reports.length,
-    isLoading,
-    selectedReportId,
-    selectedReportTitle,
-  });
-
-  const handleSelectReport = (reportId: string, reportTitle: string) => {
-    console.log("Selecting report:", reportId, reportTitle);
-    setSelectedReportId(reportId);
-    setSelectedReportTitle(reportTitle);
+  // --- UPDATED: handleSelectReport now controls the input and dropdown ---
+  const handleSelectReport = (report: Report) => {
+    setSelectedReportId(report.id);
+    setSelectedReportTitle(report.title);
+    setSearchQuery(report.title); // Set input text to the selected report's title
+    setIsDropdownOpen(false); // Close the dropdown on selection
   };
 
   return (
@@ -146,11 +153,12 @@ export function AddToReportDialog({
         <DialogHeader>
           <DialogTitle>Add to Report</DialogTitle>
           <DialogDescription>
-            Select a report to add this expense to.
+            Search for and select a report to add this expense to.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="relative">
+          {/* --- UPDATED: Wrapped in a div with a ref for click-outside detection --- */}
+          <div className="relative" ref={searchContainerRef}>
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Search className="w-4 h-4 text-gray-500" />
             </div>
@@ -159,31 +167,43 @@ export function AddToReportDialog({
               placeholder="Search reports..."
               className="pl-10"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setIsDropdownOpen(true)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                // --- NEW: If user starts typing again, clear the previous selection ---
+                if (selectedReportId) {
+                  setSelectedReportId(null);
+                  setSelectedReportTitle("");
+                }
+                setIsDropdownOpen(true);
+              }}
             />
-          </div>
-          
-          <div className="border rounded-md max-h-[200px] overflow-y-auto">
-            {isLoading ? (
-              <div className="flex items-center justify-center p-4">
-                <Loader className="h-4 w-4 animate-spin mr-2" />
-                <span>Loading reports...</span>
-              </div>
-            ) : reports.length === 0 ? (
-              <div className="p-4 text-center text-sm text-muted-foreground">
-                No reports found
-              </div>
-            ) : (
-              <div className="divide-y">
-                {reports.map((report) => (
-                  <div
-                    key={report.id}
-                    className={`p-2 cursor-pointer hover:bg-gray-100 ${selectedReportId === report.id ? 'bg-gray-100' : ''}`}
-                    onClick={() => handleSelectReport(report.id, report.title)}
-                  >
-                    {report.title}
+
+            {/* --- UPDATED: Dropdown is now conditionally rendered --- */}
+            {isDropdownOpen && (
+              <div className="absolute top-full mt-2 w-full z-10 border rounded-md bg-white shadow-lg max-h-[200px] overflow-y-auto">
+                {isLoading ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader className="h-4 w-4 animate-spin mr-2" />
+                    <span>Loading reports...</span>
                   </div>
-                ))}
+                ) : reports.length === 0 && debouncedSearchQuery ? (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No reports found
+                  </div>
+                ) : reports.length > 0 ? (
+                  <div className="divide-y">
+                    {reports.map((report) => (
+                      <div
+                        key={report.id}
+                        className="p-2 cursor-pointer hover:bg-gray-100"
+                        onClick={() => handleSelectReport(report)}
+                      >
+                        {report.title}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             )}
           </div>

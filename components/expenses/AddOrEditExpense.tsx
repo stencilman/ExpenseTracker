@@ -12,6 +12,7 @@ import {
   Download,
   Check,
   ChevronsUpDown,
+  Search,
 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -122,6 +123,8 @@ export default function AddOrEditExpense({
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [selectedReportTitle, setSelectedReportTitle] = useState<string>("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const searchInputRef = React.useRef<HTMLDivElement>(null); // Ref for the wrapper div
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { createExpense, updateExpense, isLoading } = useExpenses();
   const isEditMode = mode === "edit" && expense;
@@ -145,7 +148,7 @@ export default function AddOrEditExpense({
   // Search for reports based on the debounced search term
   useEffect(() => {
     const searchReports = async () => {
-      if (!debouncedSearchTerm) {
+      if (!debouncedSearchTerm || debouncedSearchTerm === selectedReportTitle) {
         setReports([]);
         return;
       }
@@ -167,7 +170,7 @@ export default function AddOrEditExpense({
     };
 
     searchReports();
-  }, [debouncedSearchTerm]);
+  }, [debouncedSearchTerm, selectedReportTitle]);
 
   const form = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema) as any, // Type assertion to fix resolver compatibility
@@ -211,13 +214,16 @@ export default function AddOrEditExpense({
               if (response.ok) {
                 const reportData = await response.json();
                 setSelectedReportTitle(reportData.title);
-                console.log("Loaded report title:", reportData.title);
+                setSearchTerm(reportData.title);
               }
             } catch (error) {
               console.error("Failed to fetch report details:", error);
             }
           };
           fetchReportDetails();
+        } else {
+          setSelectedReportTitle("");
+          setSearchTerm("");
         }
 
         // Store the initial values for comparison
@@ -229,30 +235,20 @@ export default function AddOrEditExpense({
         // Process existing receipt URLs if available
         if (expense.receiptUrls && expense.receiptUrls.length > 0) {
           const receipts = expense.receiptUrls.map((url, index) => {
-            // Extract filename from URL or use a default name
             const urlParts = url.split("/");
             const fileName =
               urlParts[urlParts.length - 1] || `receipt-${index + 1}`;
-
-            // Improved PDF detection logic
-            // Check both filename extension and URL for PDF indicators
             const isPdf =
               fileName.toLowerCase().endsWith(".pdf") ||
               url.toLowerCase().includes("pdf") ||
               url.toLowerCase().includes("application/pdf");
 
-            return {
-              url,
-              name: fileName,
-              isPdf,
-            };
+            return { url, name: fileName, isPdf };
           });
           setExistingReceipts(receipts);
         } else {
           setExistingReceipts([]);
         }
-
-        // Reset the hasChanges flag
         setHasChanges(false);
       } else {
         // Reset form to default values for adding a new expense
@@ -270,17 +266,34 @@ export default function AddOrEditExpense({
         };
 
         form.reset(defaultValues);
-        setInitialFormValues(null); // No initial values in add mode
+        setInitialFormValues(null);
         setExistingReceipts([]);
-        setHasChanges(false); // Reset changes flag
+        setSelectedReportTitle(""); // Explicitly clear state
+        setSearchTerm(""); // Explicitly clear state
+        setHasChanges(false);
       }
     }
   }, [isOpen, isEditMode, expense, form, categories]);
 
+  // Effect to handle clicks outside the dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handleFilesDrop = (newFiles: File[]) => {
     setFiles((prevFiles) => {
       const updatedFiles = [...prevFiles, ...newFiles];
-      // Mark as changed if we have files in edit mode
       if (isEditMode) setHasChanges(true);
       return updatedFiles;
     });
@@ -289,7 +302,6 @@ export default function AddOrEditExpense({
   const removeFile = (index: number) => {
     setFiles((prevFiles) => {
       const updatedFiles = prevFiles.filter((_, i) => i !== index);
-      // Mark as changed if we're in edit mode
       if (isEditMode) setHasChanges(true);
       return updatedFiles;
     });
@@ -299,16 +311,9 @@ export default function AddOrEditExpense({
     try {
       const receiptToRemove = existingReceipts[index];
       if (receiptToRemove) {
-        // Extract the key from the URL
-        const urlParts = receiptToRemove.url.split("/");
-        const key = urlParts[urlParts.length - 1];
-
-        // Call the API to delete the file from S3
         const response = await fetch("/api/uploads/delete", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ key: receiptToRemove.url }),
         });
 
@@ -317,14 +322,11 @@ export default function AddOrEditExpense({
             "Failed to delete file from S3:",
             await response.text()
           );
-          // Continue with UI removal even if S3 deletion fails
         }
       }
 
-      // Update the UI state
       setExistingReceipts((prevReceipts) => {
         const updatedReceipts = prevReceipts.filter((_, i) => i !== index);
-        // Always mark as changed when removing existing receipts
         if (isEditMode) setHasChanges(true);
         return updatedReceipts;
       });
@@ -334,62 +336,38 @@ export default function AddOrEditExpense({
     }
   };
 
-  // Helper function to get proxy URL for S3 files
   const getProxyUrl = useCallback((url: string) => {
     if (!url) return "";
-    // If it's already a proxy URL, return as is
     if (url.includes("/api/files/")) return url;
-
-    // Extract the key from the S3 URL
     const urlParts = url.split("/");
     const key = urlParts[urlParts.length - 1];
-
-    // Return the proxy URL
     return `/api/files/${key}`;
   }, []);
 
   const onSubmit = form.handleSubmit(async (values) => {
     try {
-      // Format the data payload for the API
-      const expenseData: {
-        amount: number;
-        date: string;
-        description: string;
-        merchant: string;
-        category: ExpenseCategory;
-        notes: string;
-        claimReimbursement: boolean;
-        receiptUrls?: string[];
-        reportId?: number;
-      } = {
+      const expenseData: any = {
         amount: values.amount,
-        date: format(values.date, "yyyy-MM-dd"), // Format as YYYY-MM-DD
-        description: values.description || "", // Use merchant as fallback
+        date: format(values.date, "yyyy-MM-dd"),
+        description: values.description || "",
         merchant: values.merchant,
         category: values.category,
         notes: values.reference || "",
         claimReimbursement: values.claimReimbursement,
       };
 
-      // Add reportId if a report was selected
       if (values.report) {
         expenseData.reportId = parseInt(values.report, 10);
       }
 
-      // Combine existing receipts (that weren't removed) with new uploads
       let receiptUrls: string[] = existingReceipts.map(
         (receipt) => receipt.url
       );
 
-      // Upload new receipts to S3 if there are any files
       if (files.length > 0) {
-        // Upload each file and collect the URLs
         for (const file of files) {
-          // Create a FormData object to send the file
           const formData = new FormData();
           formData.append("file", file);
-
-          // Upload the file to S3 via our API
           const uploadResponse = await fetch("/api/uploads", {
             method: "POST",
             body: formData,
@@ -400,31 +378,17 @@ export default function AddOrEditExpense({
               `Failed to upload receipt: ${uploadResponse.statusText}`
             );
           }
-
           const uploadResult = await uploadResponse.json();
           receiptUrls.push(uploadResult.url);
         }
       }
 
-      // Add the receipt URLs to the expense data
       expenseData.receiptUrls = receiptUrls;
 
-      // Log the final payload for debugging
-      console.log("Final expense payload:", expenseData);
-
       if (isEditMode) {
-        // Make sure reportId is explicitly included in the payload
-        if (values.report) {
-          console.log("Updating expense with reportId:", expenseData.reportId);
-        } else {
-          // Explicitly set reportId to null to clear any existing association
-          // Use undefined instead of null to match the type definition
-          expenseData.reportId = undefined;
-          console.log(
-            "Explicitly setting reportId to undefined in update payload"
-          );
+        if (!values.report) {
+          expenseData.reportId = null; // Explicitly disassociate
         }
-
         await updateExpense(expense.id.toString(), expenseData);
         toast.success("Expense updated successfully!");
       } else {
@@ -432,7 +396,7 @@ export default function AddOrEditExpense({
         toast.success("Expense created successfully!");
       }
 
-      onClose(); // Close the drawer on success
+      onClose();
     } catch (error) {
       console.error("Error saving expense:", error);
       toast.error(
@@ -460,53 +424,24 @@ export default function AddOrEditExpense({
     return file.type.startsWith("image/") ? URL.createObjectURL(file) : null;
   };
 
-  // Watch form values to detect changes
   const formValues = form.watch();
 
-  // Effect to detect changes in form values
   useEffect(() => {
     if (isEditMode && initialFormValues) {
-      // Compare current form values with initial values
       const formChanged = Object.keys(initialFormValues).some((key) => {
-        // Special handling for date comparison
         if (key === "date") {
-          const initialDate = new Date(initialFormValues.date).toDateString();
-          const currentDate = new Date(formValues.date).toDateString();
-          return initialDate !== currentDate;
+          return (
+            new Date(initialFormValues.date).toDateString() !==
+            new Date(formValues.date).toDateString()
+          );
         }
-
-        // Type-safe comparison for specific fields
-        switch (key) {
-          case "merchant":
-            return initialFormValues.merchant !== formValues.merchant;
-          case "category":
-            return initialFormValues.category !== formValues.category;
-          case "amount":
-            return initialFormValues.amount !== formValues.amount;
-          case "description":
-            return initialFormValues.description !== formValues.description;
-          case "reference":
-            return initialFormValues.reference !== formValues.reference;
-          case "currency":
-            return initialFormValues.currency !== formValues.currency;
-          case "report":
-            return initialFormValues.report !== formValues.report;
-          case "claimReimbursement":
-            return (
-              initialFormValues.claimReimbursement !==
-              formValues.claimReimbursement
-            );
-          default:
-            return false;
-        }
+        return initialFormValues[key] !== (formValues as any)[key];
       });
 
-      // Check if files or receipts have changed
       const filesChanged = files.length > 0;
       const receiptsChanged =
         existingReceipts.length !== (expense?.receiptUrls?.length || 0);
 
-      // Update the hasChanges state
       setHasChanges(formChanged || filesChanged || receiptsChanged);
     }
   }, [
@@ -544,86 +479,65 @@ export default function AddOrEditExpense({
               onSubmit={onSubmit}
               className="grid grid-cols-1 md:grid-cols-3 gap-6"
             >
-              {/* Form Fields Column */}
               <div className="md:col-span-1 space-y-4">
-                {/* Report Input - available in both add and edit modes */}
                 <FormField
                   control={form.control}
                   name="report"
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
                       <FormLabel>Report</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              role="combobox"
-                              className={cn(
-                                "w-full justify-between",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value
-                                ? selectedReportTitle ||
-                                  reports.find(
-                                    (report) =>
-                                      report.id.toString() === field.value
-                                  )?.title ||
-                                  "Report #" + field.value
-                                : "Select a report"}
-                              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[300px] p-0" align="start">
-                          <Command>
-                            <CommandInput
-                              placeholder="Search for reports..."
-                              value={searchTerm}
-                              onValueChange={setSearchTerm}
-                              className="h-9"
-                            />
-                            <CommandList>
-                              <CommandEmpty>
-                                {isSearching ? (
-                                  <div className="py-6 text-center text-sm">
-                                    <Loader
-                                      size="sm"
-                                      className="mx-auto mb-2"
-                                    />
-                                    Searching...
-                                  </div>
-                                ) : (
-                                  "No reports found."
-                                )}
-                              </CommandEmpty>
-                              <CommandGroup>
+                      <div className="relative" ref={searchInputRef}>
+                        <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                          <Search className="w-4 h-4 text-gray-500" />
+                        </div>
+                        <Input
+                          type="text"
+                          placeholder="Search reports..."
+                          className="pl-10"
+                          value={searchTerm} // FIX: Use searchTerm as single source of truth for display
+                          onChange={(e) => {
+                            setSearchTerm(e.target.value);
+                            // If a report was selected, typing clears it
+                            if (selectedReportTitle) {
+                              setSelectedReportTitle("");
+                              field.onChange(""); // Use field.onChange to clear RHF value
+                            }
+                          }}
+                          onFocus={() => setIsDropdownOpen(true)} // FIX: Simplified onFocus
+                        />
+                        {isDropdownOpen && debouncedSearchTerm && (
+                          <div className="border rounded-md max-h-[200px] overflow-y-auto mt-2 absolute z-10 bg-white w-full shadow-lg">
+                            {isSearching ? (
+                              <div className="flex items-center justify-center p-4">
+                                <Loader className="h-4 w-4 animate-spin mr-2" />
+                                <span>Loading reports...</span>
+                              </div>
+                            ) : reports.length === 0 ? (
+                              <div className="p-4 text-center text-sm text-muted-foreground">
+                                No reports found
+                              </div>
+                            ) : (
+                              <div className="divide-y">
                                 {reports.map((report) => (
-                                  <CommandItem
+                                  <div
                                     key={report.id}
-                                    value={report.title}
-                                    onSelect={() => {
-                                      console.log("Selected report:", report);
-                                      form.setValue(
-                                        "report",
-                                        report.id.toString()
-                                      );
-                                      // Store the selected report title
-                                      setSelectedReportTitle(report.title);
-                                      setSearchTerm("");
-                                      // Close the popover after selection
-                                      document.body.click();
+                                    className="p-2 cursor-pointer hover:bg-gray-100"
+                                    onClick={() => {
+                                      const exactTitle = report.title;
+                                      field.onChange(report.id.toString());
+                                      setSelectedReportTitle(exactTitle);
+                                      setSearchTerm(exactTitle);
+                                      setIsDropdownOpen(false);
                                     }}
                                   >
                                     {report.title}
-                                  </CommandItem>
+                                  </div>
                                 ))}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                       <FormDescription>
                         Search and select a report to attach this expense to.
                       </FormDescription>
@@ -632,7 +546,6 @@ export default function AddOrEditExpense({
                   )}
                 />
 
-                {/* Expense Date */}
                 <FormField
                   control={form.control}
                   name="date"
@@ -672,7 +585,6 @@ export default function AddOrEditExpense({
                   )}
                 />
 
-                {/* Merchant Input */}
                 <FormField
                   control={form.control}
                   name="merchant"
@@ -687,7 +599,6 @@ export default function AddOrEditExpense({
                   )}
                 />
 
-                {/* Category */}
                 <FormField
                   control={form.control}
                   name="category"
@@ -718,7 +629,6 @@ export default function AddOrEditExpense({
                   )}
                 />
 
-                {/* Amount */}
                 <div className="grid grid-cols-4 gap-2">
                   <FormField
                     control={form.control}
@@ -729,10 +639,8 @@ export default function AddOrEditExpense({
                         <Select
                           onValueChange={field.onChange}
                           value={field.value}
-                          disabled={!!isEditMode}
+                          // disabled={isEditMode}
                         >
-                          {" "}
-                          {/* FIX: Coerce to boolean */}
                           <FormControl>
                             <SelectTrigger>
                               <SelectValue />
@@ -768,7 +676,6 @@ export default function AddOrEditExpense({
                   />
                 </div>
 
-                {/* Claim Reimbursement - available in both add and edit modes */}
                 <FormField
                   control={form.control}
                   name="claimReimbursement"
@@ -783,14 +690,14 @@ export default function AddOrEditExpense({
                       <div className="space-y-1 leading-none">
                         <FormLabel>Claim reimbursement</FormLabel>
                         <FormDescription>
-                          Check this if you want to claim reimbursement for this expense.
+                          Check this if you want to claim reimbursement for this
+                          expense.
                         </FormDescription>
                       </div>
                     </FormItem>
                   )}
                 />
 
-                {/* Description */}
                 <FormField
                   control={form.control}
                   name="description"
@@ -809,9 +716,7 @@ export default function AddOrEditExpense({
                     </FormItem>
                   )}
                 />
-                {/* FIX: Removed stray closing tag `/>` from here */}
 
-                {/* Reference */}
                 <FormField
                   control={form.control}
                   name="reference"
@@ -829,7 +734,6 @@ export default function AddOrEditExpense({
                     </FormItem>
                   )}
                 />
-                {/* FIX: Added missing self-closing tag `/>` */}
 
                 <div className="flex justify-end pt-2">
                   <Button
@@ -879,7 +783,6 @@ export default function AddOrEditExpense({
                           </Button>
                         </div>
                         <div className="flex gap-2 pb-2 pt-2 overflow-x-auto">
-                          {/* Existing receipts */}
                           {existingReceipts.map((receipt, index) => {
                             const proxyUrl = getProxyUrl(receipt.url);
                             return (
@@ -918,7 +821,6 @@ export default function AddOrEditExpense({
                             );
                           })}
 
-                          {/* New files */}
                           {files.map((file, index) => {
                             const previewUrl = getFilePreview(file);
                             return (
@@ -932,6 +834,9 @@ export default function AddOrEditExpense({
                                       src={previewUrl}
                                       alt={file.name}
                                       className="w-full h-full object-cover"
+                                      onLoad={() =>
+                                        URL.revokeObjectURL(previewUrl)
+                                      }
                                     />
                                   ) : (
                                     <div className="flex flex-col items-center justify-center p-1">
