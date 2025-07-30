@@ -26,6 +26,7 @@ model User {
   reports       Report[]                // Reports created by this user
   approvedReports Report[] @relation("ReportApprovals") // Reports approved by this user
   expenseActions ExpenseHistory[] @relation("ExpenseActions") // Actions performed on expenses
+  reportActions ReportHistory[] @relation("ReportActions") // Actions performed on reports
   role          UserRole  @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
@@ -126,6 +127,7 @@ model Report {
   // Relations
   expenses        Expense[]
   expenseHistory  ExpenseHistory[]
+  history         ReportHistory[]
   
   // Approval information
   approvedBy      String?
@@ -150,6 +152,14 @@ enum ExpenseEventType {
   REIMBURSED
 }
 
+enum ReportEventType {
+  CREATED
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
 model ExpenseHistory {
   id          Int              @id @default(autoincrement())
   eventType   ExpenseEventType
@@ -167,6 +177,23 @@ model ExpenseHistory {
   // Report reference (optional)
   reportId    Int?
   report      Report?        @relation(fields: [reportId], references: [id])
+  
+  createdAt   DateTime       @default(now())
+}
+
+model ReportHistory {
+  id          Int              @id @default(autoincrement())
+  eventType   ReportEventType
+  eventDate   DateTime        @default(now())
+  details     String?
+  
+  // Foreign keys
+  reportId    Int
+  report      Report          @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  
+  // User who performed the action (optional)
+  performedById String?
+  performedBy   User?         @relation("ReportActions", fields: [performedById], references: [id])
   
   createdAt   DateTime       @default(now())
 }

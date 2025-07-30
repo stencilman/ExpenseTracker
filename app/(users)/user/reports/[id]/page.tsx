@@ -4,6 +4,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  AlertCircle,
   FileText,
   MoreHorizontal,
   Pencil,
@@ -14,6 +15,7 @@ import {
 import { Loader } from "@/components/ui/loader";
 import ReportExpenseCard from "@/components/reports/ReportExpenseCard";
 import AddReportDialog from "@/components/reports/AddReportDialog";
+import HistoryItemCard from "@/components/expenses/HistoryItemCard";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ExpenseCategory, ReportStatus } from "@prisma/client";
@@ -35,6 +37,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+// Define the history item type
+interface ReportHistoryItem {
+  id: number;
+  eventType: string;
+  eventDate: Date;
+  details?: string | null;
+  performedBy?: {
+    name: string;
+  } | null;
+}
+
+// Define the history response type
+interface ReportHistoryResponse {
+  history: ReportHistoryItem[];
+}
 
 // Define the API report type
 interface ApiReport {
@@ -80,6 +98,11 @@ export default function ReportDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  
+  // History state
+  const [historyData, setHistoryData] = useState<ReportHistoryItem[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   // Fetch report data
   useEffect(() => {
@@ -109,6 +132,35 @@ export default function ReportDetailPage() {
 
   const handleClose = () => {
     router.back();
+  };
+  
+  // Fetch report history
+  const fetchReportHistory = async (reportId: number) => {
+    setIsLoadingHistory(true);
+    setHistoryError(null);
+
+    try {
+      const response = await fetch(`/api/reports/${reportId}/history`);
+
+      if (!response.ok) {
+        throw new Error(`Error fetching history: ${response.statusText}`);
+      }
+
+      const data: ReportHistoryResponse = await response.json();
+      setHistoryData(data.history);
+    } catch (error) {
+      console.error("Failed to fetch report history:", error);
+      setHistoryError("Failed to load report history. Please try again.");
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
+
+  // Handle tab change to fetch history data when needed
+  const handleTabChange = (value: string) => {
+    if (value === "history" && historyData.length === 0 && !isLoadingHistory && report) {
+      fetchReportHistory(report.id);
+    }
   };
 
   // Handle report deletion
@@ -310,7 +362,7 @@ export default function ReportDetailPage() {
               Duration: {formatDateRange(report.startDate, report.endDate)}
             </p>
 
-            <Tabs defaultValue="expenses">
+            <Tabs defaultValue="expenses" onValueChange={handleTabChange}>
               <TabsList className="mb-4">
                 <TabsTrigger value="expenses" className="relative w-64">
                   EXPENSES
@@ -318,7 +370,6 @@ export default function ReportDetailPage() {
                     {report.expenses.length}
                   </span>
                 </TabsTrigger>
-                <TabsTrigger value="advances">ADVANCES & REFUNDS</TabsTrigger>
                 <TabsTrigger value="history">HISTORY</TabsTrigger>
               </TabsList>
 
@@ -369,43 +420,47 @@ export default function ReportDetailPage() {
                 )}
               </TabsContent>
 
-              <TabsContent value="advances">
-                <div className="text-center py-8 text-gray-500">
-                  No advances or refunds for this report
-                </div>
-              </TabsContent>
-
               <TabsContent value="history">
-                <div className="text-center py-8 text-gray-500">
-                  {report.submittedAt ? (
-                    <div className="flex flex-col items-center">
-                      <div className="mb-2">
-                        Submitted on{" "}
-                        {format(new Date(report.submittedAt), "dd/MM/yyyy")}
-                      </div>
-                      {report.approvedAt && (
-                        <div className="mb-2">
-                          Approved on{" "}
-                          {format(new Date(report.approvedAt), "dd/MM/yyyy")}
-                        </div>
-                      )}
-                      {report.rejectedAt && (
-                        <div className="mb-2">
-                          Rejected on{" "}
-                          {format(new Date(report.rejectedAt), "dd/MM/yyyy")}
-                        </div>
-                      )}
-                      {report.reimbursedAt && (
-                        <div className="mb-2">
-                          Reimbursed on{" "}
-                          {format(new Date(report.reimbursedAt), "dd/MM/yyyy")}
-                        </div>
-                      )}
+                {isLoadingHistory ? (
+                  <div className="flex justify-center items-center py-8">
+                    <Loader size="md" text="Loading history..." />
+                  </div>
+                ) : historyError ? (
+                  <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                    <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
+                    <p>{historyError}</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-4"
+                      onClick={() => report && fetchReportHistory(report.id)}
+                    >
+                      Try Again
+                    </Button>
+                  </div>
+                ) : historyData.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No history available
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium text-muted-foreground mb-2">
+                      Report Timeline
                     </div>
-                  ) : (
-                    "No history available"
-                  )}
-                </div>
+                    <div className="space-y-4">
+                      {historyData.map((event) => (
+                        <HistoryItemCard
+                          key={event.id}
+                          id={event.id}
+                          eventType={event.eventType}
+                          eventDate={event.eventDate}
+                          details={event.details}
+                          performedBy={event.performedBy}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>

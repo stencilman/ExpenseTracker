@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import { ReportStatus } from "@prisma/client";
+import { ReportEventType, ReportStatus } from "@prisma/client";
+import { createReportHistoryEntry } from "./report-history";
 
 // Import types from the schema
 type ReportCreateInput = {
@@ -21,7 +22,8 @@ type ReportUpdateInput = {
  * Create a new report
  */
 export async function createReport(data: ReportCreateInput, userId: string) {
-    return db.report.create({
+    // Create the report
+    const report = await db.report.create({
         data: {
             ...data,
             userId,
@@ -38,6 +40,16 @@ export async function createReport(data: ReportCreateInput, userId: string) {
             expenses: true,
         },
     });
+    
+    // Create history entry for report creation
+    await createReportHistoryEntry({
+        reportId: report.id,
+        eventType: ReportEventType.CREATED,
+        details: "Report created",
+        performedById: userId,
+    });
+    
+    return report;
 }
 
 /**
@@ -381,7 +393,7 @@ export async function submitReport(id: number, userId: string) {
     const amountToBeReimbursed = totalAmount - nonReimbursableAmount;
     
     // Update the report
-    return db.report.update({
+    const updatedReport = await db.report.update({
         where: { id, userId },
         data: {
             status: "SUBMITTED",
@@ -410,13 +422,24 @@ export async function submitReport(id: number, userId: string) {
             },
         },
     });
+    
+    // Create history entry for report submission
+    await createReportHistoryEntry({
+        reportId: id,
+        eventType: ReportEventType.SUBMITTED,
+        details: `Report submitted for approval with total amount $${totalAmount.toFixed(2)}`,
+        performedById: userId,
+    });
+    
+    return updatedReport;
 }
 
 /**
  * Approve a report
  */
 export async function approveReport(id: number, approverUserId: string) {
-    return db.report.update({
+    // Update the report
+    const updatedReport = await db.report.update({
         where: { id },
         data: {
             status: "APPROVED",
@@ -424,13 +447,24 @@ export async function approveReport(id: number, approverUserId: string) {
             approvedById: approverUserId,
         },
     });
+    
+    // Create history entry for report approval
+    await createReportHistoryEntry({
+        reportId: id,
+        eventType: ReportEventType.APPROVED,
+        details: "Report approved",
+        performedById: approverUserId,
+    });
+    
+    return updatedReport;
 }
 
 /**
  * Reject a report
  */
 export async function rejectReport(id: number, approverUserId: string) {
-    return db.report.update({
+    // Update the report
+    const updatedReport = await db.report.update({
         where: { id },
         data: {
             status: "REJECTED",
@@ -438,6 +472,16 @@ export async function rejectReport(id: number, approverUserId: string) {
             approvedById: approverUserId,
         },
     });
+    
+    // Create history entry for report rejection
+    await createReportHistoryEntry({
+        reportId: id,
+        eventType: ReportEventType.REJECTED,
+        details: "Report rejected",
+        performedById: approverUserId,
+    });
+    
+    return updatedReport;
 }
 
 /**
@@ -449,14 +493,28 @@ export async function recordReimbursement(
         reimbursementMethod: string;
         reimbursementRef?: string;
         reimbursementNotes?: string;
-    }
+    },
+    performedById?: string
 ) {
-    return db.report.update({
+    // Update the report
+    const updatedReport = await db.report.update({
         where: { id },
         data: {
             status: "REIMBURSED",
             reimbursedAt: new Date(),
-            ...data,
+            reimbursementMethod: data.reimbursementMethod,
+            reimbursementRef: data.reimbursementRef,
+            reimbursementNotes: data.reimbursementNotes,
         },
     });
+    
+    // Create history entry for report reimbursement
+    await createReportHistoryEntry({
+        reportId: id,
+        eventType: ReportEventType.REIMBURSED,
+        details: `Report reimbursed via ${data.reimbursementMethod}${data.reimbursementRef ? ` (Ref: ${data.reimbursementRef})` : ''}`,
+        performedById,
+    });
+    
+    return updatedReport;
 }

@@ -12,7 +12,7 @@ import { ExpenseEventType } from "@prisma/client";
 
 interface HistoryItemCardProps {
   id: string | number;
-  eventType: ExpenseEventType;
+  eventType: ExpenseEventType | string;
   eventDate: Date | string;
   details?: string | null;
   performedBy?: {
