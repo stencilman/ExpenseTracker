@@ -24,13 +24,15 @@ interface Report {
 }
 
 interface AddToReportDialogProps {
-  expenseId: string | number;
+  expenseId?: string | number;
+  expenseIds?: Array<string | number>;
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function AddToReportDialog({
   expenseId,
+  expenseIds,
   isOpen,
   onClose,
 }: AddToReportDialogProps) {
@@ -118,22 +120,42 @@ export function AddToReportDialog({
 
     setIsAddingToReport(true);
     try {
-      const response = await fetch(`/api/expenses/${expenseId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reportId: parseInt(selectedReportId, 10),
-        }),
-      });
+      // Handle bulk update if expenseIds is provided
+      if (expenseIds && expenseIds.length > 0) {
+        const response = await fetch(`/api/expenses/bulk-update`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expenseIds: expenseIds,
+            reportId: parseInt(selectedReportId, 10),
+          }),
+        });
 
-      if (!response.ok) throw new Error(`Error: ${response.status}`);
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
 
-      toast.success(`Expense added to report: ${selectedReportTitle}`);
+        const count = expenseIds.length;
+        toast.success(`${count} expense${count !== 1 ? 's' : ''} added to report: ${selectedReportTitle}`);
+      } 
+      // Handle single expense update
+      else if (expenseId) {
+        const response = await fetch(`/api/expenses/${expenseId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            reportId: parseInt(selectedReportId, 10),
+          }),
+        });
+
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+        toast.success(`Expense added to report: ${selectedReportTitle}`);
+      }
+      
       onClose(); // This will trigger the state reset via the useEffect above
       router.refresh();
     } catch (error) {
-      console.error("Failed to add expense to report:", error);
-      toast.error("Failed to add expense to report");
+      console.error("Failed to add expense(s) to report:", error);
+      toast.error("Failed to add expense(s) to report");
     } finally {
       setIsAddingToReport(false);
     }
@@ -153,7 +175,9 @@ export function AddToReportDialog({
         <DialogHeader>
           <DialogTitle>Add to Report</DialogTitle>
           <DialogDescription>
-            Search for and select a report to add this expense to.
+            {expenseIds && expenseIds.length > 0 
+              ? `Select a report to add ${expenseIds.length} expense${expenseIds.length !== 1 ? 's' : ''} to.`
+              : 'Select a report to add this expense to.'}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">

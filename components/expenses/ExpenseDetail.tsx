@@ -21,6 +21,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { AddToReportDialog } from "./AddToReportDialog";
+import { DeleteExpenseDialog } from "./DeleteExpenseDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -241,22 +242,9 @@ export default function ExpenseDetail({
     }
   };
 
-  // Handle delete expense
-  const handleDelete = async () => {
-    try {
-      // Extract the ID from the expense
-      const expenseId = expense.id;
-      // Convert to string if needed by the deleteExpense function
-      const expenseIdString = String(expenseId);
-      await deleteExpense(expenseIdString);
-      toast.success("Expense deleted successfully");
-      router.push("/user/expenses/all");
-    } catch (error) {
-      console.error("Error deleting expense:", error);
-      toast.error("Failed to delete expense");
-    } finally {
-      setIsDeleteDialogOpen(false);
-    }
+  // Handle successful deletion
+  const handleDeleteSuccess = () => {
+    router.push("/user/expenses/all");
   };
 
   // Content to be rendered
@@ -278,29 +266,12 @@ export default function ExpenseDetail({
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={isDeleteDialogOpen}
+      <DeleteExpenseDialog
+        expenseIds={expense.id}
+        isOpen={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Expense</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this expense? This action cannot
-              be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-red-500 hover:bg-red-600"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onSuccess={handleDeleteSuccess}
+      />
 
       {/* Add to Report Dialog */}
       <AddToReportDialog

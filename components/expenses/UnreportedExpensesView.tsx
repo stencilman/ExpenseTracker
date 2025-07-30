@@ -9,8 +9,12 @@ import { ExpensesFilter } from "@/components/expenses/ExpensesFilter";
 import { ExpensesSort } from "@/components/expenses/ExpensesSort";
 import UnreportedExpenseCard from "@/components/expenses/UnreportedExpenseCard";
 import AddOrEditExpense from "@/components/expenses/AddOrEditExpense";
+import { AddToReportDialog } from "@/components/expenses/AddToReportDialog";
+import { DeleteExpenseDialog } from "@/components/expenses/DeleteExpenseDialog";
 import { DropZone } from "@/components/ui/drop-zone";
 import { cn } from "@/lib/utils";
+import { ExpenseWithUI } from "@/types/expense";
+import { toast } from "sonner";
 
 interface UnreportedExpensesViewProps {
   compact?: boolean;
@@ -21,6 +25,11 @@ export default function UnreportedExpensesView({
 }: UnreportedExpensesViewProps) {
   const router = useRouter();
   const [droppedFiles, setDroppedFiles] = useState<File[]>([]);
+  const [selectedExpenses, setSelectedExpenses] = useState<
+    Set<number | string>
+  >(new Set());
+  const [isBulkAddToReportOpen, setIsBulkAddToReportOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { stopLoading } = useLoading();
   const {
     processedUnreportedExpenses,
@@ -38,11 +47,68 @@ export default function UnreportedExpensesView({
     router.push(`/user/expenses/unreported/${id}`);
   };
 
+  // Handle checkbox selection
+  const handleExpenseSelect = (id: string | number, isSelected: boolean) => {
+    setSelectedExpenses((prev) => {
+      const newSelected = new Set(prev);
+      if (isSelected) {
+        newSelected.add(id);
+      } else {
+        newSelected.delete(id);
+      }
+      return newSelected;
+    });
+  };
+
+  // Check if an expense is selected
+  const isExpenseSelected = (id: string | number) => {
+    return selectedExpenses.has(id);
+  };
+
+  // Handle bulk add to report
+  const handleBulkAddToReport = () => {
+    if (selectedExpenses.size > 0) {
+      setIsBulkAddToReportOpen(true);
+    }
+  };
+  
+  // Handle bulk delete expenses
+  const handleBulkDelete = () => {
+    if (selectedExpenses.size === 0) return;
+    setIsDeleteDialogOpen(true);
+  };
+  
+  // Handle successful bulk deletion
+  const handleDeleteSuccess = () => {
+    // Clear selected expenses
+    setSelectedExpenses(new Set());
+    
+    // Refresh the page to update the list
+    router.refresh();
+  };
+
+  // Handle select all expenses
+  const handleSelectAll = () => {
+    const allIds = new Set<string | number>();
+    processedUnreportedExpenses.forEach((expense) => {
+      allIds.add(expense.id);
+    });
+    setSelectedExpenses(allIds);
+  };
+
   useEffect(() => {
     if (!compact) {
       stopLoading();
     }
   }, [stopLoading, compact]);
+
+  // Reset selected expenses when bulk add dialog closes
+  useEffect(() => {
+    if (!isBulkAddToReportOpen) {
+      // Only reset if the dialog was previously open and is now closed
+      setSelectedExpenses(new Set());
+    }
+  }, [isBulkAddToReportOpen]);
 
   return (
     <div className="space-y-4">
@@ -81,9 +147,52 @@ export default function UnreportedExpensesView({
               e.stopPropagation();
               // Open the Add Expense drawer when files are hovered
               setIsAddExpenseOpen(true);
-            }
+            },
           }}
         />
+      )}
+
+      {selectedExpenses.size > 0 && (
+        <div className="flex items-center space-x-2">
+          <span className="text-sm font-medium">
+            {selectedExpenses.size} expense
+            {selectedExpenses.size !== 1 ? "s" : ""} selected
+          </span>
+          <Button
+            onClick={() => setSelectedExpenses(new Set())}
+            variant="ghost"
+            size="sm"
+            className="text-gray-500 hover:text-gray-700"
+          >
+            Clear
+          </Button>
+          <Button
+            onClick={handleBulkAddToReport}
+            variant="outline"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+          >
+            Add To Report
+          </Button>
+          <Button
+            onClick={handleBulkDelete}
+            variant="outline"
+            className="border-red-500 text-red-500 hover:bg-red-50"
+          >
+            Delete Expenses
+          </Button>
+        </div>
+      )}
+      {selectedExpenses.size === 0 && (
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={handleSelectAll}
+            variant="ghost"
+            size="sm"
+            className="text-gray-500 hover:text-gray-700"
+          >
+            Select All
+          </Button>
+        </div>
       )}
 
       <div
@@ -98,6 +207,8 @@ export default function UnreportedExpensesView({
             expense={expense}
             onClick={() => handleCardClick(expense.id)}
             compact={compact}
+            isSelected={isExpenseSelected(expense.id)}
+            onSelectChange={handleExpenseSelect}
           />
         ))}
 
@@ -119,6 +230,21 @@ export default function UnreportedExpensesView({
           initialFiles={droppedFiles}
         />
       )}
+
+      {/* Bulk Add to Report Dialog */}
+      <AddToReportDialog
+        expenseIds={Array.from(selectedExpenses)}
+        isOpen={isBulkAddToReportOpen}
+        onClose={() => setIsBulkAddToReportOpen(false)}
+      />
+      
+      {/* Bulk Delete Dialog */}
+      <DeleteExpenseDialog
+        expenseIds={Array.from(selectedExpenses)}
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onSuccess={handleDeleteSuccess}
+      />
     </div>
   );
 }

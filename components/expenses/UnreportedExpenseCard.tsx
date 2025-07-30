@@ -14,12 +14,16 @@ interface UnreportedExpenseCardProps {
   expense: ExpenseWithUI;
   onClick?: () => void;
   compact?: boolean;
+  isSelected?: boolean;
+  onSelectChange?: (id: string | number, isSelected: boolean) => void;
 }
 
 export default function UnreportedExpenseCard({
   expense,
   onClick,
   compact = false,
+  isSelected = false,
+  onSelectChange,
 }: UnreportedExpenseCardProps) {
   // State for Add To Report dialog
   const [isAddToReportOpen, setIsAddToReportOpen] = useState(false);
@@ -39,6 +43,25 @@ export default function UnreportedExpenseCard({
   const handleCheckboxClick = (e: React.MouseEvent) => {
     // Stop event propagation to prevent the card onClick from firing
     e.stopPropagation();
+    
+    // Call the onSelectChange handler if provided
+    if (onSelectChange) {
+      onSelectChange(expense.id, !isSelected);
+    }
+  };
+  
+  // Handle card click - if we have selection handlers, toggle selection instead of navigating
+  const handleCardClick = (e: React.MouseEvent) => {
+    if (onSelectChange) {
+      // If we're in selection mode, clicking the card should toggle selection
+      onSelectChange(expense.id, !isSelected);
+      // And prevent the default onClick navigation
+      e.stopPropagation();
+      e.preventDefault();
+    } else if (onClick) {
+      // Otherwise, use the default onClick handler
+      onClick();
+    }
   };
   
   // Handle Add To Report button click
@@ -51,7 +74,7 @@ export default function UnreportedExpenseCard({
     <>
       <Card
         className={`mb-2 border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-24`}
-        onClick={onClick}
+        onClick={handleCardClick}
       >
       {/*
         MODIFICATION 1:
@@ -74,6 +97,7 @@ export default function UnreportedExpenseCard({
           <div className="flex-shrink-0" onClick={handleCheckboxClick}>
             <Checkbox
               id={`expense-${expense.id}`}
+              checked={isSelected}
               className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
             />
           </div>
