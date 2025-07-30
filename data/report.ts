@@ -270,7 +270,7 @@ export async function updateReport(id: number, data: ReportUpdateInput, userId?:
 }
 
 /**
- * Delete a report
+ * Delete a report and update associated expenses to UNREPORTED status
  */
 export async function deleteReport(id: number, userId?: string) {
     const where: any = { id };
@@ -279,9 +279,22 @@ export async function deleteReport(id: number, userId?: string) {
     if (userId) {
         where.userId = userId;
     }
-
-    return db.report.delete({
-        where,
+    
+    // Use a transaction to ensure both operations succeed or fail together
+    return db.$transaction(async (tx) => {
+        // First, find all expenses associated with this report and update their status
+        await tx.expense.updateMany({
+            where: { reportId: id },
+            data: {
+                reportId: null,
+                status: "UNREPORTED"
+            }
+        });
+        
+        // Then delete the report
+        return tx.report.delete({
+            where,
+        });
     });
 }
 
