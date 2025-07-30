@@ -7,6 +7,7 @@ import { useLoading } from "@/components/providers/LoadingProvider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Loader } from "@/components/ui/loader";
 import { X } from "lucide-react";
 import Link from "next/link";
 import ExpenseDetail from "@/components/expenses/ExpenseDetail";
@@ -14,7 +15,7 @@ import ExpenseDetail from "@/components/expenses/ExpenseDetail";
 export default function ExpenseDetailPage() {
   const { id } = useParams();
   const { stopLoading } = useLoading();
-  const { unreportedExpenses } = useExpenses();
+  const { unreportedExpenses, isLoading } = useExpenses();
   const router = useRouter(); // Move useRouter to the top level
 
   // Find the expense by ID - handle both string and number IDs
@@ -39,6 +40,16 @@ export default function ExpenseDetailPage() {
     router.push("/user/expenses/unreported");
   };
 
+  // Show loading indicator while expenses are being fetched
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader size="lg" text="Loading expense..." />
+      </div>
+    );
+  }
+  
+  // Only show not found message after loading is complete
   if (!expense) {
     return (
       <div className="p-6 text-center">

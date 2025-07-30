@@ -83,7 +83,7 @@ const ExpensesContext = createContext<ExpensesContextType | undefined>(
 
 export function ExpensesProvider({ children }: { children: ReactNode }) {
   // Internal loading state management
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start with loading true
 
   const startLoading = () => setIsLoading(true);
   const stopLoading = () => setIsLoading(false);

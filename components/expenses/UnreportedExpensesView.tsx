@@ -12,6 +12,7 @@ import AddOrEditExpense from "@/components/expenses/AddOrEditExpense";
 import { AddToReportDialog } from "@/components/expenses/AddToReportDialog";
 import { DeleteExpenseDialog } from "@/components/expenses/DeleteExpenseDialog";
 import { DropZone } from "@/components/ui/drop-zone";
+import { Loader } from "@/components/ui/loader";
 import { cn } from "@/lib/utils";
 import { ExpenseWithUI } from "@/types/expense";
 import { toast } from "sonner";
@@ -40,6 +41,7 @@ export default function UnreportedExpensesView({
     statuses,
     isAddExpenseOpen,
     setIsAddExpenseOpen,
+    isLoading,
   } = useExpenses();
 
   // Handle card click to navigate to expense detail
@@ -96,11 +98,13 @@ export default function UnreportedExpensesView({
     setSelectedExpenses(allIds);
   };
 
+  // Only stop loading from the LoadingProvider when we're done with our data loading
+  // The isLoading state from useExpenses will handle the component-level loading state
   useEffect(() => {
-    if (!compact) {
+    if (!compact && !isLoading) {
       stopLoading();
     }
-  }, [stopLoading, compact]);
+  }, [stopLoading, compact, isLoading]);
 
   // Reset selected expenses when bulk add dialog closes
   useEffect(() => {
@@ -195,29 +199,35 @@ export default function UnreportedExpensesView({
         </div>
       )}
 
-      <div
-        className={cn(
-          "flex flex-col overflow-y-auto ",
-          compact && "h-[calc(100vh-10rem)]"
-        )}
-      >
-        {processedUnreportedExpenses.map((expense) => (
-          <UnreportedExpenseCard
-            key={expense.id}
-            expense={expense}
-            onClick={() => handleCardClick(expense.id)}
-            compact={compact}
-            isSelected={isExpenseSelected(expense.id)}
-            onSelectChange={handleExpenseSelect}
-          />
-        ))}
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader size="lg" text="Loading expenses..." />
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "flex flex-col overflow-y-auto ",
+            compact && "h-[calc(100vh-10rem)]"
+          )}
+        >
+          {processedUnreportedExpenses.map((expense) => (
+            <UnreportedExpenseCard
+              key={expense.id}
+              expense={expense}
+              onClick={() => handleCardClick(expense.id)}
+              compact={compact}
+              isSelected={isExpenseSelected(expense.id)}
+              onSelectChange={handleExpenseSelect}
+            />
+          ))}
 
-        {processedUnreportedExpenses.length === 0 && (
-          <div className="text-center p-8 border rounded-lg">
-            <p className="text-gray-500">No unreported expenses found</p>
-          </div>
-        )}
-      </div>
+          {processedUnreportedExpenses.length === 0 && (
+            <div className="text-center p-8 border rounded-lg">
+              <p className="text-gray-500">No unreported expenses found</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {isAddExpenseOpen && (
         <AddOrEditExpense

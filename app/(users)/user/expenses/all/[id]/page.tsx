@@ -5,13 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import { useExpenses } from "@/components/providers/ExpenseProvider";
 import { useLoading } from "@/components/providers/LoadingProvider";
 import { Button } from "@/components/ui/button";
+import { Loader } from "@/components/ui/loader";
 import { X } from "lucide-react";
 import ExpenseDetail from "@/components/expenses/ExpenseDetail";
 
 export default function ExpenseDetailPage() {
   const router = useRouter();
   const { id } = useParams();
-  const { allExpenses, stopLoading } = useExpenses();
+  const { allExpenses, stopLoading, isLoading } = useExpenses();
   const { stopLoading: stopPageLoading } = useLoading();
 
   // Find the expense with the matching ID
@@ -47,6 +48,16 @@ export default function ExpenseDetailPage() {
     router.push("/user/expenses/all");
   };
 
+  // Show loading indicator while expenses are being fetched
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <Loader size="lg" text="Loading expense..." />
+      </div>
+    );
+  }
+  
+  // Only show not found message after loading is complete
   if (!expense) {
     return (
       <div className="p-6 text-center">

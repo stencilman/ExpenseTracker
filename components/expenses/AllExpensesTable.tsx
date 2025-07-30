@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ExpensesFilter } from "@/components/expenses/ExpensesFilter";
 import { ExpensesSort } from "@/components/expenses/ExpensesSort";
 import AddOrEditExpense from "@/components/expenses/AddOrEditExpense";
+import { Loader } from "@/components/ui/loader";
 
 interface AllExpensesTableViewProps {
   compact?: boolean;
@@ -27,6 +28,7 @@ export default function AllExpensesTableView({
     statuses,
     isAddExpenseOpen,
     setIsAddExpenseOpen,
+    isLoading,
   } = useExpenses();
 
   // Use a local state for selected expenses IDs
@@ -37,11 +39,13 @@ export default function AllExpensesTableView({
     router.push(`/user/expenses/all/${expenseId}`);
   };
 
+  // Only stop loading from the LoadingProvider when we're done with our data loading
+  // The isLoading state from useExpenses will handle the component-level loading state
   useEffect(() => {
-    if (!compact) {
+    if (!compact && !isLoading) {
       stopLoading();
     }
-  }, [stopLoading, compact]);
+  }, [stopLoading, compact, isLoading]);
 
   return (
     <div className="space-y-4 ">
@@ -61,13 +65,19 @@ export default function AllExpensesTableView({
           )}
         </div>
       </div>
-      <ExpensesTable
-        data={processedAllExpenses}
-        onSelectedRowsChange={setSelectedExpenseIds}
-        onRowClick={handleRowClick}
-        enableRowSelection={true}
-        showPagination={true}
-      />
+      {isLoading ? (
+        <div className="flex justify-center items-center py-20">
+          <Loader size="lg" text="Loading expenses..." />
+        </div>
+      ) : (
+        <ExpensesTable
+          data={processedAllExpenses}
+          onSelectedRowsChange={setSelectedExpenseIds}
+          onRowClick={handleRowClick}
+          enableRowSelection={true}
+          showPagination={true}
+        />
+      )}
       {isAddExpenseOpen && (
         <AddOrEditExpense
           isOpen={isAddExpenseOpen}
