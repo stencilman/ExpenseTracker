@@ -2,13 +2,15 @@
 
 import { useEffect } from "react";
 import { redirect } from "next/navigation";
+import { Loader } from "@/components/ui/loader";
+import { useRouter } from "next/navigation";
 
 export default function ReportsPage() {
-  // Redirect to the pending reports page
+  const router = useRouter();
+
   useEffect(() => {
-    // This will only run on the client side
-    redirect("/user/reports/pending");
+    router.push("/user/reports/pending");
   }, []);
 
-  return null;
+  return <Loader size="lg" text="Loading reports..." />;
 }

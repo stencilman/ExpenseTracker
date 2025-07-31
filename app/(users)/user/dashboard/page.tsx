@@ -17,7 +17,7 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="flex flex-col p-4 sm:p-6 max-w-7xl mx-auto">
+    <div className="flex flex-col p-4 sm:p-6 max-w-7xl mx-auto h-[calc(100vh-5rem)] overflow-y-auto">
       <Header />
 
       <div className="mt-4 flex flex-col xl:flex-row gap-4 sm:gap-6">
