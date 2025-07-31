@@ -192,29 +192,20 @@ export default function PendingReportsPage() {
     <div className="p-4 space-y-4">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          {selectedReports.length > 0 && (
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-700">
-                  {selectedReports.length} report{selectedReports.length !== 1 ? "s" : ""} selected
+          <div className="flex items-center space-x-2">
+            {selectedReports.length > 0 ? (
+              <>
+                <span className="text-sm font-medium">
+                  {selectedReports.length} report
+                  {selectedReports.length !== 1 ? "s" : ""} selected
                 </span>
                 <Button
+                  onClick={() => setSelectedReports([])}
                   variant="ghost"
                   size="sm"
-                  onClick={handleDeselectAll}
-                  className="text-blue-600 hover:bg-blue-50"
+                  className="text-gray-500 hover:text-gray-700"
                 >
-                  Deselect all
-                </Button>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  disabled={isSubmitting}
-                >
-                  Delete
+                  Clear
                 </Button>
                 <Button
                   variant="outline"
@@ -225,15 +216,19 @@ export default function PendingReportsPage() {
                   {isSubmitting ? (
                     <Loader size="sm" text="Submitting..." />
                   ) : (
-                    `Submit`
+                    "Submit"
                   )}
                 </Button>
-              </div>
-            </div>
-          )}
-
-          {selectedReports.length === 0 && (
-            <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  className="border-red-500 text-red-500 hover:bg-red-50"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isSubmitting}
+                >
+                  Delete Reports
+                </Button>
+              </>
+            ) : (
               <Button
                 onClick={handleSelectAll}
                 variant="ghost"
@@ -242,14 +237,16 @@ export default function PendingReportsPage() {
               >
                 Select All
               </Button>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        <AddReportDialog
-          open={isAddReportOpen}
-          onOpenChange={setIsAddReportOpen}
-        />
+          {/* Right Side: New Report Button */}
+          <div>
+            <Button variant="outline" onClick={() => setIsAddReportOpen(true)}>
+              New Report
+            </Button>
+          </div>
+        </div>
 
         {loading ? (
           <div className="text-center py-8">
@@ -270,6 +267,10 @@ export default function PendingReportsPage() {
           <div className="text-center py-8">No reports found.</div>
         )}
 
+        <AddReportDialog
+          open={isAddReportOpen}
+          onOpenChange={setIsAddReportOpen}
+        />
         <DeleteReportsDialog
           open={isDeleteDialogOpen}
           onOpenChange={setIsDeleteDialogOpen}
