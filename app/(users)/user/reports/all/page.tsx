@@ -26,6 +26,8 @@ interface ApiReport {
   expenses: {
     id: number;
   }[];
+  submitter: { name: string };
+  approver?: { name: string };
 }
 
 export default function AllReportsPage() {
@@ -53,6 +55,7 @@ export default function AllReportsPage() {
 
         // Convert API reports to UI reports format
         const uiReports: Report[] = reportsArray.map((report) => {
+          const approverName = report.approver ? report.approver.name : undefined;
           // Get status display from utility function
           const statusDisplay = mapReportStatusToDisplay(
             report.status,
@@ -94,6 +97,8 @@ export default function AllReportsPage() {
             expenseCount: report.expenses.length,
             toBeReimbursed: `Rs.${totalAmount.toLocaleString()}.00`,
             status: statusDisplay,
+            submitter: report.submitter.name,
+            approver: approverName,
           };
         });
 
@@ -119,28 +124,33 @@ export default function AllReportsPage() {
         const reportsArray: ApiReport[] = responseData.data || responseData;
 
         // Same conversion logic as above (simplified for brevity)
-        const uiReports: Report[] = reportsArray.map((report: ApiReport) => ({
-          id: report.id.toString(),
-          iconType: "file-text" as const,
-          title: report.title,
-          dateRange:
-            report.startDate && report.endDate
-              ? `${format(new Date(report.startDate), "dd/MM/yyyy")} - ${format(
-                  new Date(report.endDate),
-                  "dd/MM/yyyy"
-                )}`
-              : "No date range",
-          total: `Rs.${report.totalAmount.toLocaleString()}.00`,
-          expenseCount: report.expenses.length,
-          toBeReimbursed: `Rs.${report.totalAmount.toLocaleString()}.00`,
-          status: mapReportStatusToDisplay(
-            report.status,
-            report.submittedAt,
-            report.approvedAt,
-            report.rejectedAt,
-            report.reimbursedAt
-          ),
-        }));
+        const uiReports: Report[] = reportsArray.map((report: ApiReport) => {
+          const approverName = report.approver ? report.approver.name : undefined;
+          return {
+            id: report.id.toString(),
+            iconType: "file-text" as const,
+            title: report.title,
+            dateRange:
+              report.startDate && report.endDate
+                ? `${format(new Date(report.startDate), "dd/MM/yyyy")} - ${format(
+                    new Date(report.endDate),
+                    "dd/MM/yyyy"
+                  )}`
+                : "No date range",
+            total: `Rs.${report.totalAmount.toLocaleString()}.00`,
+            expenseCount: report.expenses.length,
+            toBeReimbursed: `Rs.${report.totalAmount.toLocaleString()}.00`,
+            status: mapReportStatusToDisplay(
+              report.status,
+              report.submittedAt,
+              report.approvedAt,
+              report.rejectedAt,
+              report.reimbursedAt
+            ),
+            submitter: report.submitter.name,
+            approver: approverName,
+          };
+        });
         setReports(uiReports);
       })
       .catch((err) => {

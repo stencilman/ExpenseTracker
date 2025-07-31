@@ -155,50 +155,10 @@ export const getReportsColumns = (): ColumnDef<Report>[] => [
   },
 ];
 
-// Define the columns for the reports page with additional columns
-export const getReportsPageColumns = (): ColumnDef<Report>[] => [
-  {
-    accessorKey: "id",
-    header: "ID",
-    cell: ({ row }) => <div>{row.original.id}</div>,
-  },
-  {
-    accessorKey: "details",
-    header: "NAME",
-    cell: ({ row }) => (
-      <ReportDetailsCell
-        iconType={row.original.iconType}
-        title={row.original.title}
-        dateRange={row.original.dateRange}
-      />
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: () => <div className="text-right">STATUS</div>,
-    cell: ({ row }) => <StatusCell status={row.original.status} />,
-  },
-  {
-    accessorKey: "total",
-    header: () => <div className="text-right">TOTAL</div>,
-    cell: ({ row }) => (
-      <TotalCell
-        total={row.original.total}
-        expenseCount={row.original.expenseCount}
-      />
-    ),
-  },
-  {
-    accessorKey: "toBeReimbursed",
-    header: () => <div className="text-right">TO BE REIMBURSED</div>,
-    cell: ({ row }) => (
-      <div className="text-right">{row.original.toBeReimbursed}</div>
-    ),
-  },
-];
-
 // Using the shared Expense type from types/expense.ts
-export const getAdminReportTableColumns = (): ColumnDef<Report>[] => [
+export const getAdminReportTableColumns = (
+  onReportActionComplete?: (updatedReport: Report) => void
+): ColumnDef<Report>[] => [
   {
     accessorKey: "submitter",
     header: "SUBMITTER",
@@ -349,6 +309,28 @@ export function getExpensesPageColumns(
           />
         </div>
       ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const report = row.original;
+        return (
+          <div className="flex justify-end">
+            {/* Import and use the ReportActions component */}
+            {React.createElement(
+              require("@/components/admin/ReportActions").ReportActions,
+              {
+                report,
+                onActionComplete: (updatedReport: Report) => {
+                  // This will be handled by the parent component refreshing the data
+                  console.log("Action completed", updatedReport);
+                },
+              }
+            )}
+          </div>
+        );
+      },
     },
   ];
 }

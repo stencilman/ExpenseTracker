@@ -1,56 +1,95 @@
 "use client";
 
 import { Report, ReportsTable } from "@/components/table/ReportsTable";
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import { Loader } from "@/components/ui/loader";
+import { toast } from "sonner";
+import { mapReportStatusToDisplay } from "@/lib/report-status-utils";
+import { ReportStatus } from "@prisma/client";
 
 export default function AdminReportsAllPage() {
-  const AllReports: Report[] = [
-    {
-      id: "1",
-      submitter: "John Doe",
-      approver: "Jane Doe",
-      iconType: "calendar",
-      title: "May-June",
-      dateRange: "30/05/2025 - 30/05/2025",
-      total: "Rs.1,995.00",
-      expenseCount: 2,
-      toBeReimbursed: "Rs.1,995.00",
-      status: {
-        label: "AWAITING APPROVAL",
-        color: "orange",
-        additionalInfo: "From 27/06/2025",
-      },
-    },
-    {
-      id: "2",
-      submitter: "John Doe",
-      approver: undefined,
-      iconType: "calendar",
-      title: "Bhive Passes and Trial Interview expense",
-      dateRange: "16/05/2025 - 16/05/2025",
-      total: "Rs.3,486.00",
-      expenseCount: 5,
-      toBeReimbursed: "Rs.0.00",
-      status: {
-        label: "REIMBURSED",
-        color: "green",
-      },
-    },
-  ];
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedReports, setSelectedReports] = useState<Report[]>([]);
 
-  const [selectedReports, setSelectedReports] = React.useState<Report[]>([]);
+  const fetchReports = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch("/api/admin/reports");
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch reports");
+      }
+
+      const responseData = await response.json();
+      // The API returns { data: { data: [...reports], meta: {...} } }
+      // Make sure we're accessing the correct property structure
+      const reportsData = responseData.data?.data || [];
+      
+      // Map API reports to UI format with proper status object
+      const formattedReports = reportsData.map((report: any) => {
+        // Ensure report has the correct status format expected by the UI
+        if (report.status && typeof report.status === 'string') {
+          // Map the status string to a status object
+          report.status = mapReportStatusToDisplay(
+            report.status as ReportStatus,
+            report.submittedAt,
+            report.approvedAt,
+            report.rejectedAt,
+            report.reimbursedAt
+          );
+        }
+        return report;
+      });
+      
+      setReports(formattedReports);
+    } catch (err) {
+      console.error("Error fetching reports:", err);
+      setError("Failed to load reports. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const handleSelectedRowsChange = (reports: Report[]) => {
     setSelectedReports(reports);
   };
 
+  // Handle report action completion (approve, reject, reimburse)
+  const handleReportActionComplete = useCallback(
+    (updatedReport: Report) => {
+      // Refresh the reports list
+      fetchReports();
+      toast.success(`Report ${updatedReport.id} status updated successfully`);
+    },
+    [fetchReports]
+  );
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center p-4">{error}</div>;
+  }
+
   return (
     <ReportsTable
-      data={AllReports}
+      data={reports}
       enableRowSelection={true}
       onSelectedRowsChange={handleSelectedRowsChange}
-      variant="page"
       showPagination={true}
+      variant="page"
+      onReportActionComplete={handleReportActionComplete}
     />
   );
 }

@@ -6,14 +6,7 @@ import { DataTable } from "./DataTable";
 import {
   Report,
   getReportsColumns,
-  getReportsPageColumns,
-} from "./TableColumnDefs";
-import { useRouter } from "next/navigation";
-import {
-  Report,
   getAdminReportTableColumns,
-  getReportsColumns,
-  getReportsPageColumns,
 } from "./TableColumnDefs";
 import { usePathname, useRouter } from "next/navigation";
 
@@ -27,6 +20,7 @@ interface ReportsTableProps {
   variant?: "dashboard" | "page";
   className?: string;
   isAllRowsSelected?: boolean;
+  onReportActionComplete?: (updatedReport: Report) => void;
 }
 
 export function ReportsTable({
@@ -37,6 +31,7 @@ export function ReportsTable({
   variant = "dashboard",
   className = "",
   isAllRowsSelected = false,
+  onReportActionComplete,
 }: ReportsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -66,13 +61,10 @@ export function ReportsTable({
   // Get the appropriate columns based on the variant
   const columns = React.useMemo(() => {
     if (pathname.includes("admin")) {
-      return getAdminReportTableColumns();
+      return getAdminReportTableColumns(onReportActionComplete);
     }
-
-    return variant === "dashboard"
-      ? getReportsColumns()
-      : getReportsPageColumns();
-  }, [variant]);
+    return getReportsColumns();
+  }, [variant, pathname, onReportActionComplete]);
 
   return (
     <DataTable

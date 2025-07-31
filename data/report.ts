@@ -77,9 +77,16 @@ export async function getReports(
     const skip = (page - 1) * pageSize;
 
     // Build where clause
-    const where: any = { userId };
+    const where: any = {};
+    
+    // Add userId filter if provided (for regular users)
+    // If userId is undefined, don't filter by user (for admin access)
 
     // Add filters if provided
+    if (userId) {
+        where.userId = userId;
+    }
+    
     if (status) {
         where.status = status;
     }

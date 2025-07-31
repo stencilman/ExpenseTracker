@@ -1,57 +1,66 @@
 "use client";
 
-import { Report } from "@/components/table/ReportsTable";
-import { ReportsTable } from "@/components/table/ReportsTable";
-import React from "react";
+import { Report, ReportsTable } from "@/components/table/ReportsTable";
+import React, { useState, useEffect, useCallback } from "react";
+import { Loader } from "@/components/ui/loader";
+import { toast } from "sonner";
 
 export default function AdminReportsAwaitingApprovalPage() {
-  const AllReports: Report[] = [
-    {
-      id: "1",
-      submitter: "John Doe",
-      approver: "Jane Doe",
-      iconType: "calendar",
-      title: "May-June",
-      dateRange: "30/05/2025 - 30/05/2025",
-      total: "Rs.1,995.00",
-      expenseCount: 2,
-      toBeReimbursed: "Rs.1,995.00",
-      status: {
-        label: "AWAITING APPROVAL",
-        color: "orange",
-        additionalInfo: "From 27/06/2025",
-      },
-    },
-    {
-      id: "2",
-      submitter: "John Doe",
-      approver: undefined,
-      iconType: "calendar",
-      title: "Bhive Passes and Trial Interview expense",
-      dateRange: "16/05/2025 - 16/05/2025",
-      total: "Rs.3,486.00",
-      expenseCount: 5,
-      toBeReimbursed: "Rs.0.00",
-      status: {
-        label: "AWAITING APPROVAL",
-        color: "orange",
-        additionalInfo: "From 27/06/2025",
-      },
-    },
-  ];
+  const [reports, setReports] = useState<Report[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedReports, setSelectedReports] = useState<Report[]>([]);
 
-  const [selectedReports, setSelectedReports] = React.useState<Report[]>([]);
+  const fetchReports = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/admin/reports/awaiting-approval');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch reports');
+      }
+      
+      const data = await response.json();
+      setReports(data.data);
+    } catch (err) {
+      console.error('Error fetching reports:', err);
+      setError('Failed to load reports. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchReports();
+  }, [fetchReports]);
 
   const handleSelectedRowsChange = (reports: Report[]) => {
     setSelectedReports(reports);
   };
+
+  // Handle report action completion (approve, reject, reimburse)
+  const handleReportActionComplete = useCallback((updatedReport: Report) => {
+    // Refresh the reports list
+    fetchReports();
+    toast.success(`Report ${updatedReport.id} status updated successfully`);
+  }, [fetchReports]);
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-64"><Loader /></div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 text-center p-4">{error}</div>;
+  }
+
   return (
     <ReportsTable
-      data={AllReports}
-      onSelectedRowsChange={handleSelectedRowsChange}
+      data={reports}
       enableRowSelection={true}
-      showPagination={true}
+      onSelectedRowsChange={handleSelectedRowsChange}
       variant="page"
+      showPagination={true}
+      onReportActionComplete={handleReportActionComplete}
     />
   );
 }

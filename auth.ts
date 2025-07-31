@@ -14,7 +14,7 @@ export const {
 } = NextAuth({
   adapter: PrismaAdapter(db),
   callbacks: {
-    
+
     // This is called when a user tries to sign in and checks if the user email is verified
     // async signIn({ user }) {
     //   console.log("signIn", user);

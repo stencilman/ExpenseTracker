@@ -38,6 +38,8 @@ interface ApiReport {
     lastName: string;
     email: string;
   };
+  submitter: { name: string };
+  approver?: { name: string };
 }
 
 export default function PendingReportsPage() {
@@ -66,21 +68,28 @@ export default function PendingReportsPage() {
 
   // Function to convert API report to UI report
   const convertApiReportToUiReport = (apiReport: ApiReport): Report => {
+    const dateRange = formatDateRange(apiReport.startDate, apiReport.endDate);
+    const totalAmount = apiReport.totalAmount;
+    const statusDisplay = mapReportStatusToDisplay(
+      apiReport.status,
+      apiReport.submittedAt,
+      apiReport.approvedAt,
+      apiReport.rejectedAt,
+      apiReport.reimbursedAt
+    );
+    const approverName = apiReport.approver ? apiReport.approver.name : undefined;
+
     return {
       id: apiReport.id.toString(),
       iconType: "file-text",
       title: apiReport.title,
-      dateRange: formatDateRange(apiReport.startDate, apiReport.endDate),
-      total: `Rs.${apiReport.totalAmount.toLocaleString()}.00`,
+      dateRange,
+      total: `Rs.${totalAmount.toLocaleString()}.00`,
       expenseCount: apiReport.expenses.length,
-      toBeReimbursed: `Rs.${apiReport.totalAmount.toLocaleString()}.00`,
-      status: mapReportStatusToDisplay(
-        apiReport.status,
-        apiReport.submittedAt,
-        apiReport.approvedAt,
-        apiReport.rejectedAt,
-        apiReport.reimbursedAt
-      ),
+      toBeReimbursed: `Rs.${totalAmount.toLocaleString()}.00`,
+      status: statusDisplay,
+      submitter: apiReport.submitter.name,
+      approver: approverName,
     };
   };
 
