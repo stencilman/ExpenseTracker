@@ -5,6 +5,12 @@ import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "./DataTable";
 import {
   Report,
+  getReportsColumns,
+  getReportsPageColumns,
+} from "./TableColumnDefs";
+import { useRouter } from "next/navigation";
+import {
+  Report,
   getAdminReportTableColumns,
   getReportsColumns,
   getReportsPageColumns,
@@ -20,6 +26,7 @@ interface ReportsTableProps {
   onSelectedRowsChange?: (selectedRows: Report[]) => void;
   variant?: "dashboard" | "page";
   className?: string;
+  isAllRowsSelected?: boolean;
 }
 
 export function ReportsTable({
@@ -29,6 +36,7 @@ export function ReportsTable({
   onSelectedRowsChange,
   variant = "dashboard",
   className = "",
+  isAllRowsSelected = false,
 }: ReportsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -44,6 +52,8 @@ export function ReportsTable({
 
   const handleRowClick = React.useCallback(
     (row: Report) => {
+      // Navigate to the report detail page
+      router.push(`/user/reports/${row.id}`);
       if (pathname.includes("admin")) {
         router.push(`/admin/reports/${row.id}`);
       } else {
@@ -73,6 +83,7 @@ export function ReportsTable({
       onSelectedRowsChange={handleSelectedRowsChange}
       onRowClick={handleRowClick}
       className={className}
+      isAllRowsSelected={isAllRowsSelected}
     />
   );
 }

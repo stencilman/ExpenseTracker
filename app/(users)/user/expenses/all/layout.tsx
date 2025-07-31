@@ -1,7 +1,7 @@
 "use client";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { useLoading } from "@/components/providers/loading-provider";
+import { useLoading } from "@/components/providers/LoadingProvider";
 import AllExpensesTableView from "@/components/expenses/AllExpensesTable";
 
 export default function ExpensesAllLayout({
@@ -20,11 +20,11 @@ export default function ExpensesAllLayout({
   }, [stopLoading]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4">
+    <div className="flex flex-col lg:flex-row gap-4 ">
       {isDetailView ? (
         <>
           {/* Table section - takes 1/3 of the space on desktop */}
-          <div className="lg:w-1/3 overflow-auto">
+          <div className="lg:w-1/3 overflow-auto ">
             <AllExpensesTableView compact={true} />
           </div>
           {/* Detail section - takes 2/3 of the space on desktop */}

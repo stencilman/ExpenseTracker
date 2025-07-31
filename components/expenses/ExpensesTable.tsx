@@ -3,13 +3,13 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "../table/DataTable";
-import { Expense, getExpensesPageColumns } from "../table/TableColumnDefs";
+import { getExpensesPageColumns } from "../table/TableColumnDefs";
+import { ExpenseWithUI } from "@/types/expense";
 import ExpenseDetail from "./ExpenseDetail";
-
-export type { Expense } from "../table/TableColumnDefs";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface ExpensesTableProps {
-  data: Expense[];
+  data: ExpenseWithUI[];
   showPagination?: boolean;
   enableRowSelection?: boolean;
   onSelectedRowsChange?: (selectedRows: string[]) => void;
@@ -25,51 +25,24 @@ export function ExpensesTable({
   onRowClick,
   className = "",
 }: ExpensesTableProps) {
-  const [selectedExpense, setSelectedExpense] = React.useState<Expense | null>(
+  const [selectedExpense, setSelectedExpense] = React.useState<ExpenseWithUI | null>(
     null
   );
   const [detailOpen, setDetailOpen] = React.useState(false);
 
   const handleSelectedRowsChange = React.useCallback(
-    (selectedRows: Expense[]) => {
+    (selectedRows: ExpenseWithUI[]) => {
       if (onSelectedRowsChange) {
-        onSelectedRowsChange(selectedRows.map(row => row.id));
+        onSelectedRowsChange(selectedRows.map((row) => row.id.toString()));
       }
     },
     [onSelectedRowsChange]
   );
 
-  // Custom column definition with click handler for expense details
+  // Use the base columns directly since row click is now handled at the table level
   const columns = React.useMemo(() => {
-    const baseColumns = getExpensesPageColumns();
-
-    // Modify the expense details column to make it clickable
-    const enhancedColumns = baseColumns.map((column) => {
-      if ("accessorKey" in column && column.accessorKey === "expenseDetails") {
-        return {
-          ...column,
-          cell: ({ row }: { row: any }) => (
-            <div
-              className="w-full cursor-pointer hover:text-primary hover:underline"
-              onClick={() => {
-                if (onRowClick) {
-                  onRowClick(row.original.id);
-                } else {
-                  setSelectedExpense(row.original);
-                  setDetailOpen(true);
-                }
-              }}
-            >
-              {row.original.expenseDetails}
-            </div>
-          ),
-        };
-      }
-      return column;
-    });
-
-    return enhancedColumns;
-  }, [onRowClick]);
+    return getExpensesPageColumns();
+  }, []);
 
   return (
     <>
@@ -79,15 +52,26 @@ export function ExpensesTable({
         showPagination={showPagination}
         enableRowSelection={enableRowSelection}
         onSelectedRowsChange={handleSelectedRowsChange}
+        onRowClick={(row) => {
+          if (onRowClick) {
+            onRowClick(row.id.toString());
+          } else {
+            setSelectedExpense(row);
+            setDetailOpen(true);
+          }
+        }}
         className={className}
       />
 
-      {selectedExpense && (
-        <ExpenseDetail
-          expense={selectedExpense}
-          open={detailOpen}
-          onOpenChange={setDetailOpen}
-        />
+      {selectedExpense && detailOpen && (
+        <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
+          <DialogContent>
+            <ExpenseDetail
+              expense={selectedExpense}
+              onClose={() => setDetailOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </>
   );

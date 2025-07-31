@@ -3,6 +3,7 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Calendar, FileText, Receipt, CreditCard } from "lucide-react";
+import { ExpenseWithUI } from "@/types/expense";
 
 // Define the Report type
 export interface Report {
@@ -45,15 +46,15 @@ export const StatusCell = ({ status }: { status?: Report["status"] }) => {
   const getStatusClasses = (color: string): { bg: string; text: string } => {
     switch (color) {
       case "green":
-        return { bg: "bg-green-100", text: "text-green-500" };
+        return { bg: "bg-green-100", text: "text-green-800" };
       case "orange":
-        return { bg: "bg-orange-100", text: "text-orange-500" };
+        return { bg: "bg-orange-100", text: "text-orange-800" };
       case "blue":
-        return { bg: "bg-blue-100", text: "text-blue-500" };
+        return { bg: "bg-blue-100", text: "text-blue-800" };
       case "red":
-        return { bg: "bg-red-100", text: "text-red-500" };
+        return { bg: "bg-red-100", text: "text-red-800" };
       default:
-        return { bg: "bg-gray-100", text: "text-gray-500" };
+        return { bg: "bg-gray-100", text: "text-gray-800" };
     }
   };
 
@@ -196,6 +197,7 @@ export const getReportsPageColumns = (): ColumnDef<Report>[] => [
   },
 ];
 
+// Using the shared Expense type from types/expense.ts
 export const getAdminReportTableColumns = (): ColumnDef<Report>[] => [
   {
     accessorKey: "submitter",
@@ -258,51 +260,89 @@ export interface Expense {
 
 export interface ExpenseColumnOptions {
   includeReportName?: boolean;
-  // Add other flags here as needed, e.g., includeActions?: boolean;
 }
 
-export const getExpensesPageColumns = (
+// Define the columns for the expenses table
+export function getExpensesPageColumns(
   options: ExpenseColumnOptions = {}
-): ColumnDef<Expense>[] => {
+): ColumnDef<ExpenseWithUI>[] {
   const { includeReportName = false } = options;
   return [
     {
-      accessorKey: "expenseDetails",
+      accessorKey: "description",
       header: "EXPENSE DETAILS",
-      cell: ({ row }) => (
-        <div className="w-full">{row.original.expenseDetails}</div>
-      ),
+      size: 180, // Adjusted width for compact view
+      cell: ({ row }) => {
+        const expense = row.original;
+        const dateStr =
+          expense.date instanceof Date
+            ? expense.date.toISOString().split("T")[0]
+            : typeof expense.date === "string"
+            ? expense.date.split("T")[0]
+            : "Unknown date";
+
+        return (
+          <div className="flex flex-col w-full">
+            <div className="flex items-center gap-1 text-sm ">
+              <span>{dateStr}</span>
+              <span>-</span>
+              <span>{expense.category}</span>
+            </div>
+            <div className="text-sm font-medium truncate">
+              {expense.description}
+            </div>
+          </div>
+        );
+      },
     },
     {
       accessorKey: "merchant",
       header: "MERCHANT",
-      cell: ({ row }) => <div className="w-full">{row.original.merchant}</div>,
+      size: 100, // Adjusted width for compact view
+      cell: ({ row }) => (
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">
+          {row.original.merchant}
+        </div>
+      ),
     },
     {
       accessorKey: "amount",
       header: () => <div className="text-right w-full">AMOUNT</div>,
+      size: 80, // Adjusted width for compact view
       cell: ({ row }) => (
-        <div className="text-right w-full">{row.original.amount}</div>
+        <div className="text-right w-full">
+          {typeof row.original.amount === "number"
+            ? new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                minimumFractionDigits: 2,
+              }).format(row.original.amount)
+            : row.original.amount}
+        </div>
       ),
     },
     {
       accessorKey: "reportName",
       header: "REPORT NAME",
+      size: 120, // Adjusted width for compact view
       cell: ({ row }) => (
-        <div className="w-full">{row.original.reportName || "-"}</div>
+        <div className="w-full whitespace-nowrap overflow-hidden text-ellipsis">
+          {row.original.reportName || "-"}
+        </div>
       ),
     },
     {
       accessorKey: "status",
       header: () => <div className="text-right w-full">STATUS</div>,
+      size: 100, // Adjusted width for compact view
       cell: ({ row }) => (
         <div className="flex justify-end w-full">
           <StatusCell
             status={
-              row.original.status
+              row.original.statusDisplay
                 ? {
-                    label: row.original.status.label,
-                    color: row.original.status.color,
+                    label: row.original.statusDisplay.label,
+                    color: row.original.statusDisplay.color,
                   }
                 : undefined
             }
@@ -311,4 +351,4 @@ export const getExpensesPageColumns = (
       ),
     },
   ];
-};
+}

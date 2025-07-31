@@ -1,7 +1,7 @@
 "use client";
 
 import { TabNavigation } from "@/components/navigation/TabNavigation";
-import { ExpensesProvider } from "@/components/expenses/ExpensesContext";
+import { ExpensesProvider } from "@/components/providers/ExpenseProvider";
 import React from "react";
 
 export default function ExpensesLayout({

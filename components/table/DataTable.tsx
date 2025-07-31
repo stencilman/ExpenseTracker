@@ -24,6 +24,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Loader } from "@/components/ui/loader";
 
 export interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
@@ -35,6 +36,7 @@ export interface DataTableProps<TData, TValue> {
   onRowClick?: (row: TData) => void;
   columnVisibility?: VisibilityState;
   className?: string;
+  isAllRowsSelected?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -47,6 +49,7 @@ export function DataTable<TData, TValue>({
   onRowClick,
   columnVisibility = {},
   className = "",
+  isAllRowsSelected = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
@@ -56,6 +59,7 @@ export function DataTable<TData, TValue>({
   // Create a column for selection checkboxes if row selection is enabled
   const selectionColumn: ColumnDef<TData, any> = {
     id: "select",
+    size: 40, // Small fixed width for checkbox column
     header: ({ table }) => (
       <Checkbox
         checked={table.getIsAllPageRowsSelected()}
@@ -105,6 +109,13 @@ export function DataTable<TData, TValue>({
   // Use a ref to store previous selection to prevent unnecessary updates
   const prevSelectionRef = React.useRef<string>("");
 
+  React.useEffect(() => {
+    // Programmatically update selection state when isAllRowsSelected prop changes
+    if (enableRowSelection) {
+      table.toggleAllRowsSelected(isAllRowsSelected);
+    }
+  }, [isAllRowsSelected, table, enableRowSelection]);
+
   // Notify parent component when selection changes
   React.useEffect(() => {
     if (onSelectedRowsChange && enableRowSelection) {
@@ -126,21 +137,34 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      <div className="rounded-md border">
-        <Table>
+      <div className="rounded-md border overflow-x-auto">
+        <Table className="w-full table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
+                {headerGroup.headers.map((header) => {
+                  // Get column width from size property or default to auto
+                  const columnSize = header.column.columnDef.size || "auto";
+                  const width =
+                    typeof columnSize === "number"
+                      ? `${columnSize}px`
+                      : columnSize;
+
+                  return (
+                    <TableHead
+                      key={header.id}
+                      style={{ width, minWidth: width, maxWidth: width }}
+                      className="overflow-hidden"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  );
+                })}
               </TableRow>
             ))}
           </TableHeader>
@@ -150,33 +174,43 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && "selected"}
+                  className={onRowClick ? "cursor-pointer hover:bg-muted" : ""}
                   onClick={(e) => {
-                    // Only trigger row click if the click wasn't on a checkbox
+                    // Don't trigger row click when clicking on checkbox or its container
                     if (
-                      onRowClick &&
-                      !(e.target as HTMLElement).closest(
-                        'input[type="checkbox"]'
-                      )
+                      e.target instanceof HTMLElement &&
+                      (e.target.closest('input[type="checkbox"]') ||
+                        e.target.closest('[aria-label="Select row"]'))
                     ) {
+                      return;
+                    }
+
+                    if (onRowClick) {
                       onRowClick(row.original);
                     }
                   }}
-                  className={
-                    onRowClick ? "cursor-pointer hover:bg-muted/50" : ""
-                  }
                 >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell 
-                      key={cell.id}
-                      // Stop propagation on the checkbox cell to prevent row click
-                      onClick={cell.column.id === 'select' ? (e) => e.stopPropagation() : undefined}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
+                  {row.getVisibleCells().map((cell) => {
+                    // Get column width from size property or default to auto
+                    const columnSize = cell.column.columnDef.size || "auto";
+                    const width =
+                      typeof columnSize === "number"
+                        ? `${columnSize}px`
+                        : columnSize;
+
+                    return (
+                      <TableCell
+                        key={cell.id}
+                        style={{ width, minWidth: width, maxWidth: width }}
+                        className="overflow-hidden"
+                      >
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
@@ -185,7 +219,9 @@ export function DataTable<TData, TValue>({
                   colSpan={columns.length + (enableRowSelection ? 1 : 0)}
                   className="h-24 text-center"
                 >
-                  No results.
+                  <div className="flex justify-center items-center">
+                    <span className="text-muted-foreground">No results</span>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
