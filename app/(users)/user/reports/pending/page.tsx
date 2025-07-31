@@ -276,6 +276,7 @@ export default function PendingReportsPage() {
           onOpenChange={setIsDeleteDialogOpen}
           onConfirm={handleBulkDelete}
           reportsCount={selectedReports.length}
+          isPending={isSubmitting}
         />
       </div>
     </div>
