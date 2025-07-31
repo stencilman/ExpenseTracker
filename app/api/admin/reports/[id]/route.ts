@@ -40,7 +40,7 @@ export async function GET(
     
     // Format the report for UI consumption with proper status object
     const formattedReport = formatReportForUI(report);
-    return jsonResponse(formattedReport);
+    return jsonResponse({ data: formattedReport });
   } catch (error) {
     console.error("Error fetching report:", error);
     return errorResponse("Failed to fetch report", 500);

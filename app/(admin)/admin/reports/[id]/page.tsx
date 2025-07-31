@@ -29,6 +29,24 @@ export default function ReportDetailPage() {
   const [dialogAction, setDialogAction] = useState<'approve' | 'reject'>('approve');
   const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
   
+  // Utility to normalize status field coming from API
+  const normalizeReportStatus = (reportData: any) => {
+    if (!reportData) return reportData;
+    if (reportData.status && typeof reportData.status === 'object') {
+      reportData.statusDisplay = reportData.status;
+      reportData.status = reportData.status.label;
+    } else if (typeof reportData.status === 'string') {
+      reportData.statusDisplay = mapReportStatusToDisplay(
+        reportData.status as ReportStatus,
+        reportData.submittedAt,
+        reportData.approvedAt,
+        reportData.rejectedAt,
+        reportData.reimbursedAt
+      );
+    }
+    return reportData;
+  };
+
   // Fetch report details
   useEffect(() => {
     const fetchReport = async () => {
@@ -43,9 +61,12 @@ export default function ReportDetailPage() {
         const data = await response.json();
         const reportData = data.data;
         
-        // Ensure report status is properly formatted as an object for UI
-        if (reportData && reportData.status && typeof reportData.status === 'string') {
-          reportData.status = mapReportStatusToDisplay(
+        // If API already returns a formatted status object
+        if (reportData && typeof reportData.status === 'object' && reportData.status !== null) {
+          reportData.statusDisplay = reportData.status;
+          reportData.status = reportData.status.label;
+        } else if (reportData && typeof reportData.status === 'string') {
+          reportData.statusDisplay = mapReportStatusToDisplay(
             reportData.status as ReportStatus,
             reportData.submittedAt,
             reportData.approvedAt,
@@ -113,7 +134,7 @@ export default function ReportDetailPage() {
       
       // Ensure report status is properly formatted as an object for UI
       if (reportData && reportData.status && typeof reportData.status === 'string') {
-        reportData.status = mapReportStatusToDisplay(
+        reportData.statusDisplay = mapReportStatusToDisplay(
           reportData.status as ReportStatus,
           reportData.submittedAt,
           reportData.approvedAt,
@@ -161,7 +182,7 @@ export default function ReportDetailPage() {
       
       // Ensure report status is properly formatted as an object for UI
       if (reportData && reportData.status && typeof reportData.status === 'string') {
-        reportData.status = mapReportStatusToDisplay(
+        reportData.statusDisplay = mapReportStatusToDisplay(
           reportData.status as ReportStatus,
           reportData.submittedAt,
           reportData.approvedAt,
@@ -209,7 +230,7 @@ export default function ReportDetailPage() {
       
       // Ensure report status is properly formatted as an object for UI
       if (reportData && reportData.status && typeof reportData.status === 'string') {
-        reportData.status = mapReportStatusToDisplay(
+        reportData.statusDisplay = mapReportStatusToDisplay(
           reportData.status as ReportStatus,
           reportData.submittedAt,
           reportData.approvedAt,
@@ -299,7 +320,7 @@ export default function ReportDetailPage() {
                 : "bg-orange-100 text-orange-800"
             }`}
           >
-            {report.status}
+            {report.statusDisplay?.label ?? report.status}
           </div>
         </div>
         <div className="flex items-center space-x-2">
