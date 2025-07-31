@@ -231,11 +231,42 @@ export async function updateExpense(id: number, data: ExpenseUpdate, userId: str
       }
     }
 
-    const expense = await db.expense.update({
-      where: { id },
-      data: updateData,
+      // Use a transaction to update the expense and create history events
+    return await db.$transaction(async (tx) => {
+      // Update the expense
+      const expense = await tx.expense.update({
+        where: { id },
+        data: updateData,
+      });
+      
+      // Create history event for adding to report
+      if (updateData.reportId && (!existingExpense.reportId || existingExpense.reportId !== updateData.reportId)) {
+        await tx.expenseHistory.create({
+          data: {
+            eventType: 'ADDED_TO_REPORT',
+            expenseId: expense.id,
+            details: `Added to report #${updateData.reportId}`,
+            reportId: updateData.reportId,
+            performedById: userId,
+          },
+        });
+      }
+      
+      // Create history event for removing from report
+      if (existingExpense.reportId && updateData.reportId === null) {
+        await tx.expenseHistory.create({
+          data: {
+            eventType: 'ADDED_TO_REPORT', // Using existing event type
+            expenseId: expense.id,
+            details: `Removed from report #${existingExpense.reportId}`,
+            reportId: existingExpense.reportId,
+            performedById: userId,
+          },
+        });
+      }
+      
+      return expense;
     });
-    return expense;
   } catch (error) {
     console.error(`Failed to update expense with ID ${id}:`, error);
     throw new Error(`Failed to update expense with ID ${id}`);
