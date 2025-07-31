@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -49,6 +50,7 @@ import SignoutButton from "@/components/auth/signout-button";
 import {
   UserSettingsSchema,
   UserSettingsFormValues,
+  ROLE_NAMES,
 } from "@/lib/validations/user";
 import { toast } from "sonner";
 
@@ -71,7 +73,7 @@ export default function SettingsPage() {
       dateOfJoining: undefined,
       dateOfBirth: undefined,
       designation: "",
-      roleName: "",
+      roleName: undefined,
       approverId: "",
     },
   });
@@ -125,15 +127,15 @@ export default function SettingsPage() {
   const onSubmit = async (values: UserSettingsFormValues) => {
     try {
       setIsLoading(true);
-      
+
       // Create a copy of the values to submit
       const dataToSubmit = { ...values };
-      
+
       // Don't send empty approverId to avoid foreign key constraint issues
-      if (!dataToSubmit.approverId || dataToSubmit.approverId.trim() === '') {
+      if (!dataToSubmit.approverId || dataToSubmit.approverId.trim() === "") {
         delete dataToSubmit.approverId;
       }
-      
+
       // Handle date fields - ensure they're valid dates or null
       if (dataToSubmit.dateOfJoining) {
         // Ensure it's a valid date object
@@ -141,16 +143,16 @@ export default function SettingsPage() {
       } else {
         dataToSubmit.dateOfJoining = null;
       }
-      
+
       if (dataToSubmit.dateOfBirth) {
         // Ensure it's a valid date object
         dataToSubmit.dateOfBirth = new Date(dataToSubmit.dateOfBirth);
       } else {
         dataToSubmit.dateOfBirth = null;
       }
-      
-      console.log('Submitting data:', dataToSubmit);
-      
+
+      console.log("Submitting data:", dataToSubmit);
+
       const response = await fetch("/api/user/settings", {
         method: "PATCH",
         headers: {
@@ -455,14 +457,30 @@ export default function SettingsPage() {
                       name="roleName"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Role Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Role Name"
-                              {...field}
-                              value={field.value || ""}
-                            />
-                          </FormControl>
+                          <FormLabel>Role</FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value ?? undefined}
+                            disabled={currentUser?.role === "USER"}
+                          >
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a role" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {ROLE_NAMES.map((role) => (
+                                <SelectItem key={role} value={role}>
+                                  {role}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {currentUser?.role === "USER" && (
+                            <FormDescription>
+                              Your role is managed by your administrator.
+                            </FormDescription>
+                          )}
                           <FormMessage />
                         </FormItem>
                       )}
@@ -476,7 +494,7 @@ export default function SettingsPage() {
                   <Button
                     type="submit"
                     className="w-full md:w-auto flex items-center gap-1"
-                    disabled={isLoading}
+                    disabled={!form.formState.isDirty || isLoading}
                   >
                     {isLoading ? (
                       <>
