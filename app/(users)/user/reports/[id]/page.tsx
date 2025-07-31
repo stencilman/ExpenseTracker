@@ -89,7 +89,7 @@ export default function ReportDetailPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  
+
   // History state
   const [historyData, setHistoryData] = useState<ReportHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -124,7 +124,7 @@ export default function ReportDetailPage() {
   const handleClose = () => {
     router.back();
   };
-  
+
   // Fetch report history
   const fetchReportHistory = async (reportId: number) => {
     setIsLoadingHistory(true);
@@ -149,7 +149,12 @@ export default function ReportDetailPage() {
 
   // Handle tab change to fetch history data when needed
   const handleTabChange = (value: string) => {
-    if (value === "history" && historyData.length === 0 && !isLoadingHistory && report) {
+    if (
+      value === "history" &&
+      historyData.length === 0 &&
+      !isLoadingHistory &&
+      report
+    ) {
       fetchReportHistory(report.id);
     }
   };

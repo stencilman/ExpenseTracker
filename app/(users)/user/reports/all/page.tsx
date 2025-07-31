@@ -41,16 +41,16 @@ export default function AllReportsPage() {
       setLoading(true);
       try {
         const response = await fetch("/api/reports");
-        
+
         if (!response.ok) {
           throw new Error("Failed to fetch reports");
         }
-        
+
         const responseData = await response.json();
-        
+
         // Check if the response has a data property (paginated response)
         const reportsArray: ApiReport[] = responseData.data || responseData;
-        
+
         // Convert API reports to UI reports format
         const uiReports: Report[] = reportsArray.map((report) => {
           // Get status display from utility function
@@ -61,21 +61,30 @@ export default function AllReportsPage() {
             report.rejectedAt,
             report.reimbursedAt
           );
-          
+
           // Format date range
           let dateRange = "No date range";
           if (report.startDate && report.endDate) {
-            dateRange = `${format(new Date(report.startDate), "dd/MM/yyyy")} - ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
+            dateRange = `${format(
+              new Date(report.startDate),
+              "dd/MM/yyyy"
+            )} - ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
           } else if (report.startDate) {
-            dateRange = `From ${format(new Date(report.startDate), "dd/MM/yyyy")}`;
+            dateRange = `From ${format(
+              new Date(report.startDate),
+              "dd/MM/yyyy"
+            )}`;
           } else if (report.endDate) {
-            dateRange = `Until ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
+            dateRange = `Until ${format(
+              new Date(report.endDate),
+              "dd/MM/yyyy"
+            )}`;
           }
-          
+
           // Calculate the correct total amount based on expenses
           // This ensures we display the correct total even for unsubmitted reports
           const totalAmount = report.totalAmount || 0;
-          
+
           return {
             id: report.id.toString(),
             iconType: "file-text",
@@ -87,7 +96,7 @@ export default function AllReportsPage() {
             status: statusDisplay,
           };
         });
-        
+
         setReports(uiReports);
       } catch (err) {
         console.error("Error fetching reports:", err);
@@ -96,27 +105,31 @@ export default function AllReportsPage() {
         setLoading(false);
       }
     };
-    
+
     fetchReports();
   }, []);
-  
+
   // Refresh reports after adding a new one
   const handleReportAdded = () => {
     setLoading(true);
     fetch("/api/reports")
-      .then(response => response.json())
-      .then(responseData => {
+      .then((response) => response.json())
+      .then((responseData) => {
         // Check if the response has a data property (paginated response)
         const reportsArray: ApiReport[] = responseData.data || responseData;
-        
+
         // Same conversion logic as above (simplified for brevity)
         const uiReports: Report[] = reportsArray.map((report: ApiReport) => ({
           id: report.id.toString(),
           iconType: "file-text" as const,
           title: report.title,
-          dateRange: report.startDate && report.endDate 
-            ? `${format(new Date(report.startDate), "dd/MM/yyyy")} - ${format(new Date(report.endDate), "dd/MM/yyyy")}` 
-            : "No date range",
+          dateRange:
+            report.startDate && report.endDate
+              ? `${format(new Date(report.startDate), "dd/MM/yyyy")} - ${format(
+                  new Date(report.endDate),
+                  "dd/MM/yyyy"
+                )}`
+              : "No date range",
           total: `Rs.${report.totalAmount.toLocaleString()}.00`,
           expenseCount: report.expenses.length,
           toBeReimbursed: `Rs.${report.totalAmount.toLocaleString()}.00`,
@@ -130,7 +143,7 @@ export default function AllReportsPage() {
         }));
         setReports(uiReports);
       })
-      .catch(err => {
+      .catch((err) => {
         console.error("Error refreshing reports:", err);
       })
       .finally(() => {
@@ -162,7 +175,11 @@ export default function AllReportsPage() {
       ) : error ? (
         <div className="text-center py-8 text-red-500">
           <div className="text-lg font-medium mb-2">{error}</div>
-          <Button onClick={() => window.location.reload()} variant="outline" size="sm">
+          <Button
+            onClick={() => window.location.reload()}
+            variant="outline"
+            size="sm"
+          >
             Try Again
           </Button>
         </div>

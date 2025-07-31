@@ -8,6 +8,8 @@ import { ExpenseWithUI } from "@/types/expense";
 // Define the Report type
 export interface Report {
   id: string;
+  submitter: string;
+  approver: string | undefined;
   iconType: "calendar" | "file-text" | "receipt" | "credit-card";
   title: string;
   dateRange: string;
@@ -196,6 +198,65 @@ export const getReportsPageColumns = (): ColumnDef<Report>[] => [
 ];
 
 // Using the shared Expense type from types/expense.ts
+export const getAdminReportTableColumns = (): ColumnDef<Report>[] => [
+  {
+    accessorKey: "submitter",
+    header: "SUBMITTER",
+    cell: ({ row }) => <div>{row.original.submitter}</div>,
+  },
+  {
+    accessorKey: "id",
+    header: "ID",
+    cell: ({ row }) => <div>{row.original.id}</div>,
+  },
+  {
+    accessorKey: "reportName",
+    header: "REPORT NAME",
+    cell: ({ row }) => <div>{row.original.title}</div>,
+  },
+  {
+    accessorKey: "status",
+    header: () => <div className="text-right">STATUS</div>,
+    cell: ({ row }) => <StatusCell status={row.original.status} />,
+  },
+  {
+    accessorKey: "approver",
+    header: "APPROVER",
+    cell: ({ row }) => <div>{row.original.approver}</div>,
+  },
+  {
+    accessorKey: "total",
+    header: () => <div className="text-right">TOTAL</div>,
+    cell: ({ row }) => (
+      <TotalCell
+        total={row.original.total}
+        expenseCount={row.original.expenseCount}
+      />
+    ),
+  },
+  {
+    accessorKey: "toBeReimbursed",
+    header: () => <div className="text-right">TO BE REIMBURSED</div>,
+    cell: ({ row }) => (
+      <div className="text-right">{row.original.toBeReimbursed}</div>
+    ),
+  },
+];
+
+// Example of how to create columns for an expenses table
+export interface Expense {
+  id: string;
+  expenseDetails: string;
+  merchant: string;
+  amount: string;
+  reportName?: string;
+  date: string;
+  category: string;
+  status?: {
+    label: string;
+    color: "green" | "orange" | "blue" | "red";
+  };
+}
 
 export interface ExpenseColumnOptions {
   includeReportName?: boolean;

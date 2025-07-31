@@ -3,8 +3,19 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "./DataTable";
-import { Report, getReportsColumns, getReportsPageColumns } from "./TableColumnDefs";
+import {
+  Report,
+  getReportsColumns,
+  getReportsPageColumns,
+} from "./TableColumnDefs";
 import { useRouter } from "next/navigation";
+import {
+  Report,
+  getAdminReportTableColumns,
+  getReportsColumns,
+  getReportsPageColumns,
+} from "./TableColumnDefs";
+import { usePathname, useRouter } from "next/navigation";
 
 export type { Report } from "./TableColumnDefs";
 
@@ -28,6 +39,7 @@ export function ReportsTable({
   isAllRowsSelected = false,
 }: ReportsTableProps) {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleSelectedRowsChange = React.useCallback(
     (selectedRows: Report[]) => {
@@ -42,13 +54,24 @@ export function ReportsTable({
     (row: Report) => {
       // Navigate to the report detail page
       router.push(`/user/reports/${row.id}`);
+      if (pathname.includes("admin")) {
+        router.push(`/admin/reports/${row.id}`);
+      } else {
+        router.push(`/user/reports/${row.id}`);
+      }
     },
     [router]
   );
 
   // Get the appropriate columns based on the variant
   const columns = React.useMemo(() => {
-    return variant === "dashboard" ? getReportsColumns() : getReportsPageColumns();
+    if (pathname.includes("admin")) {
+      return getAdminReportTableColumns();
+    }
+
+    return variant === "dashboard"
+      ? getReportsColumns()
+      : getReportsPageColumns();
   }, [variant]);
 
   return (

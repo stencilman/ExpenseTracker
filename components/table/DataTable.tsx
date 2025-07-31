@@ -53,7 +53,8 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
-  const [visibility, setVisibility] = React.useState<VisibilityState>(columnVisibility);
+  const [visibility, setVisibility] =
+    React.useState<VisibilityState>(columnVisibility);
 
   // Create a column for selection checkboxes if row selection is enabled
   const selectionColumn: ColumnDef<TData, any> = {
@@ -107,7 +108,7 @@ export function DataTable<TData, TValue>({
 
   // Use a ref to store previous selection to prevent unnecessary updates
   const prevSelectionRef = React.useRef<string>("");
-  
+
   React.useEffect(() => {
     // Programmatically update selection state when isAllRowsSelected prop changes
     if (enableRowSelection) {
@@ -119,8 +120,10 @@ export function DataTable<TData, TValue>({
   React.useEffect(() => {
     if (onSelectedRowsChange && enableRowSelection) {
       // Convert current selection to string for comparison
-      const currentSelectionKey = JSON.stringify(Object.keys(rowSelection).sort());
-      
+      const currentSelectionKey = JSON.stringify(
+        Object.keys(rowSelection).sort()
+      );
+
       // Only update if selection has changed
       if (prevSelectionRef.current !== currentSelectionKey) {
         const selectedRows = table
@@ -142,11 +145,14 @@ export function DataTable<TData, TValue>({
                 {headerGroup.headers.map((header) => {
                   // Get column width from size property or default to auto
                   const columnSize = header.column.columnDef.size || "auto";
-                  const width = typeof columnSize === "number" ? `${columnSize}px` : columnSize;
-                  
+                  const width =
+                    typeof columnSize === "number"
+                      ? `${columnSize}px`
+                      : columnSize;
+
                   return (
-                    <TableHead 
-                      key={header.id} 
+                    <TableHead
+                      key={header.id}
                       style={{ width, minWidth: width, maxWidth: width }}
                       className="overflow-hidden"
                     >
@@ -178,7 +184,7 @@ export function DataTable<TData, TValue>({
                     ) {
                       return;
                     }
-                    
+
                     if (onRowClick) {
                       onRowClick(row.original);
                     }
@@ -187,10 +193,13 @@ export function DataTable<TData, TValue>({
                   {row.getVisibleCells().map((cell) => {
                     // Get column width from size property or default to auto
                     const columnSize = cell.column.columnDef.size || "auto";
-                    const width = typeof columnSize === "number" ? `${columnSize}px` : columnSize;
-                    
+                    const width =
+                      typeof columnSize === "number"
+                        ? `${columnSize}px`
+                        : columnSize;
+
                     return (
-                      <TableCell 
+                      <TableCell
                         key={cell.id}
                         style={{ width, minWidth: width, maxWidth: width }}
                         className="overflow-hidden"
