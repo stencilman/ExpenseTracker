@@ -21,12 +21,30 @@ model User {
   password      String
   image         String?
   emailVerified DateTime?
+  
+  // Additional user settings fields
+  employeeId    String?   // Employee ID
+  mobile        String?   // Mobile number
+  department    String?   // Department
+  dateOfJoining DateTime? // Date of joining
+  dateOfBirth   DateTime? // Date of birth
+  designation   String?   // Designation/job title
+  roleName      String?   // Role name (e.g., "Submitter")
+  
+  // Approver relationship - who this user submits to
+  approverId    String?   
+  approver      User?     @relation("UserApprover", fields: [approverId], references: [id])
+  subordinates  User[]    @relation("UserApprover") // Users who submit to this user
+  
+  // Relations
   Account       Account[]
   expenses      Expense[]
   reports       Report[]                // Reports created by this user
   approvedReports Report[] @relation("ReportApprovals") // Reports approved by this user
   expenseActions ExpenseHistory[] @relation("ExpenseActions") // Actions performed on expenses
   reportActions ReportHistory[] @relation("ReportActions") // Actions performed on reports
+  
+  // System fields
   role          UserRole  @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
