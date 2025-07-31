@@ -15,6 +15,7 @@ interface ReportsTableProps {
   onSelectedRowsChange?: (selectedRows: Report[]) => void;
   variant?: "dashboard" | "page";
   className?: string;
+  isAllRowsSelected?: boolean;
 }
 
 export function ReportsTable({
@@ -24,6 +25,7 @@ export function ReportsTable({
   onSelectedRowsChange,
   variant = "dashboard",
   className = "",
+  isAllRowsSelected = false,
 }: ReportsTableProps) {
   const router = useRouter();
 
@@ -58,6 +60,7 @@ export function ReportsTable({
       onSelectedRowsChange={handleSelectedRowsChange}
       onRowClick={handleRowClick}
       className={className}
+      isAllRowsSelected={isAllRowsSelected}
     />
   );
 }

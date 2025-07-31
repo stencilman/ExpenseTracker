@@ -36,6 +36,7 @@ export interface DataTableProps<TData, TValue> {
   onRowClick?: (row: TData) => void;
   columnVisibility?: VisibilityState;
   className?: string;
+  isAllRowsSelected?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -48,6 +49,7 @@ export function DataTable<TData, TValue>({
   onRowClick,
   columnVisibility = {},
   className = "",
+  isAllRowsSelected = false,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
@@ -106,6 +108,13 @@ export function DataTable<TData, TValue>({
   // Use a ref to store previous selection to prevent unnecessary updates
   const prevSelectionRef = React.useRef<string>("");
   
+  React.useEffect(() => {
+    // Programmatically update selection state when isAllRowsSelected prop changes
+    if (enableRowSelection) {
+      table.toggleAllRowsSelected(isAllRowsSelected);
+    }
+  }, [isAllRowsSelected, table, enableRowSelection]);
+
   // Notify parent component when selection changes
   React.useEffect(() => {
     if (onSelectedRowsChange && enableRowSelection) {
