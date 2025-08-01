@@ -7,6 +7,7 @@ import {
   CheckCircle,
   XCircle,
   CreditCard,
+  Send,
 } from "lucide-react";
 import { ExpenseEventType } from "@prisma/client";
 
@@ -45,6 +46,8 @@ export default function HistoryItemCard({
         return <XCircle className="h-5 w-5 text-red-500" />;
       case "REIMBURSED":
         return <CreditCard className="h-5 w-5 text-green-700" />;
+      case "SUBMITTED":
+        return <Send className="h-5 w-5 text-blue-500" />;
       default:
         return <FileText className="h-5 w-5 text-gray-500" />;
     }
@@ -53,23 +56,31 @@ export default function HistoryItemCard({
   // Helper function to get the event title based on event type
   const getEventTitle = () => {
     switch (eventType) {
-      case "CREATED":
-        return "Expense Created";
-      case "ADDED_TO_REPORT":
-        return (
-          <>
-            Added to Report{" "}
-            {report?.title && <span className="font-normal">({report.title})</span>}
-          </>
-        );
       case "APPROVED":
         return "Expense Approved";
       case "REJECTED":
         return "Expense Rejected";
       case "REIMBURSED":
         return "Expense Reimbursed";
+      case "SUBMITTED":
+        return "Report Submitted";
       default:
-        return "Event";
+        // Handle report-specific events
+        switch (eventType) {
+          case "CREATED":
+            return report ? "Report Created" : "Expense Created";
+          case "ADDED_TO_REPORT":
+            return (
+              <>
+                Added to Report{" "}
+                {report?.title && (
+                  <span className="font-normal">({report.title})</span>
+                )}
+              </>
+            );
+          default:
+            return "Event";
+        }
     }
   };
 
@@ -84,16 +95,11 @@ export default function HistoryItemCard({
           <div className="flex flex-col sm:flex-row sm:justify-between">
             <h4 className="font-medium text-gray-900">{getEventTitle()}</h4>
             <time className="text-xs text-gray-500 mt-1 sm:mt-0">
-              {format(
-                new Date(eventDate),
-                "MMM d, yyyy h:mm a"
-              )}
+              {format(new Date(eventDate), "MMM d, yyyy h:mm a")}
             </time>
           </div>
 
-          {details && (
-            <p className="mt-1 text-sm text-gray-600">{details}</p>
-          )}
+          {details && <p className="mt-1 text-sm text-gray-600">{details}</p>}
 
           {performedBy && (
             <div className="mt-2 text-xs text-gray-500 flex items-center">

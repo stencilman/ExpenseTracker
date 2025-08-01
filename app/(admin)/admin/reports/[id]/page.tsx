@@ -3,7 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, FileText, MoreHorizontal, X } from "lucide-react";
+import { Check, FileText, MoreHorizontal, X, AlertCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -547,9 +547,29 @@ export default function ReportDetailPage() {
               </TabsContent>
 
               <TabsContent value="history">
-                <div className="text-center py-8 text-gray-500">
-                  No history available
-                </div>
+                {historyItems.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No history available
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-sm font-medium text-muted-foreground mb-2">
+                      Report Timeline
+                    </div>
+                    <div className="space-y-4">
+                      {historyItems.map((event: any) => (
+                        <HistoryItemCard
+                          key={event.id}
+                          id={event.id}
+                          eventType={event.eventType}
+                          eventDate={event.eventDate}
+                          details={event.details}
+                          performedBy={event.performedBy}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </TabsContent>
             </Tabs>
           </div>

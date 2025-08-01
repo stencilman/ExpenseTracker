@@ -66,7 +66,7 @@ export async function GET(
         : null,
     }));
 
-    return jsonResponse({ history: mappedHistory });
+    return jsonResponse({ data: mappedHistory });
   } catch (error) {
     console.error("Error fetching report history:", error);
     return errorResponse("Failed to fetch report history", 500);

@@ -33,10 +33,14 @@ import { DeleteReportsDialog } from "@/components/reports/DeleteReportsDialog";
 interface ReportHistoryItem {
   id: number;
   eventType: string;
-  eventDate: Date;
+  eventDate: Date | string;
   details?: string | null;
   performedBy?: {
     name: string;
+  } | null;
+  report?: {
+    id: number;
+    title: string;
   } | null;
 }
 
@@ -452,6 +456,7 @@ export default function ReportDetailPage() {
                           eventDate={event.eventDate}
                           details={event.details}
                           performedBy={event.performedBy}
+                          report={event.report}
                         />
                       ))}
                     </div>
