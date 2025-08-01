@@ -4,15 +4,21 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check, FileText, MoreHorizontal, X } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import ExpenseDetail from "@/components/expenses/ExpenseDetail";
+import { ExpensesProvider } from "@/components/providers/ExpenseProvider";
+import RecordReimbursement from "@/components/admin/RecordReimbursement";
+import ReportExpenseCard from "@/components/reports/ReportExpenseCard";
+
 import { useEffect, useState } from "react";
 import ApproveReportDialog from "@/components/admin/ApproveReportDialog";
-import RecordReimbursement from "@/components/admin/RecordReimbursement";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/loader";
 import { formatCurrency } from "@/lib/format-utils";
 import HistoryItemCard from "@/components/expenses/HistoryItemCard";
 import { mapReportStatusToDisplay } from "@/lib/report-status-utils";
 import { ReportStatus } from "@prisma/client";
+import { ExpenseWithUI } from "@/types/expense";
 
 export default function ReportDetailPage() {
   const router = useRouter();
@@ -23,6 +29,7 @@ export default function ReportDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [historyItems, setHistoryItems] = useState<any[]>([]);
+
   const [isActionLoading, setIsActionLoading] = useState(false);
 
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
@@ -30,6 +37,11 @@ export default function ReportDetailPage() {
     "approve"
   );
   const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
+
+  // Expense dialog state
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<any | null>(null);
+  const [isExpenseLoading, setIsExpenseLoading] = useState(false);
 
   // Utility to normalize status field coming from API
   const normalizeReportStatus = (reportData: any) => {
@@ -116,7 +128,7 @@ export default function ReportDetailPage() {
     if (statusLabel === "SUBMITTED") {
       setDialogAction("approve");
       setConfirmDialogOpen(true);
-    } else if (statusLabel === "AWAITING REIMBURSEMENT") {
+    } else if (statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "APPROVED") {
       setReimbursementDialogOpen(true);
     }
   };
@@ -311,10 +323,27 @@ export default function ReportDetailPage() {
   // Determine main action button text based on status
   const getPrimaryButtonText = () => {
     if (statusLabel === "SUBMITTED") return "Approve";
-    if (statusLabel === "AWAITING REIMBURSEMENT") return "Record Reimbursement";
+    if (statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "APPROVED") return "Record Reimbursement";
     if (statusLabel === "REJECTED") return "Rejected";
     if (statusLabel === "REIMBURSED") return "Reimbursed";
     return "Approve";
+  };
+
+  // Handler to open expense dialog
+  const handleExpenseClick = async (expenseId: number) => {
+    try {
+      setIsExpenseLoading(true);
+      setExpenseDialogOpen(true);
+      const res = await fetch(`/api/admin/expenses/${expenseId}`);
+      if (!res.ok) throw new Error("Failed to fetch expense");
+      const data = await res.json();
+      setSelectedExpense(data);
+    } catch (err: any) {
+      toast.error(err.message || "Could not load expense");
+      setExpenseDialogOpen(false);
+    } finally {
+      setIsExpenseLoading(false);
+    }
   };
 
   // Determine primary button variant based on status
@@ -363,7 +392,9 @@ export default function ReportDetailPage() {
   }
 
   return (
+    // This is the single root element for the component.
     <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
+      {/* Header Section */}
       <div className="flex items-center justify-between bg-white border rounded-lg p-4">
         <div className="flex items-center space-x-4">
           <div className="bg-gray-100 p-2 rounded-lg">
@@ -396,7 +427,7 @@ export default function ReportDetailPage() {
               disabled={isActionLoading}
             >
               {isActionLoading ? (
-                <Loader className="h-4 w-4 mr-2" />
+                <Loader className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <Check className="h-4 w-4 mr-1" />
               )}
@@ -432,7 +463,9 @@ export default function ReportDetailPage() {
         </div>
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Left Column */}
         <div className="md:col-span-2 space-y-6">
           <div className="bg-white border rounded-lg p-6">
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
@@ -460,49 +493,29 @@ export default function ReportDetailPage() {
 
               <TabsContent value="expenses" className="space-y-4">
                 {report.expenses && report.expenses.length > 0 ? (
-                  report.expenses.map((expense: any) => (
-                    <div
-                      key={expense.id}
-                      className="border rounded-lg overflow-hidden"
-                    >
-                      <div className="flex items-center p-4 border-b">
-                        <div className="w-12">
-                          <div className="bg-red-500 h-10 w-10 rounded flex items-center justify-center">
-                            <FileText className="h-5 w-5 text-white" />
-                          </div>
-                        </div>
-                        <div className="flex-1">
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <div className="flex items-center">
-                                <span className="text-sm text-gray-500 mr-2">
-                                  {new Date(expense.date).toLocaleDateString()}
-                                </span>
-                                <span className="font-medium">
-                                  {expense.merchant}
-                                </span>
-                              </div>
-                              <div className="text-sm text-blue-600">
-                                {expense.category}
-                              </div>
-                            </div>
-                            <div className="font-bold">
-                              {formatCurrency(expense.amount)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))
+                  <>
+                    {report.expenses.map((expense: ExpenseWithUI) => (
+                      <ReportExpenseCard
+                        key={expense.id}
+                        id={expense.id}
+                        date={new Date(expense.date).toLocaleDateString()}
+                        merchant={expense.merchant}
+                        category={expense.category}
+                        amount={expense.amount}
+                        onClick={() => handleExpenseClick(expense.id)}
+                      />
+                    ))}
+                  </>
                 ) : (
-                  <div className="text-center p-4 text-gray-500">
-                    No expenses found
+                  <div className="text-center py-8 text-gray-500">
+                    No expenses available
                   </div>
                 )}
 
-                <div className="space-y-2">
+                {/* --- FIX: Cleaned up the totals section --- */}
+                <div className="pt-4 mt-4 border-t space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>Total Expense Amount</span>
+                    <span>Total Amount</span>
                     <span className="font-medium">
                       {formatCurrency(getTotalAmount())}
                     </span>
@@ -517,7 +530,7 @@ export default function ReportDetailPage() {
                     <span>Applied Advance Amount</span>
                     <span className="font-medium">(-) 0.00</span>
                   </div>
-                  <div className="flex justify-between text-sm font-medium pt-2 border-t">
+                  <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span>Amount to be Reimbursed</span>
                     <span>{formatCurrency(getAmountToBeReimbursed())}</span>
                   </div>
@@ -533,6 +546,7 @@ export default function ReportDetailPage() {
           </div>
         </div>
 
+        {/* Right Column */}
         <div className="space-y-4">
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <div className="flex justify-between">
@@ -572,6 +586,7 @@ export default function ReportDetailPage() {
         </div>
       </div>
 
+      {/* Dialogs and Modals */}
       <ApproveReportDialog
         open={confirmDialogOpen && dialogAction === "approve"}
         onOpenChange={setConfirmDialogOpen}
@@ -587,6 +602,31 @@ export default function ReportDetailPage() {
         reportId={reportId}
         action="reject"
       />
+
+      <Dialog
+        open={expenseDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setExpenseDialogOpen(false);
+            setSelectedExpense(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-3xl w-full max-h-[95vh] overflow-y-auto p-0">
+          {isExpenseLoading ? (
+            <div className="flex justify-center items-center p-8">
+              <Loader className="animate-spin" />
+            </div>
+          ) : selectedExpense ? (
+            <ExpensesProvider>
+              <ExpenseDetail
+                expense={selectedExpense}
+                onClose={() => setExpenseDialogOpen(false)}
+              />
+            </ExpensesProvider>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <RecordReimbursement
         open={reimbursementDialogOpen}

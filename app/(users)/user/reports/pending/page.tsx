@@ -38,7 +38,7 @@ interface ApiReport {
     lastName: string;
     email: string;
   };
-  submitter: { name: string };
+  submitter?: { name: string };
   approver?: { name: string };
 }
 
@@ -85,10 +85,10 @@ export default function PendingReportsPage() {
       title: apiReport.title,
       dateRange,
       total: `Rs.${totalAmount.toLocaleString()}.00`,
-      expenseCount: apiReport.expenses.length,
+      expenseCount: apiReport.expenses?.length ?? 0,
       toBeReimbursed: `Rs.${totalAmount.toLocaleString()}.00`,
       status: statusDisplay,
-      submitter: apiReport.submitter.name,
+      submitter: apiReport.submitter?.name ?? `${apiReport.user.firstName} ${apiReport.user.lastName}`,
       approver: approverName,
     };
   };

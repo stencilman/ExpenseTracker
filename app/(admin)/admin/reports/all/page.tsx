@@ -27,7 +27,12 @@ export default function AdminReportsAllPage() {
       // 1) { data: [ ... ], meta: { ... } }
       // 2) { data: { data: [ ... ], meta: { ... } } }
       const apiData = responseData.data;
-      const reportsData = Array.isArray(apiData) ? apiData : apiData?.data ?? [];
+      // Exclude reports that are still in PENDING (draft) state – admin only needs submitted ones
+      const reportsDataRaw = Array.isArray(apiData) ? apiData : apiData?.data ?? [];
+      const reportsData = reportsDataRaw.filter((r: any) => {
+        const label = typeof r.status === "string" ? r.status : r.status?.label;
+        return label !== "PENDING"; // keep everything except drafts
+      });
       
       // Map API reports to UI format with proper status object
       const formattedReports = reportsData.map((report: any) => {
