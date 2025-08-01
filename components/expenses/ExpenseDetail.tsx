@@ -219,7 +219,8 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
     setHistoryError(null);
 
     try {
-      const response = await fetch(`/api/expenses/${expenseId}/history`);
+      const historyEndpoint = readOnly ? `/api/admin/expenses/${expenseId}/history` : `/api/expenses/${expenseId}/history`;
+      const response = await fetch(historyEndpoint);
 
       if (!response.ok) {
         throw new Error(`Error fetching history: ${response.statusText}`);

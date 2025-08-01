@@ -345,7 +345,7 @@ export default function ReportDetailPage() {
       setExpenseDialogOpen(true);
       const res = await fetch(`/api/admin/expenses/${expenseId}`);
       if (!res.ok) throw new Error("Failed to fetch expense");
-      const data = await res.json();
+      const { data } = await res.json();
       setSelectedExpense(data);
     } catch (err: any) {
       toast.error(err.message || "Could not load expense");
