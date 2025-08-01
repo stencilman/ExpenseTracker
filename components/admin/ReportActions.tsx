@@ -23,10 +23,16 @@ export function ReportActions({ report, onActionComplete }: ReportActionsProps) 
   const [rejectionReason, setRejectionReason] = useState("");
   const [paymentReference, setPaymentReference] = useState("");
 
+    // Determine status label regardless of shape (enum or object)
+  const statusLabel: string | undefined =
+    typeof report.status === "string"
+      ? report.status
+      : report.status?.label;
+
   // Determine which actions are available based on report status
-  const canApprove = report.status?.label === "SUBMITTED";
-  const canReject = report.status?.label === "SUBMITTED";
-  const canReimburse = report.status?.label === "APPROVED";
+  const canApprove = statusLabel === "SUBMITTED";
+  const canReject = statusLabel === "SUBMITTED";
+  const canReimburse = statusLabel === "APPROVED";
 
   const handleApprove = async () => {
     if (!canApprove) return;

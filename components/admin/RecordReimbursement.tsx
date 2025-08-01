@@ -18,7 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Camera } from "lucide-react";
+import { Camera, CalendarIcon } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -30,6 +30,10 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { formatCurrency } from "@/lib/format-utils";
 
 interface RecordReimbursementProps {
   open: boolean;
@@ -102,7 +106,7 @@ export default function RecordReimbursement({
                       <Label htmlFor="amount">Amount to be Reimbursed</Label>
                       <Input
                         id="amount"
-                        value={(totalAmount - totalAdvance).toFixed(2)}
+                        value={formatCurrency(totalAmount - totalAdvance)}
                         className="bg-gray-50 cursor-not-allowed"
                         readOnly
                         disabled
@@ -119,11 +123,37 @@ export default function RecordReimbursement({
                             <span className="text-red-500 ml-1">*</span>
                           </FormLabel>
                           <FormControl>
-                            <Input
-                              type="date"
-                              className="bg-white"
-                              {...field}
-                            />
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  className={
+                                    field.value
+                                      ? "w-full justify-start text-left font-normal"
+                                      : "w-full justify-start text-left font-normal text-muted-foreground"
+                                  }
+                                >
+                                  {field.value ? (
+                                    format(new Date(field.value), "dd/MM/yyyy")
+                                  ) : (
+                                    "Select date"
+                                  )}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                  mode="single"
+                                  selected={field.value ? new Date(field.value) : undefined}
+                                  onSelect={(date) => {
+                                    if (date) {
+                                      field.onChange(format(date, "yyyy-MM-dd"));
+                                    }
+                                  }}
+                                  initialFocus
+                                />
+                              </PopoverContent>
+                            </Popover>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -210,15 +240,15 @@ export default function RecordReimbursement({
                         Total Reimbursable Amount
                       </span>
                       <span className="font-medium">
-                        Rs.{totalAmount.toFixed(2)}
+                        {formatCurrency(totalAmount)}
                       </span>
                     </div>
 
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">Total Advance</span>
                       <span className="font-medium flex items-center">
-                        <span className="text-gray-400 mr-1">−</span> Rs.
-                        {totalAdvance.toFixed(2)}
+                        <span className="text-gray-400 mr-1">−</span> 
+                        {formatCurrency(totalAdvance)}
                       </span>
                     </div>
 
@@ -228,7 +258,7 @@ export default function RecordReimbursement({
                           Amount to be Reimbursed
                         </span>
                         <span className="font-medium">
-                          Rs.{(totalAmount - totalAdvance).toFixed(2)}
+                          {formatCurrency(totalAmount - totalAdvance)}
                         </span>
                       </div>
                     </div>

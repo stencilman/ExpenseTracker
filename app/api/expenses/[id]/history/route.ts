@@ -10,6 +10,12 @@ export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+  // Access dynamic route params BEFORE any awaits (Next.js requirement)
+  const expenseId = Number(params.id);
+  if (Number.isNaN(expenseId)) {
+    return errorResponse("Invalid expense ID", 400);
+  }
+
   try {
     // Check authentication
     const session = await auth();
@@ -17,10 +23,7 @@ export async function GET(
       return errorResponse("Unauthorized", 401);
     }
 
-    const expenseId = parseInt(params.id);
-    if (isNaN(expenseId)) {
-      return errorResponse("Invalid expense ID", 400);
-    }
+    
 
     // Verify the expense exists and belongs to the user
     const expense = await db.expense.findUnique({
@@ -58,8 +61,8 @@ export async function GET(
         },
       },
       orderBy: {
-        eventDate: "asc",
-      },
+        eventDate: "desc",
+      }
     });
 
     // Format the response

@@ -10,6 +10,12 @@ export async function GET(
   _req: Request,
   { params }: { params: { id: string } }
 ) {
+  // Access dynamic route params BEFORE any awaits (Next.js requirement)
+  const expenseId = Number(params.id);
+  if (Number.isNaN(expenseId)) {
+    return errorResponse("Invalid expense ID", 400);
+  }
+
   try {
     const session = await auth();
     if (!session?.user?.id) {
@@ -20,10 +26,7 @@ export async function GET(
       return errorResponse("Forbidden: Admin access required", 403);
     }
 
-    const expenseId = Number(params.id);
-    if (Number.isNaN(expenseId)) {
-      return errorResponse("Invalid expense ID", 400);
-    }
+    
 
     // Fetch expense w/out ownership restriction
     const expense = await db.expense.findUnique({ where: { id: expenseId } });
@@ -83,7 +86,7 @@ export async function GET(
       history: formattedHistory,
     });
   } catch (err: any) {
-    console.error(`Error fetching admin expense history ${params.id}:`, err);
+    console.error(`Error fetching admin expense history ${expenseId}:`, err);
     return errorResponse(err.message || "Failed to fetch expense history", 500);
   }
 }

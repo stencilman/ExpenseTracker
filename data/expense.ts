@@ -264,6 +264,43 @@ export async function updateExpense(id: number, data: ExpenseUpdate, userId: str
           },
         });
       }
+
+      // --- EDITED EVENT ---
+      // Determine what changed (excluding report association handled above)
+      const changes: string[] = [];
+      if (updateData.amount !== undefined && updateData.amount !== existingExpense.amount) {
+        changes.push(`Amount: ${existingExpense.amount} → ${updateData.amount}`);
+      }
+      if (updateData.merchant && updateData.merchant !== existingExpense.merchant) {
+        changes.push(`Merchant updated`);
+      }
+      if (updateData.description && updateData.description !== existingExpense.description) {
+        changes.push(`Description updated`);
+      }
+      if (updateData.category && updateData.category !== existingExpense.category) {
+        changes.push(`Category changed from ${existingExpense.category} to ${updateData.category}`);
+      }
+      if (updateData.date && new Date(updateData.date).getTime() !== new Date(existingExpense.date).getTime()) {
+        changes.push(`Date updated`);
+      }
+      if (updateData.receiptUrls && Array.isArray(updateData.receiptUrls)) {
+        const oldReceipts = existingExpense.receiptUrls || [];
+        const newReceipts = updateData.receiptUrls;
+        if (oldReceipts.length !== newReceipts.length) {
+          changes.push(`Receipts count changed (${oldReceipts.length} → ${newReceipts.length})`);
+        }
+      }
+
+      if (changes.length > 0) {
+        await tx.expenseHistory.create({
+          data: {
+            eventType: 'EDITED',
+            expenseId: expense.id,
+            details: changes.join('; '),
+            performedById: userId,
+          },
+        });
+      }
       
       return expense;
     });
