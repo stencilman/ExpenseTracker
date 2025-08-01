@@ -4,7 +4,12 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Check, FileText, MoreHorizontal, X } from "lucide-react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import ExpenseDetail from "@/components/expenses/ExpenseDetail";
 import { ExpensesProvider } from "@/components/providers/ExpenseProvider";
 import RecordReimbursement from "@/components/admin/RecordReimbursement";
@@ -128,7 +133,10 @@ export default function ReportDetailPage() {
     if (statusLabel === "SUBMITTED") {
       setDialogAction("approve");
       setConfirmDialogOpen(true);
-    } else if (statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "APPROVED") {
+    } else if (
+      statusLabel === "AWAITING REIMBURSEMENT" ||
+      statusLabel === "APPROVED"
+    ) {
       setReimbursementDialogOpen(true);
     }
   };
@@ -323,7 +331,8 @@ export default function ReportDetailPage() {
   // Determine main action button text based on status
   const getPrimaryButtonText = () => {
     if (statusLabel === "SUBMITTED") return "Approve";
-    if (statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "APPROVED") return "Record Reimbursement";
+    if (statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "APPROVED")
+      return "Record Reimbursement";
     if (statusLabel === "REJECTED") return "Rejected";
     if (statusLabel === "REIMBURSED") return "Reimbursed";
     return "Approve";
@@ -612,7 +621,10 @@ export default function ReportDetailPage() {
           }
         }}
       >
-        <DialogContent className="max-w-3xl w-full max-h-[95vh] overflow-y-auto p-0">
+        <DialogContent className="w-full max-h-[95vh] overflow-y-auto p-0 sm:max-w-5xl">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Expense Details</DialogTitle>
+          </DialogHeader>
           {isExpenseLoading ? (
             <div className="flex justify-center items-center p-8">
               <Loader className="animate-spin" />
@@ -622,6 +634,8 @@ export default function ReportDetailPage() {
               <ExpenseDetail
                 expense={selectedExpense}
                 onClose={() => setExpenseDialogOpen(false)}
+                hideClose
+                readOnly
               />
             </ExpensesProvider>
           ) : null}

@@ -57,10 +57,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-interface ExpenseDetailProps {
-  expense: ExpenseWithUI;
-  onClose: () => void;
-}
+
 
 // History event interface
 interface ExpenseHistoryEvent {
@@ -144,10 +141,14 @@ const getStatusLabel = (expense: ExpenseWithUI): string => {
   return expense.reportName ? "REPORTED" : "UNREPORTED";
 };
 
-export default function ExpenseDetail({
-  expense,
-  onClose,
-}: ExpenseDetailProps) {
+export interface ExpenseDetailProps {
+  expense: ExpenseWithUI;
+  onClose: () => void;
+  hideClose?: boolean;
+  readOnly?: boolean;
+}
+
+export default function ExpenseDetail({ expense, onClose, hideClose = false, readOnly = false }: ExpenseDetailProps) {
   // States for component
   const router = useRouter();
   const { deleteExpense, updateExpense } = useExpenses();
@@ -251,37 +252,42 @@ export default function ExpenseDetail({
   return (
     <>
       {/* Edit Expense Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogTitle className="sr-only">Edit Expense</DialogTitle>
-          {isEditOpen && (
-            <AddOrEditExpense
-              expense={expense}
-              isOpen={isEditOpen}
-              onClose={() => setIsEditOpen(false)}
-              mode="edit"
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
+      {!readOnly && (
+        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogTitle className="sr-only">Edit Expense</DialogTitle>
+            {isEditOpen && (
+              <AddOrEditExpense
+                expense={expense}
+                isOpen={isEditOpen}
+                onClose={() => setIsEditOpen(false)}
+                mode="edit"
+              />
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
       {/* Delete Confirmation Dialog */}
-      <DeleteExpenseDialog
-        expenseIds={expense.id}
-        isOpen={isDeleteDialogOpen}
-        onOpenChange={setIsDeleteDialogOpen}
-        onSuccess={handleDeleteSuccess}
-      />
+      {!readOnly && (
+        <DeleteExpenseDialog
+          expenseIds={expense.id}
+          isOpen={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onSuccess={handleDeleteSuccess}
+        />
+      )}
 
       {/* Add to Report Dialog */}
-      <AddToReportDialog
-        expenseId={expense.id}
-        isOpen={isAddToReportOpen}
-        onClose={() => {
-          setIsAddToReportOpen(false);
-          onClose(); // Also close the main detail panel on success
-        }}
-      />
+      {!readOnly && (
+        <AddToReportDialog
+          expenseId={expense.id}
+          isOpen={isAddToReportOpen}
+          onClose={() => {
+            setIsAddToReportOpen(false);
+            onClose(); // Also close the main detail panel on success
+          }}
+        />
+      )}
 
       {/* File Preview Dialog */}
       <Dialog open={isFilePreviewOpen} onOpenChange={setIsFilePreviewOpen}>
@@ -331,38 +337,40 @@ export default function ExpenseDetail({
         </DialogContent>
       </Dialog>
 
-
-
       <div className="p-4 h-[calc(100vh-10rem)] overflow-y-auto overflow-x-hidden w-full">
         <div className="flex justify-between items-center mb-4">
-          <div className="flex gap-2">
+          {!readOnly && (
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditOpen(true)}
+                className="flex items-center gap-1"
+              >
+                <Edit className="h-4 w-4" />
+                Edit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDeleteDialogOpen(true)}
+                className="flex items-center gap-1 text-red-500 hover:text-red-600"
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+          )}
+          {!hideClose && (
             <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditOpen(true)}
-              className="flex items-center gap-1"
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="hover:bg-gray-100"
             >
-              <Edit className="h-4 w-4" />
-              Edit
+              <X className="h-5 w-5" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsDeleteDialogOpen(true)}
-              className="flex items-center gap-1 text-red-500 hover:text-red-600"
-            >
-              <Trash2 className="h-4 w-4" />
-              Delete
-            </Button>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="hover:bg-gray-100"
-          >
-            <X className="h-5 w-5" />
-          </Button>
+          )}
         </div>
 
         {/* What's next section for unreported expenses */}
@@ -489,9 +497,14 @@ export default function ExpenseDetail({
               <div>
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                   <span>
-                    {typeof expense.date === "string"
-                      ? expense.date
-                      : format(new Date(expense.date), "PPP")}
+                    {expense.date
+                       ? typeof expense.date === "string"
+                         ? (() => {
+                             const parsed = new Date(expense.date);
+                             return isNaN(parsed.getTime()) ? expense.date : format(parsed, "PPP");
+                           })()
+                         : format(new Date(expense.date), "PPP")
+                       : "-"}
                   </span>
                 </div>
                 <h2 className="text-lg md:text-xl font-semibold mt-1 md:mt-2">

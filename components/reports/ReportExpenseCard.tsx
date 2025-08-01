@@ -48,9 +48,7 @@ export default function ReportExpenseCard({
         </div>
       );
     }
-    return (
-      <Link href={href ?? `/user/expenses/all/${id}`}>{children}</Link>
-    );
+    return <Link href={href ?? `/user/expenses/all/${id}`}>{children}</Link>;
   };
 
   return (
