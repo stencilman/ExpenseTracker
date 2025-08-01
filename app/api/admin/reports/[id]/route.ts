@@ -40,7 +40,18 @@ export async function GET(
     
     // Format the report for UI consumption with proper status object
     const formattedReport = formatReportForUI(report);
-    return jsonResponse({ data: formattedReport });
+    // Include raw expenses and date fields so the admin detail page can compute totals
+    const enrichedReport = {
+      ...formattedReport,
+      expenses: report.expenses,
+      startDate: report.startDate,
+      endDate: report.endDate,
+      submittedAt: report.submittedAt,
+      approvedAt: report.approvedAt,
+      rejectedAt: report.rejectedAt,
+      reimbursedAt: report.reimbursedAt,
+    };
+    return jsonResponse({ data: enrichedReport });
   } catch (error) {
     console.error("Error fetching report:", error);
     return errorResponse("Failed to fetch report", 500);

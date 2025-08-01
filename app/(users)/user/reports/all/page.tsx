@@ -25,9 +25,17 @@ interface ApiReport {
   reimbursedAt?: Date;
   expenses: {
     id: number;
+    amount: number;
+    claimReimbursement?: boolean;
   }[];
-  submitter: { name: string };
-  approver?: { name: string };
+  user: {
+    firstName: string;
+    lastName: string;
+  };
+  approver?: {
+    firstName: string;
+    lastName: string;
+  };
 }
 
 export default function AllReportsPage() {
@@ -55,7 +63,7 @@ export default function AllReportsPage() {
 
         // Convert API reports to UI reports format
         const uiReports: Report[] = reportsArray.map((report) => {
-          const approverName = report.approver ? report.approver.name : undefined;
+          const approverName = report.approver ? `${report.approver.firstName} ${report.approver.lastName}` : undefined;
           // Get status display from utility function
           const statusDisplay = mapReportStatusToDisplay(
             report.status,
@@ -88,6 +96,13 @@ export default function AllReportsPage() {
           // This ensures we display the correct total even for unsubmitted reports
           const totalAmount = report.totalAmount || 0;
 
+          // Calculate reimbursable amount based on claimReimbursement flag
+          const reimbursableAmount = report.expenses.reduce(
+            (sum, exp) =>
+              sum + (exp.claimReimbursement !== false ? exp.amount : 0),
+            0
+          );
+
           return {
             id: report.id.toString(),
             iconType: "file-text",
@@ -95,9 +110,9 @@ export default function AllReportsPage() {
             dateRange,
             total: `Rs.${totalAmount.toLocaleString()}.00`,
             expenseCount: report.expenses.length,
-            toBeReimbursed: `Rs.${totalAmount.toLocaleString()}.00`,
+            toBeReimbursed: `Rs.${reimbursableAmount.toLocaleString()}.00`,
             status: statusDisplay,
-            submitter: report.submitter.name,
+            submitter: `${report.user.firstName} ${report.user.lastName}`,
             approver: approverName,
           };
         });
@@ -125,7 +140,15 @@ export default function AllReportsPage() {
 
         // Same conversion logic as above (simplified for brevity)
         const uiReports: Report[] = reportsArray.map((report: ApiReport) => {
-          const approverName = report.approver ? report.approver.name : undefined;
+          const approverName = report.approver ? `${report.approver.firstName} ${report.approver.lastName}` : undefined;
+
+          // Calculate reimbursable amount based on claimReimbursement flag
+          const reimbursableAmount = report.expenses.reduce(
+            (sum, exp) =>
+              sum + (exp.claimReimbursement !== false ? exp.amount : 0),
+            0
+          );
+
           return {
             id: report.id.toString(),
             iconType: "file-text" as const,
@@ -139,7 +162,7 @@ export default function AllReportsPage() {
                 : "No date range",
             total: `Rs.${report.totalAmount.toLocaleString()}.00`,
             expenseCount: report.expenses.length,
-            toBeReimbursed: `Rs.${report.totalAmount.toLocaleString()}.00`,
+            toBeReimbursed: `Rs.${reimbursableAmount.toLocaleString()}.00`,
             status: mapReportStatusToDisplay(
               report.status,
               report.submittedAt,
@@ -147,7 +170,7 @@ export default function AllReportsPage() {
               report.rejectedAt,
               report.reimbursedAt
             ),
-            submitter: report.submitter.name,
+            submitter: `${report.user.firstName} ${report.user.lastName}`,
             approver: approverName,
           };
         });

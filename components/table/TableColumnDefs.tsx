@@ -3,6 +3,8 @@
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Calendar, FileText, Receipt, CreditCard } from "lucide-react";
+import { ReportStatus } from "@prisma/client";
+import { mapReportStatusToDisplay } from "@/lib/report-status-utils";
 import { ExpenseWithUI } from "@/types/expense";
 
 // Define the Report type
@@ -16,11 +18,13 @@ export interface Report {
   total: string;
   expenseCount: number;
   toBeReimbursed: string;
-  status?: {
-    label: string;
-    color: "green" | "orange" | "blue" | "red";
-    additionalInfo?: string;
-  };
+  status?:
+    | {
+        label: string;
+        color: "green" | "orange" | "blue" | "red";
+        additionalInfo?: string;
+      }
+    | ReportStatus;
 }
 
 // Helper function to get the icon component based on the icon type
@@ -41,7 +45,12 @@ export const getIconComponent = (iconType: Report["iconType"]) => {
 
 // Custom cell renderer for the status column
 export const StatusCell = ({ status }: { status?: Report["status"] }) => {
-  if (!status) return null;
+  const display =
+    status && typeof status === "string"
+      ? mapReportStatusToDisplay(status as ReportStatus)
+      : (status as any);
+  if (!display) return null;
+
 
   const getStatusClasses = (color: string): { bg: string; text: string } => {
     switch (color) {
@@ -61,15 +70,15 @@ export const StatusCell = ({ status }: { status?: Report["status"] }) => {
   return (
     <div className="flex flex-col items-end">
       <div
-        className={`${getStatusClasses(status.color).bg} ${
-          getStatusClasses(status.color).text
+        className={`${getStatusClasses(display.color).bg} ${
+          getStatusClasses(display.color).text
         } text-xs px-2 py-1 rounded-md whitespace-nowrap`}
       >
-        {status.label}
+        {display.label}
       </div>
-      {status.additionalInfo && (
+      {display.additionalInfo && (
         <div className="text-xs text-muted-foreground mt-1">
-          {status.additionalInfo}
+          {display.additionalInfo}
         </div>
       )}
     </div>

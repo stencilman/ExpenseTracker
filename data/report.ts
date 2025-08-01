@@ -127,6 +127,7 @@ export async function getReports(
                     amount: true,
                     merchant: true,
                     category: true,
+                    claimReimbursement: true,
                 },
             },
             approver: {

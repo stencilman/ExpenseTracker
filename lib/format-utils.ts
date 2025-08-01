@@ -111,10 +111,6 @@ export function formatReportForUI(report: ReportWithRelations): ReportUI {
     total: formattedTotal,
     expenseCount: report.expenses.length,
     toBeReimbursed: formattedReimbursable,
-    status: {
-      label: statusLabel,
-      color: statusColor,
-      additionalInfo: additionalInfo,
-    },
+    status: report.status,
   };
 }

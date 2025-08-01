@@ -23,15 +23,16 @@ export default function AdminReportsAllPage() {
       }
 
       const responseData = await response.json();
-      // The API returns { data: { data: [...reports], meta: {...} } }
-      // Make sure we're accessing the correct property structure
-      const reportsData = responseData.data?.data || [];
+      // Handle both possible API response shapes:
+      // 1) { data: [ ... ], meta: { ... } }
+      // 2) { data: { data: [ ... ], meta: { ... } } }
+      const apiData = responseData.data;
+      const reportsData = Array.isArray(apiData) ? apiData : apiData?.data ?? [];
       
       // Map API reports to UI format with proper status object
       const formattedReports = reportsData.map((report: any) => {
-        // Ensure report has the correct status format expected by the UI
-        if (report.status && typeof report.status === 'string') {
-          // Map the status string to a status object
+        // Ensure status object
+        if (typeof report.status === "string") {
           report.status = mapReportStatusToDisplay(
             report.status as ReportStatus,
             report.submittedAt,
@@ -39,6 +40,16 @@ export default function AdminReportsAllPage() {
             report.rejectedAt,
             report.reimbursedAt
           );
+        }
+
+        // Ensure correct reimbursable amount for list views
+        if (Array.isArray(report.expenses)) {
+          const reimbursableAmount = report.expenses.reduce(
+            (sum: number, exp: any) =>
+              sum + (exp.claimReimbursement !== false ? exp.amount : 0),
+            0
+          );
+          report.toBeReimbursed = `Rs.${reimbursableAmount.toLocaleString()}.00`;
         }
         return report;
       });

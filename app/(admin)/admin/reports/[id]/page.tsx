@@ -18,24 +18,26 @@ export default function ReportDetailPage() {
   const router = useRouter();
   const { id } = useParams();
   const reportId = Array.isArray(id) ? id[0] : id;
-  
+
   const [report, setReport] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [historyItems, setHistoryItems] = useState<any[]>([]);
   const [isActionLoading, setIsActionLoading] = useState(false);
-  
+
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
-  const [dialogAction, setDialogAction] = useState<'approve' | 'reject'>('approve');
+  const [dialogAction, setDialogAction] = useState<"approve" | "reject">(
+    "approve"
+  );
   const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
-  
+
   // Utility to normalize status field coming from API
   const normalizeReportStatus = (reportData: any) => {
     if (!reportData) return reportData;
-    if (reportData.status && typeof reportData.status === 'object') {
+    if (reportData.status && typeof reportData.status === "object") {
       reportData.statusDisplay = reportData.status;
       reportData.status = reportData.status.label;
-    } else if (typeof reportData.status === 'string') {
+    } else if (typeof reportData.status === "string") {
       reportData.statusDisplay = mapReportStatusToDisplay(
         reportData.status as ReportStatus,
         reportData.submittedAt,
@@ -53,19 +55,23 @@ export default function ReportDetailPage() {
       try {
         setLoading(true);
         const response = await fetch(`/api/admin/reports/${reportId}`);
-        
+
         if (!response.ok) {
-          throw new Error('Failed to fetch report');
+          throw new Error("Failed to fetch report");
         }
-        
+
         const data = await response.json();
         const reportData = data.data;
-        
+
         // If API already returns a formatted status object
-        if (reportData && typeof reportData.status === 'object' && reportData.status !== null) {
+        if (
+          reportData &&
+          typeof reportData.status === "object" &&
+          reportData.status !== null
+        ) {
           reportData.statusDisplay = reportData.status;
           reportData.status = reportData.status.label;
-        } else if (reportData && typeof reportData.status === 'string') {
+        } else if (reportData && typeof reportData.status === "string") {
           reportData.statusDisplay = mapReportStatusToDisplay(
             reportData.status as ReportStatus,
             reportData.submittedAt,
@@ -74,18 +80,24 @@ export default function ReportDetailPage() {
             reportData.reimbursedAt
           );
         }
-        
-        setReport(reportData);
-        
+
+        const mergedReport =
+          !report?.expenses || reportData.expenses
+            ? reportData
+            : { ...reportData, expenses: report.expenses };
+        setReport(mergedReport);
+
         // Fetch report history
-        const historyResponse = await fetch(`/api/admin/reports/${reportId}/history`);
+        const historyResponse = await fetch(
+          `/api/admin/reports/${reportId}/history`
+        );
         if (historyResponse.ok) {
           const historyData = await historyResponse.json();
           setHistoryItems(historyData.data);
         }
       } catch (err) {
-        console.error('Error fetching report:', err);
-        setError('Failed to load report. Please try again.');
+        console.error("Error fetching report:", err);
+        setError("Failed to load report. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -100,17 +112,17 @@ export default function ReportDetailPage() {
     router.back();
   };
 
-  const handleApproveClick = () => {
-    if (report?.status === "SUBMITTED") {
-      setDialogAction('approve');
+  const handlePrimaryActionClick = () => {
+    if (statusLabel === "SUBMITTED") {
+      setDialogAction("approve");
       setConfirmDialogOpen(true);
-    } else if (report?.status === "APPROVED") {
+    } else if (statusLabel === "AWAITING REIMBURSEMENT") {
       setReimbursementDialogOpen(true);
     }
   };
 
   const handleRejectClick = () => {
-    setDialogAction('reject');
+    setDialogAction("reject");
     setConfirmDialogOpen(true);
   };
 
@@ -118,22 +130,26 @@ export default function ReportDetailPage() {
     try {
       setIsActionLoading(true);
       const response = await fetch(`/api/admin/reports/${reportId}/approve`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
-        }
+          "Content-Type": "application/json",
+        },
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || 'Failed to approve report');
+        throw new Error(errorText || "Failed to approve report");
       }
-      
+
       const data = await response.json();
       const reportData = data.data;
-      
+
       // Ensure report status is properly formatted as an object for UI
-      if (reportData && reportData.status && typeof reportData.status === 'string') {
+      if (
+        reportData &&
+        reportData.status &&
+        typeof reportData.status === "string"
+      ) {
         reportData.statusDisplay = mapReportStatusToDisplay(
           reportData.status as ReportStatus,
           reportData.submittedAt,
@@ -142,20 +158,28 @@ export default function ReportDetailPage() {
           reportData.reimbursedAt
         );
       }
-      
-      setReport(reportData);
-      toast.success('Report approved successfully');
+
+      const mergedReport =
+        !report?.expenses || reportData.expenses
+          ? reportData
+          : { ...reportData, expenses: report.expenses };
+      setReport(mergedReport);
+      toast.success("Report approved successfully");
       setConfirmDialogOpen(false);
-      
+
       // Refresh history
-      const historyResponse = await fetch(`/api/admin/reports/${reportId}/history`);
+      const historyResponse = await fetch(
+        `/api/admin/reports/${reportId}/history`
+      );
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
         setHistoryItems(historyData.data);
       }
     } catch (error) {
-      console.error('Error approving report:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to approve report');
+      console.error("Error approving report:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to approve report"
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -165,23 +189,27 @@ export default function ReportDetailPage() {
     try {
       setIsActionLoading(true);
       const response = await fetch(`/api/admin/reports/${reportId}/reimburse`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ paymentReference })
+        body: JSON.stringify({ paymentReference }),
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || 'Failed to reimburse report');
+        throw new Error(errorText || "Failed to reimburse report");
       }
-      
+
       const data = await response.json();
       const reportData = data.data;
-      
+
       // Ensure report status is properly formatted as an object for UI
-      if (reportData && reportData.status && typeof reportData.status === 'string') {
+      if (
+        reportData &&
+        reportData.status &&
+        typeof reportData.status === "string"
+      ) {
         reportData.statusDisplay = mapReportStatusToDisplay(
           reportData.status as ReportStatus,
           reportData.submittedAt,
@@ -190,20 +218,28 @@ export default function ReportDetailPage() {
           reportData.reimbursedAt
         );
       }
-      
-      setReport(reportData);
-      toast.success('Report marked as reimbursed successfully');
+
+      const mergedReport =
+        !report?.expenses || reportData.expenses
+          ? reportData
+          : { ...reportData, expenses: report.expenses };
+      setReport(mergedReport);
+      toast.success("Report marked as reimbursed successfully");
       setReimbursementDialogOpen(false);
-      
+
       // Refresh history
-      const historyResponse = await fetch(`/api/admin/reports/${reportId}/history`);
+      const historyResponse = await fetch(
+        `/api/admin/reports/${reportId}/history`
+      );
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
         setHistoryItems(historyData.data);
       }
     } catch (error) {
-      console.error('Error reimbursing report:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to reimburse report');
+      console.error("Error reimbursing report:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to reimburse report"
+      );
     } finally {
       setIsActionLoading(false);
     }
@@ -213,23 +249,27 @@ export default function ReportDetailPage() {
     try {
       setIsActionLoading(true);
       const response = await fetch(`/api/admin/reports/${reportId}/reject`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ reason })
+        body: JSON.stringify({ reason }),
       });
-      
+
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(errorText || 'Failed to reject report');
+        throw new Error(errorText || "Failed to reject report");
       }
-      
+
       const data = await response.json();
       const reportData = data.data;
-      
+
       // Ensure report status is properly formatted as an object for UI
-      if (reportData && reportData.status && typeof reportData.status === 'string') {
+      if (
+        reportData &&
+        reportData.status &&
+        typeof reportData.status === "string"
+      ) {
         reportData.statusDisplay = mapReportStatusToDisplay(
           reportData.status as ReportStatus,
           reportData.submittedAt,
@@ -238,104 +278,132 @@ export default function ReportDetailPage() {
           reportData.reimbursedAt
         );
       }
-      
-      setReport(reportData);
-      toast.success('Report rejected successfully');
+
+      const mergedReport =
+        !report?.expenses || reportData.expenses
+          ? reportData
+          : { ...reportData, expenses: report.expenses };
+      setReport(mergedReport);
+      toast.success("Report rejected successfully");
       setConfirmDialogOpen(false);
-      
+
       // Refresh history
-      const historyResponse = await fetch(`/api/admin/reports/${reportId}/history`);
+      const historyResponse = await fetch(
+        `/api/admin/reports/${reportId}/history`
+      );
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
         setHistoryItems(historyData.data);
       }
     } catch (error) {
-      console.error('Error rejecting report:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to reject report');
+      console.error("Error rejecting report:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to reject report"
+      );
     } finally {
       setIsActionLoading(false);
     }
   };
 
-  // Determine button text based on status
-  const getApproveButtonText = () => {
-    if (report?.status === "SUBMITTED") return "Approve";
-    if (report?.status === "APPROVED") return "Record Reimbursement";
-    if (report?.status === "REJECTED") return "Rejected";
-    return "Approved";
+  // Common helper to get label (works whether we have raw status string or statusDisplay)
+  const statusLabel = report?.statusDisplay?.label ?? report?.status;
+
+  // Determine main action button text based on status
+  const getPrimaryButtonText = () => {
+    if (statusLabel === "SUBMITTED") return "Approve";
+    if (statusLabel === "AWAITING REIMBURSEMENT") return "Record Reimbursement";
+    if (statusLabel === "REJECTED") return "Rejected";
+    if (statusLabel === "REIMBURSED") return "Reimbursed";
+    return "Approve";
   };
 
-  // Determine button variant based on status
-  const getApproveButtonVariant = () => {
-    if (report?.status === "REIMBURSED" || report?.status === "REJECTED") return "outline";
+  // Determine primary button variant based on status
+  const getPrimaryButtonVariant = () => {
+    if (statusLabel === "REIMBURSED" || statusLabel === "REJECTED")
+      return "outline";
     return "default";
   };
-  
+
   // Calculate total amounts
   const getTotalAmount = () => {
-    if (!report || !report.expenses || !Array.isArray(report.expenses)) return 0;
-    return report.expenses.reduce((sum: number, expense: any) => sum + expense.amount, 0);
+    if (!report || !report.expenses || !Array.isArray(report.expenses))
+      return 0;
+    return report.expenses.reduce(
+      (sum: number, expense: any) => sum + expense.amount,
+      0
+    );
   };
-  
+
   const getNonReimbursableAmount = () => {
-    if (!report || !report.expenses || !Array.isArray(report.expenses)) return 0;
+    if (!report || !report.expenses || !Array.isArray(report.expenses))
+      return 0;
     return report.expenses
       .filter((expense: any) => !expense.claimReimbursement)
       .reduce((sum: number, expense: any) => sum + expense.amount, 0);
   };
-  
+
   const getAmountToBeReimbursed = () => {
     return getTotalAmount() - getNonReimbursableAmount();
   };
-  
+
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><Loader /></div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader />
+      </div>
+    );
   }
-  
+
   if (error) {
     return <div className="text-red-500 text-center p-4">{error}</div>;
   }
-  
+
   if (!report) {
     return <div className="text-center p-4">Report not found</div>;
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
       <div className="flex items-center justify-between bg-white border rounded-lg p-4">
         <div className="flex items-center space-x-4">
           <div className="bg-gray-100 p-2 rounded-lg">
-            <span className="text-sm font-medium text-gray-500">ER-{reportId}</span>
+            <span className="text-sm font-medium text-gray-500">
+              ER-{reportId}
+            </span>
           </div>
           <div
             className={`text-xs font-medium px-2 py-1 rounded ${
-              report.status === "SUBMITTED"
+              statusLabel === "SUBMITTED"
                 ? "bg-blue-100 text-blue-800"
-                : report.status === "APPROVED"
-                ? "bg-green-100 text-green-800"
-                : report.status === "REJECTED"
+                : statusLabel === "AWAITING REIMBURSEMENT"
+                ? "bg-orange-100 text-orange-800"
+                : statusLabel === "REJECTED"
                 ? "bg-red-100 text-red-800"
-                : report.status === "REIMBURSED"
-                ? "bg-blue-100 text-blue-800"
-                : "bg-orange-100 text-orange-800"
+                : statusLabel === "REIMBURSED"
+                ? "bg-green-100 text-green-800"
+                : "bg-gray-100 text-gray-800"
             }`}
           >
-            {report.statusDisplay?.label ?? report.status}
+            {statusLabel}
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {report.status !== "REIMBURSED" && report.status !== "REJECTED" && (
+          {statusLabel !== "REIMBURSED" && statusLabel !== "REJECTED" && (
             <Button
-              variant={getApproveButtonVariant()}
-              onClick={handleApproveClick}
+              variant={getPrimaryButtonVariant()}
+              onClick={handlePrimaryActionClick}
               className="flex items-center gap-1"
               disabled={isActionLoading}
             >
-              {isActionLoading ? <Loader className="h-4 w-4 mr-2" /> : <Check className="h-4 w-4 mr-1" />}
-              {getApproveButtonText()}
+              {isActionLoading ? (
+                <Loader className="h-4 w-4 mr-2" />
+              ) : (
+                <Check className="h-4 w-4 mr-1" />
+              )}
+              {getPrimaryButtonText()}
             </Button>
           )}
-          
+
           {report.status === "REJECTED" && (
             <Button
               variant="outline"
@@ -347,7 +415,7 @@ export default function ReportDetailPage() {
             </Button>
           )}
 
-          {report.status !== "REJECTED" && report.status !== "REIMBURSED" && (
+          {statusLabel === "SUBMITTED" && (
             <Button
               variant="outline"
               onClick={handleRejectClick}
@@ -369,7 +437,14 @@ export default function ReportDetailPage() {
           <div className="bg-white border rounded-lg p-6">
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
             <p className="text-sm text-gray-500 mb-6">
-              Duration: {report.startDate ? new Date(report.startDate).toLocaleDateString() : 'N/A'} - {report.endDate ? new Date(report.endDate).toLocaleDateString() : 'N/A'}
+              Duration:{" "}
+              {report.startDate
+                ? new Date(report.startDate).toLocaleDateString()
+                : "N/A"}{" "}
+              -{" "}
+              {report.endDate
+                ? new Date(report.endDate).toLocaleDateString()
+                : "N/A"}
             </p>
 
             <Tabs defaultValue="expenses">
@@ -386,7 +461,10 @@ export default function ReportDetailPage() {
               <TabsContent value="expenses" className="space-y-4">
                 {report.expenses && report.expenses.length > 0 ? (
                   report.expenses.map((expense: any) => (
-                    <div key={expense.id} className="border rounded-lg overflow-hidden">
+                    <div
+                      key={expense.id}
+                      className="border rounded-lg overflow-hidden"
+                    >
                       <div className="flex items-center p-4 border-b">
                         <div className="w-12">
                           <div className="bg-red-500 h-10 w-10 rounded flex items-center justify-center">
@@ -408,24 +486,32 @@ export default function ReportDetailPage() {
                                 {expense.category}
                               </div>
                             </div>
-                            <div className="font-bold">{formatCurrency(expense.amount)}</div>
+                            <div className="font-bold">
+                              {formatCurrency(expense.amount)}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-center p-4 text-gray-500">No expenses found</div>
+                  <div className="text-center p-4 text-gray-500">
+                    No expenses found
+                  </div>
                 )}
 
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>Total Expense Amount</span>
-                    <span className="font-medium">{formatCurrency(getTotalAmount())}</span>
+                    <span className="font-medium">
+                      {formatCurrency(getTotalAmount())}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Non-reimbursable Amount</span>
-                    <span className="font-medium">(-) {formatCurrency(getNonReimbursableAmount())}</span>
+                    <span className="font-medium">
+                      (-) {formatCurrency(getNonReimbursableAmount())}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Applied Advance Amount</span>
@@ -451,13 +537,17 @@ export default function ReportDetailPage() {
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <div className="flex justify-between">
               <div className="text-sm text-gray-500">Total</div>
-              <div className="font-bold">Rs.944.00</div>
+              <div className="font-bold">
+                {formatCurrency(getTotalAmount())}
+              </div>
             </div>
             <div className="flex justify-between">
               <div className="text-sm text-gray-500">
                 Amount to be Reimbursed
               </div>
-              <div className="font-bold">Rs.944.00</div>
+              <div className="font-bold">
+                {formatCurrency(getAmountToBeReimbursed())}
+              </div>
             </div>
             <div className="flex items-center">
               <div className="bg-yellow-100 rounded-full h-6 w-6 flex items-center justify-center mr-2">
@@ -483,7 +573,7 @@ export default function ReportDetailPage() {
       </div>
 
       <ApproveReportDialog
-        open={confirmDialogOpen && dialogAction === 'approve'}
+        open={confirmDialogOpen && dialogAction === "approve"}
         onOpenChange={setConfirmDialogOpen}
         onConfirm={() => handleApprove()}
         reportId={reportId}
@@ -491,9 +581,9 @@ export default function ReportDetailPage() {
       />
 
       <ApproveReportDialog
-        open={confirmDialogOpen && dialogAction === 'reject'}
+        open={confirmDialogOpen && dialogAction === "reject"}
         onOpenChange={setConfirmDialogOpen}
-        onConfirm={() => handleReject('Rejected by admin')}
+        onConfirm={() => handleReject("Rejected by admin")}
         reportId={reportId}
         action="reject"
       />
@@ -502,10 +592,10 @@ export default function ReportDetailPage() {
         open={reimbursementDialogOpen}
         onOpenChange={setReimbursementDialogOpen}
         onConfirm={(data) => {
-          handleReimbursement(data.reference || 'No reference provided');
+          handleReimbursement(data.reference || "No reference provided");
         }}
         reportId={reportId}
-        totalAmount={getTotalAmount()}
+        totalAmount={getAmountToBeReimbursed()}
         totalAdvance={0}
       />
     </div>
