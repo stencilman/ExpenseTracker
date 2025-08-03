@@ -54,7 +54,7 @@ export async function GET(
           },
         },
       },
-      orderBy: { eventDate: "asc" },
+      orderBy: { eventDate: "desc" },
     });
 
     const formattedHistory = history.map((evt) => ({
