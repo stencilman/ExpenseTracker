@@ -1,13 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import {
   Save,
-  Upload,
-  Building2,
+  Loader2,
   Globe,
   Calendar,
   DollarSign,
@@ -41,9 +40,9 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Loader } from "@/components/ui/loader";
 
 // Define the form schema with Zod
 const organizationSchema = z.object({
@@ -65,99 +64,113 @@ const organizationSchema = z.object({
   state: z.string().min(1, { message: "State is required" }),
   postalCode: z.string().min(1, { message: "Postal code is required" }),
   country: z.string().min(1, { message: "Country is required" }),
-  taxId: z.string().optional(),
-  fiscalYearStart: z
-    .string()
-    .min(1, { message: "Fiscal year start is required" }),
-  fiscalYearEnd: z.string().min(1, { message: "Fiscal year end is required" }),
-  currency: z.string().min(1, { message: "Currency is required" }),
-  primaryColor: z.string().regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, {
-    message: "Please enter a valid hex color code",
-  }),
+
 });
 
 type OrganizationFormValues = z.infer<typeof organizationSchema>;
 
-// Mock data for the organization
+// Default organization values (used before API data loads)
 const defaultOrganization = {
-  name: "Acme Corporation",
-  legalName: "Acme Corporation LLC",
-  email: "contact@acmecorp.com",
-  phone: "+1 (555) 123-4567",
-  website: "https://www.acmecorp.com",
-  address: "123 Main Street, Suite 100",
-  city: "San Francisco",
-  state: "CA",
-  postalCode: "94105",
-  country: "United States",
-  taxId: "12-3456789",
-  fiscalYearStart: "01-01",
-  fiscalYearEnd: "12-31",
-  currency: "USD",
-  primaryColor: "#3b82f6",
-  logo: "/placeholder-logo.png",
+  name: "",
+  legalName: "",
+  email: "",
+  phone: "",
+  website: "",
+  address: "",
+  city: "",
+  state: "",
+  postalCode: "",
+  country: "",
+
 };
 
-// Currency options
-const currencies = [
-  { value: "USD", label: "US Dollar ($)" },
-  { value: "EUR", label: "Euro (€)" },
-  { value: "GBP", label: "British Pound (£)" },
-  { value: "JPY", label: "Japanese Yen (¥)" },
-  { value: "CAD", label: "Canadian Dollar (C$)" },
-  { value: "AUD", label: "Australian Dollar (A$)" },
-  { value: "INR", label: "Indian Rupee (₹)" },
-  { value: "CNY", label: "Chinese Yuan (¥)" },
-];
+
 
 export default function OrganizationPage() {
-  const [activeTab, setActiveTab] = useState("general");
-  const [logoPreview, setLogoPreview] = useState(defaultOrganization.logo);
+  const [organization, setOrganization] = useState<Partial<OrganizationFormValues> | null>(null);
+  const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch organization data on mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch("/api/admin/organization");
+        if (res.ok) {
+          const { data } = await res.json();
+          setOrganization(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch organization", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
 
   // Initialize form with default values
   const form = useForm<OrganizationFormValues>({
     resolver: zodResolver(organizationSchema),
     defaultValues: {
-      name: defaultOrganization.name,
-      legalName: defaultOrganization.legalName,
-      email: defaultOrganization.email,
-      phone: defaultOrganization.phone,
-      website: defaultOrganization.website,
-      address: defaultOrganization.address,
-      city: defaultOrganization.city,
-      state: defaultOrganization.state,
-      postalCode: defaultOrganization.postalCode,
-      country: defaultOrganization.country,
-      taxId: defaultOrganization.taxId,
-      fiscalYearStart: defaultOrganization.fiscalYearStart,
-      fiscalYearEnd: defaultOrganization.fiscalYearEnd,
-      currency: defaultOrganization.currency,
-      primaryColor: defaultOrganization.primaryColor,
+      name: "",
+      legalName: "",
+      email: "",
+      phone: "",
+      website: "",
+      address: "",
+      city: "",
+      state: "",
+      postalCode: "",
+      country: "",
     },
   });
+
+  // Update form values when organization data is loaded
+  useEffect(() => {
+    if (organization) {
+      form.reset({
+        name: organization.name ?? "",
+        legalName: organization.legalName ?? "",
+        email: organization.email ?? "",
+        phone: organization.phone ?? "",
+        website: organization.website ?? "",
+        address: organization.address ?? "",
+        city: organization.city ?? "",
+        state: organization.state ?? "",
+        postalCode: organization.postalCode ?? "",
+        country: organization.country ?? "",
+      });
+    }
+  }, [organization, form]);
 
   // Handle form submission
   const onSubmit = async (data: OrganizationFormValues) => {
     setIsSaving(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    console.log("Organization data saved:", data);
-    setIsSaving(false);
-  };
-
-  // Handle logo upload
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      // In a real app, you would upload this to a server
-      // For now, just create a local URL for preview
-      const url = URL.createObjectURL(file);
-      setLogoPreview(url);
+    try {
+      const res = await fetch("/api/admin/organization", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update organization");
+      const { data: updated } = await res.json();
+      setOrganization(updated);
+    } catch (error) {
+      console.error("Error saving organization data:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  // Show loading state
+  if (loading && !organization) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
+        <Loader />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -168,28 +181,13 @@ export default function OrganizationPage() {
         </p>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full max-w-md grid-cols-3">
-          <TabsTrigger value="general">
-            <Building2 className="mr-2 h-4 w-4" />
-            General
-          </TabsTrigger>
-          <TabsTrigger value="tab2">
-            <PaintBucket className="mr-2 h-4 w-4" />
-            Tab 2
-          </TabsTrigger>
-          <TabsTrigger value="tab3">
-            <DollarSign className="mr-2 h-4 w-4" />
-            Tab 3
-          </TabsTrigger>
-        </TabsList>
-
+      <div className="w-full">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6 pt-6"
           >
-            <TabsContent value="general">
+            <div>
               <div className="space-y-6 h-[calc(100vh-22rem)] overflow-y-auto">
                 <Card>
                   <CardHeader>
@@ -368,31 +366,13 @@ export default function OrganizationPage() {
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
-
-            <TabsContent value="tab2" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tab 2</CardTitle>
-                  <CardDescription>Tab 2 description</CardDescription>
-                </CardHeader>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="tab3" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Tab 3</CardTitle>
-                  <CardDescription>Tab 3 description</CardDescription>
-                </CardHeader>
-              </Card>
-            </TabsContent>
+            </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={isSaving}>
+              <Button type="submit" disabled={!form.formState.isDirty || isSaving}>
                 {isSaving ? (
                   <>
-                    <span className="animate-spin mr-2">⏳</span> Saving...
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
                   </>
                 ) : (
                   <>
@@ -403,7 +383,7 @@ export default function OrganizationPage() {
             </div>
           </form>
         </Form>
-      </Tabs>
+      </div>
     </div>
   );
 }

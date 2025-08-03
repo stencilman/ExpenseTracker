@@ -201,9 +201,9 @@ model ExpenseHistory {
 }
 
 model ReportHistory {
-  id          Int              @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   eventType   ReportEventType
-  eventDate   DateTime        @default(now())
+  eventDate   DateTime      @default(now())
   details     String?
   
   // Foreign keys
@@ -215,4 +215,20 @@ model ReportHistory {
   performedBy   User?         @relation("ReportActions", fields: [performedById], references: [id])
   
   createdAt   DateTime       @default(now())
+}
+
+model Organization {
+  id              String    @id @default(cuid())
+  name            String?
+  legalName       String?
+  email           String?
+  phone           String?
+  website         String?
+  address         String
+  city            String
+  state           String
+  postalCode      String
+  country         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
