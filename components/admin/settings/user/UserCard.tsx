@@ -24,7 +24,14 @@ import UserFormDialog, { UserFormValues } from "./UserFormDialog";
 
 // Using the shared UserFormValues type from UserFormDialog
 
-interface UserCardProps extends UserData {
+interface UserCardProps {
+  id: string;
+  name: string;
+  email: string;
+  role: "ADMIN" | "SUBMITTER";
+  company: string;
+  approver?: string;
+  approverId?: string;
   isSelected?: boolean;
   onToggleSelect?: (id: string) => void;
   onEditUser?: (id: string, userData: UserFormValues) => void;
@@ -39,6 +46,7 @@ export default function UserCard({
   role,
   company,
   approver,
+  approverId,
   isSelected = false,
   onToggleSelect,
   onEditUser,
@@ -57,6 +65,7 @@ export default function UserCard({
     role,
     company,
     approver: approver || "",
+    approverId: approverId || "",
   };
   const initials = name
     .split(" ")
@@ -67,7 +76,7 @@ export default function UserCard({
   return (
     <div
       key={id}
-      className="relative grid grid-cols-[auto_1fr_1fr_1fr_1fr_auto] gap-4 items-center px-4 py-3 border-b hover:bg-gray-50"
+      className="relative grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 items-center px-4 py-3 border-b hover:bg-gray-50"
     >
       <div className="flex justify-center">
         <Checkbox
@@ -88,13 +97,12 @@ export default function UserCard({
         </div>
       </div>
       <div className="text-sm pl-1">{role}</div>
-      <div className="text-sm pl-1">{company}</div>
       <div className="text-sm pl-1">
         {approver && (
           <div className="flex items-center gap-1">
             <Avatar className="h-6 w-6 bg-yellow-100">
               <AvatarFallback className="text-xs text-yellow-600">
-                P
+                {approver.split(" ").map(n => n[0]).join("").toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <span>{approver}</span>

@@ -3,6 +3,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -29,14 +30,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Check, ChevronsUpDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 // Define the form schema with Zod
 const userFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
   email: z.email({ message: "Invalid email address" }),
   role: z.enum(["ADMIN", "SUBMITTER"]),
-  company: z.string().min(1, { message: "Company is required" }),
-  approver: z.string().optional(),
+  approverId: z.string().optional(),
 });
 
 export type UserFormValues = z.infer<typeof userFormSchema>;
@@ -62,10 +76,36 @@ export default function UserFormDialog({
     name: "",
     email: "",
     role: "SUBMITTER",
-    company: "",
-    approver: "",
+    approverId: "",
   },
 }: UserFormDialogProps) {
+  const [adminUsers, setAdminUsers] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
+
+  // Fetch admin users for the dropdown
+  useEffect(() => {
+    const fetchAdminUsers = async () => {
+      setIsLoadingAdmins(true);
+      try {
+        const response = await fetch('/api/admin/users/admins');
+        if (!response.ok) {
+          throw new Error('Failed to fetch admin users');
+        }
+        const data = await response.json();
+        setAdminUsers(data.data || []);
+      } catch (error) {
+        console.error('Error fetching admin users:', error);
+      } finally {
+        setIsLoadingAdmins(false);
+      }
+    };
+
+    if (open) {
+      fetchAdminUsers();
+    }
+  }, [open]);
+
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues,
@@ -76,6 +116,8 @@ export default function UserFormDialog({
     onOpenChange(false);
     form.reset();
   };
+  
+  const watchRole = form.watch('role');
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -143,36 +185,51 @@ export default function UserFormDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="company"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Company</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Acme Inc." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="approver"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Approver (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Jane Smith" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    Person who will approve this user's submissions
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {watchRole === "SUBMITTER" && (
+              <FormField
+                control={form.control}
+                name="approverId"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Submits to</FormLabel>
+                    <Select 
+                      value={field.value} 
+                      onValueChange={(value) => {
+                        console.log('Selected approver ID:', value);
+                        field.onChange(value);
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select an approver" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {isLoadingAdmins ? (
+                          <SelectItem value="loading" disabled>
+                            Loading...
+                          </SelectItem>
+                        ) : adminUsers.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            No admin users found
+                          </SelectItem>
+                        ) : (
+                          adminUsers.map((admin) => (
+                            <SelectItem key={admin.id} value={admin.id}>
+                              {admin.name} ({admin.email})
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Person who will approve this user's submissions
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <DialogFooter className="pt-4">
               <Button

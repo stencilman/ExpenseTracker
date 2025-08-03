@@ -1,61 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, PlusCircle, MoreVertical } from "lucide-react";
+import { Search, PlusCircle, MoreVertical, Loader2 } from "lucide-react";
 import UserCard from "@/components/admin/settings/user/UserCard";
 import AddNewUserDialog from "@/components/admin/settings/user/AddNewUserDialog";
 
 export interface UserData {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  role: "ADMIN" | "SUBMITTER";
-  company: string;
-  approver?: string;
+  role: "ADMIN" | "USER";
+  department?: string;
+  designation?: string;
+  roleName?: string | null;
+  approverId?: string | null;
+  approver?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
 }
 
-const users: UserData[] = [
-  {
-    id: "1",
-    name: "Akash",
-    email: "akash@fastcode.ai",
-    role: "SUBMITTER",
-    company: "Fast Code AI",
-    approver: "Prabal",
-  },
-  {
-    id: "2",
-    name: "Arjun",
-    email: "arjun@fastcode.ai",
-    role: "ADMIN",
-    company: "Fast Code AI",
-  },
-  {
-    id: "3",
-    name: "Ashish Kumar",
-    email: "ashish@fastcode.ai",
-    role: "SUBMITTER",
-    company: "Fast Code AI",
-    approver: "Prabal",
-  },
-  {
-    id: "4",
-    name: "Dhaval",
-    email: "dhaval@fastcode.ai",
-    role: "SUBMITTER",
-    company: "Fast Code AI",
-    approver: "Prabal",
-  },
-];
+// Users will be fetched from the API
 
 export default function UsersPage() {
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
-  const [usersList, setUsersList] = useState<UserData[]>(users);
+  const [usersList, setUsersList] = useState<UserData[]>([]);
   const [isAddNewUserDialogOpen, setIsAddNewUserDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const toggleUserSelection = (userId: string) => {
     const newSelected = new Set(selectedUsers);
@@ -76,14 +55,65 @@ export default function UsersPage() {
     }
   };
 
+  // Fetch users on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/admin/users');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch users');
+        }
+        
+        const { data } = await response.json();
+        setUsersList(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError('Failed to load users. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchUsers();
+  }, []);
+
   // Handler for editing a user
-  const handleEditUser = (userId: string, userData: any) => {
-    console.log(`Editing user ${userId}:`, userData);
-    setUsersList(prevUsers => 
-      prevUsers.map(user => 
-        user.id === userId ? { ...user, ...userData } : user
-      )
-    );
+  const handleEditUser = async (userId: string, userData: any) => {
+    try {
+      // Map UI role names to Prisma roles
+      const mappedData = {
+        role: userData.role === 'SUBMITTER' ? 'USER' : userData.role,
+        approverId: userData.approverId || null,
+        roleName: userData.role === 'SUBMITTER' ? 'SUBMITTER' : null
+      };
+      
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mappedData),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update user');
+      }
+      
+      const { data } = await response.json();
+      
+      // Update the user in the local state
+      setUsersList(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId ? data : user
+        )
+      );
+    } catch (err) {
+      console.error(`Error updating user ${userId}:`, err);
+      // You could add a toast notification here
+    }
   };
 
   // Handler for marking a user as inactive
@@ -110,12 +140,17 @@ export default function UsersPage() {
     if (!searchQuery) return true;
 
     const query = searchQuery.toLowerCase();
+    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
+    const approverName = user.approver ? 
+      `${user.approver.firstName} ${user.approver.lastName}`.toLowerCase() : '';
+    
     return (
-      user.name.toLowerCase().includes(query) ||
+      fullName.includes(query) ||
       user.email.toLowerCase().includes(query) ||
       user.role.toLowerCase().includes(query) ||
-      user.company.toLowerCase().includes(query) ||
-      (user.approver && user.approver.toLowerCase().includes(query))
+      (user.department && user.department.toLowerCase().includes(query)) ||
+      (user.designation && user.designation.toLowerCase().includes(query)) ||
+      approverName.includes(query)
     );
   });
 
@@ -126,18 +161,19 @@ export default function UsersPage() {
         <div className="flex items-center gap-2">
           <div className="text-sm text-green-600 flex items-center gap-1">
             <span className="inline-flex items-center">🟢</span>
-            <span>Subscribed Users: 22/25</span>
-            <span className="ml-1 text-gray-500">ⓘ</span>
+            <span>Active Users: {usersList.length}</span>
           </div>
+          {/* Disabled for now as per requirements */}
           <Button
             className="flex items-center gap-1"
             onClick={() => setIsAddNewUserDialogOpen(true)}
+            disabled={true}
           >
             <PlusCircle className="h-4 w-4" />
             <span>New User</span>
           </Button>
 
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" disabled={true}>
             <MoreVertical className="h-4 w-4" />
           </Button>
         </div>
@@ -158,39 +194,58 @@ export default function UsersPage() {
         </div>
 
         <div className="bg-white overflow-y-auto max-h-[calc(100vh-15rem)]">
-          <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_auto] gap-4 px-4 py-3 border-b text-sm font-medium text-gray-500">
-            <div className="flex justify-center">
-              <Checkbox
-                checked={
-                  selectedUsers.size > 0 &&
-                  selectedUsers.size === filteredUsers.length
-                }
-                onCheckedChange={(checked) => toggleSelectAll(!!checked)}
-              />
+          {isLoading ? (
+            <div className="flex justify-center items-center h-32">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <span className="ml-2">Loading users...</span>
             </div>
-            <div className="pl-1">USER DETAILS</div>
-            <div className="pl-1">ROLE</div>
-            <div className="pl-1">POLICY</div>
-            <div className="pl-1">SUBMITS TO</div>
-            <div></div>
-          </div>
+          ) : error ? (
+            <div className="flex justify-center items-center h-32 text-red-500">
+              {error}
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-[auto_1fr_1fr_1fr_auto] gap-4 px-4 py-3 border-b text-sm font-medium text-gray-500">
+                <div className="flex justify-center">
+                  <Checkbox
+                    checked={
+                      selectedUsers.size > 0 &&
+                      selectedUsers.size === filteredUsers.length
+                    }
+                    onCheckedChange={(checked) => toggleSelectAll(!!checked)}
+                  />
+                </div>
+                <div className="pl-1">USER DETAILS</div>
+                <div className="pl-1">ROLE</div>
+                <div className="pl-1">SUBMITS TO</div>
+                <div></div>
+              </div>
 
-          {filteredUsers.map((user) => (
-            <UserCard
-              key={user.id}
-              id={user.id}
-              name={user.name}
-              email={user.email}
-              role={user.role}
-              company={user.company}
-              approver={user.approver}
-              isSelected={selectedUsers.has(user.id)}
-              onToggleSelect={toggleUserSelection}
-              onEditUser={handleEditUser}
-              onMarkInactive={handleMarkInactive}
-              onDeleteUser={handleDeleteUser}
-            />
-          ))}
+              {filteredUsers.length === 0 ? (
+                <div className="flex justify-center items-center h-32 text-gray-500">
+                  No users found
+                </div>
+              ) : (
+                filteredUsers.map((user) => (
+                  <UserCard
+                    key={user.id}
+                    id={user.id}
+                    name={`${user.firstName} ${user.lastName}`}
+                    email={user.email}
+                    role={user.role === "ADMIN" ? "ADMIN" : "SUBMITTER" as "SUBMITTER"}
+                    company={user.department || ""}
+                    approver={user.approver ? `${user.approver.firstName} ${user.approver.lastName}` : undefined}
+                    approverId={user.approverId || undefined}
+                    isSelected={selectedUsers.has(user.id)}
+                    onToggleSelect={toggleUserSelection}
+                    onEditUser={handleEditUser}
+                    onMarkInactive={handleMarkInactive}
+                    onDeleteUser={handleDeleteUser}
+                  />
+                ))
+              )}
+            </>
+          )}
         </div>
       </div>
 
