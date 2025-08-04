@@ -1,13 +1,14 @@
 "use client";
 
 import { Report, ReportsTable } from "@/components/table/ReportsTable";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import AddReportDialog from "@/components/reports/AddReportDialog";
 import { ReportStatus } from "@prisma/client";
 import { format } from "date-fns";
 import { mapReportStatusToDisplay } from "@/lib/report-status-utils";
 import { Loader } from "@/components/ui/loader";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Define the API report type
 interface ApiReport {
@@ -44,148 +45,105 @@ export default function AllReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedReports, setSelectedReports] = useState<Report[]>([]);
   const [isAddReportOpen, setIsAddReportOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch reports from API
-  useEffect(() => {
-    const fetchReports = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch("/api/reports");
+  // Fetch reports from API with pagination
+  const fetchReports = useCallback(async (page = 1) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/reports?page=${page}`);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch reports");
+      if (!response.ok) {
+        throw new Error("Failed to fetch reports");
+      }
+
+      const responseData = await response.json();
+
+      // Extract pagination metadata
+      const reportsArray: ApiReport[] = responseData.data || responseData;
+      const meta = responseData.meta;
+      if (meta) {
+        setCurrentPage(meta.page);
+        setTotalPages(meta.pageCount);
+      }
+
+      // Convert API reports to UI reports format
+      const uiReports: Report[] = reportsArray.map((report) => {
+        const approverName = report.approver
+          ? `${report.approver.firstName} ${report.approver.lastName}`
+          : undefined;
+        // Get status display from utility function
+        const statusDisplay = mapReportStatusToDisplay(
+          report.status,
+          report.submittedAt,
+          report.approvedAt,
+          report.rejectedAt,
+          report.reimbursedAt
+        );
+
+        // Format date range
+        let dateRange = "No date range";
+        if (report.startDate && report.endDate) {
+          dateRange = `${format(
+            new Date(report.startDate),
+            "dd/MM/yyyy"
+          )} - ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
+        } else if (report.startDate) {
+          dateRange = `From ${format(
+            new Date(report.startDate),
+            "dd/MM/yyyy"
+          )}`;
+        } else if (report.endDate) {
+          dateRange = `Until ${format(
+            new Date(report.endDate),
+            "dd/MM/yyyy"
+          )}`;
         }
 
-        const responseData = await response.json();
+        // Calculate the correct total amount based on expenses
+        // This ensures we display the correct total even for unsubmitted reports
+        const totalAmount = report.totalAmount || 0;
 
-        // Check if the response has a data property (paginated response)
-        const reportsArray: ApiReport[] = responseData.data || responseData;
+        // Calculate reimbursable amount based on claimReimbursement flag
+        const reimbursableAmount = report.expenses.reduce(
+          (sum, exp) =>
+            sum + (exp.claimReimbursement !== false ? exp.amount : 0),
+          0
+        );
 
-        // Convert API reports to UI reports format
-        const uiReports: Report[] = reportsArray.map((report) => {
-          const approverName = report.approver
-            ? `${report.approver.firstName} ${report.approver.lastName}`
-            : undefined;
-          // Get status display from utility function
-          const statusDisplay = mapReportStatusToDisplay(
-            report.status,
-            report.submittedAt,
-            report.approvedAt,
-            report.rejectedAt,
-            report.reimbursedAt
-          );
+        return {
+          id: report.id.toString(),
+          iconType: "file-text",
+          title: report.title,
+          dateRange,
+          total: `Rs.${totalAmount.toLocaleString()}.00`,
+          expenseCount: report.expenses.length,
+          toBeReimbursed: `Rs.${reimbursableAmount.toLocaleString()}.00`,
+          status: statusDisplay,
+          submitter: `${report.user.firstName} ${report.user.lastName}`,
+          approver: approverName,
+        };
+      });
 
-          // Format date range
-          let dateRange = "No date range";
-          if (report.startDate && report.endDate) {
-            dateRange = `${format(
-              new Date(report.startDate),
-              "dd/MM/yyyy"
-            )} - ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
-          } else if (report.startDate) {
-            dateRange = `From ${format(
-              new Date(report.startDate),
-              "dd/MM/yyyy"
-            )}`;
-          } else if (report.endDate) {
-            dateRange = `Until ${format(
-              new Date(report.endDate),
-              "dd/MM/yyyy"
-            )}`;
-          }
-
-          // Calculate the correct total amount based on expenses
-          // This ensures we display the correct total even for unsubmitted reports
-          const totalAmount = report.totalAmount || 0;
-
-          // Calculate reimbursable amount based on claimReimbursement flag
-          const reimbursableAmount = report.expenses.reduce(
-            (sum, exp) =>
-              sum + (exp.claimReimbursement !== false ? exp.amount : 0),
-            0
-          );
-
-          return {
-            id: report.id.toString(),
-            iconType: "file-text",
-            title: report.title,
-            dateRange,
-            total: `Rs.${totalAmount.toLocaleString()}.00`,
-            expenseCount: report.expenses.length,
-            toBeReimbursed: `Rs.${reimbursableAmount.toLocaleString()}.00`,
-            status: statusDisplay,
-            submitter: `${report.user.firstName} ${report.user.lastName}`,
-            approver: approverName,
-          };
-        });
-
-        setReports(uiReports);
-      } catch (err) {
-        console.error("Error fetching reports:", err);
-        setError("Failed to load reports. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchReports();
+      setReports(uiReports);
+    } catch (err) {
+      console.error("Error fetching reports:", err);
+      setError("Failed to load reports. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchReports(currentPage);
+  }, [fetchReports, currentPage]);
 
   // Refresh reports after adding a new one
   const handleReportAdded = () => {
-    setLoading(true);
-    fetch("/api/reports")
-      .then((response) => response.json())
-      .then((responseData) => {
-        // Check if the response has a data property (paginated response)
-        const reportsArray: ApiReport[] = responseData.data || responseData;
-
-        // Same conversion logic as above (simplified for brevity)
-        const uiReports: Report[] = reportsArray.map((report: ApiReport) => {
-          const approverName = report.approver
-            ? `${report.approver.firstName} ${report.approver.lastName}`
-            : undefined;
-
-          // Calculate reimbursable amount based on claimReimbursement flag
-          const reimbursableAmount = report.expenses.reduce(
-            (sum, exp) =>
-              sum + (exp.claimReimbursement !== false ? exp.amount : 0),
-            0
-          );
-
-          return {
-            id: report.id.toString(),
-            iconType: "file-text" as const,
-            title: report.title,
-            dateRange:
-              report.startDate && report.endDate
-                ? `${format(
-                    new Date(report.startDate),
-                    "dd/MM/yyyy"
-                  )} - ${format(new Date(report.endDate), "dd/MM/yyyy")}`
-                : "No date range",
-            total: `Rs.${report.totalAmount.toLocaleString()}.00`,
-            expenseCount: report.expenses.length,
-            toBeReimbursed: `Rs.${reimbursableAmount.toLocaleString()}.00`,
-            status: mapReportStatusToDisplay(
-              report.status,
-              report.submittedAt,
-              report.approvedAt,
-              report.rejectedAt,
-              report.reimbursedAt
-            ),
-            submitter: `${report.user.firstName} ${report.user.lastName}`,
-            approver: approverName,
-          };
-        });
-        setReports(uiReports);
-      })
-      .catch((err) => {
-        console.error("Error refreshing reports:", err);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    // Reset to first page and fetch reports
+    setCurrentPage(1);
+    fetchReports(1);
   };
 
   const handleSelectedRowsChange = (reports: Report[]) => {
@@ -221,13 +179,42 @@ export default function AllReportsPage() {
           </Button>
         </div>
       ) : (
-        <ReportsTable
-          data={reports}
-          enableRowSelection={true}
-          onSelectedRowsChange={handleSelectedRowsChange}
-          variant="page"
-          showPagination={true}
-        />
+        <>
+          <ReportsTable
+            data={reports}
+            enableRowSelection={true}
+            onSelectedRowsChange={handleSelectedRowsChange}
+            variant="page"
+            showPagination={false}
+          />
+          
+          {/* Server-side pagination controls */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end space-x-2 py-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                <span className="sr-only">Previous Page</span>
+              </Button>
+              <div className="text-sm font-medium">
+                Page {currentPage} of {totalPages}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                disabled={currentPage >= totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+                <span className="sr-only">Next Page</span>
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {selectedReports.length > 0 && (

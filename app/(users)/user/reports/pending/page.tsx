@@ -1,8 +1,9 @@
 "use client";
 
 import { Report, ReportsTable } from "@/components/table/ReportsTable";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import AddReportDialog from "@/components/reports/AddReportDialog";
 import { format } from "date-fns";
 import { ReportStatus } from "@prisma/client";
@@ -51,6 +52,8 @@ export default function PendingReportsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAllSelected, setIsAllSelected] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const router = useRouter();
 
   // Function to format date range
@@ -93,31 +96,40 @@ export default function PendingReportsPage() {
     };
   };
 
-  // Fetch reports from API
-  useEffect(() => {
-    const fetchReports = async () => {
-      setLoading(true);
-      try {
-        // Filter by PENDING status
-        const response = await fetch("/api/reports?status=PENDING");
+  // Fetch reports from API with pagination
+  const fetchReports = useCallback(async (page = 1) => {
+    setLoading(true);
+    try {
+      // Filter by PENDING status and add pagination
+      const response = await fetch(`/api/reports?status=PENDING&page=${page}`);
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch reports");
-        }
-
-        const data = await response.json();
-        const uiReports = data.data.map(convertApiReportToUiReport);
-        setReports(uiReports);
-      } catch (err) {
-        console.error("Error fetching reports:", err);
-        setError("Failed to load reports. Please try again.");
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error("Failed to fetch reports");
       }
-    };
 
-    fetchReports();
+      const responseData = await response.json();
+      
+      // Extract pagination metadata
+      const data = responseData.data || [];
+      const meta = responseData.meta;
+      if (meta) {
+        setCurrentPage(meta.page);
+        setTotalPages(meta.pageCount);
+      }
+      
+      const uiReports = data.map(convertApiReportToUiReport);
+      setReports(uiReports);
+    } catch (err) {
+      console.error("Error fetching reports:", err);
+      setError("Failed to load reports. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchReports(currentPage);
+  }, [fetchReports, currentPage]);
 
   const handleSelectedRowsChange = (reports: Report[]) => {
     setSelectedReports(reports);
@@ -155,9 +167,7 @@ export default function PendingReportsPage() {
       );
       setSelectedReports([]);
       // Refresh the list of reports
-      const fetchResponse = await fetch("/api/reports?status=PENDING");
-      const data = await fetchResponse.json();
-      setReports(data.data.map(convertApiReportToUiReport));
+      fetchReports(1); // Reset to first page after submission
     } catch (error) {
       console.error("Error submitting reports:", error);
       toast.error("Failed to submit reports. Please try again.");
@@ -186,9 +196,7 @@ export default function PendingReportsPage() {
       );
       setSelectedReports([]);
       // Refresh the list of reports
-      const fetchResponse = await fetch("/api/reports?status=PENDING");
-      const data = await fetchResponse.json();
-      setReports(data.data.map(convertApiReportToUiReport));
+      fetchReports(1); // Reset to first page after deletion
     } catch (error) {
       console.error("Error deleting reports:", error);
       toast.error("Failed to delete reports. Please try again.");
@@ -274,14 +282,41 @@ export default function PendingReportsPage() {
         ) : error ? (
           <div className="text-center py-8 text-red-500">{error}</div>
         ) : reports.length > 0 ? (
-          <ReportsTable
-            data={reports}
-            enableRowSelection={true}
-            onSelectedRowsChange={handleSelectedRowsChange}
-            variant="page"
-            showPagination={true}
-            isAllRowsSelected={isAllSelected}
-          />
+          <>
+            <ReportsTable
+              data={reports}
+              enableRowSelection={true}
+              onSelectedRowsChange={handleSelectedRowsChange}
+              variant="page"
+              showPagination={false} /* Disable built-in pagination */
+              isAllRowsSelected={isAllSelected}
+            />
+            
+            {/* Custom server-side pagination controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-end space-x-2 mt-4">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage <= 1 || loading}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <div className="text-sm text-muted-foreground">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage >= totalPages || loading}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-8">No reports found.</div>
         )}

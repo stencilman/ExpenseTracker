@@ -6,16 +6,20 @@ import { Loader } from "@/components/ui/loader";
 import { toast } from "sonner";
 import { mapReportStatusToDisplay } from "@/lib/report-status-utils";
 import { ReportStatus } from "@prisma/client";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function AdminReportsAllPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
-  const fetchReports = useCallback(async () => {
+  const fetchReports = useCallback(async (page = 1) => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/admin/reports");
+      const response = await fetch(`/api/admin/reports?page=${page}`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch reports");
@@ -26,6 +30,14 @@ export default function AdminReportsAllPage() {
       // 1) { data: [ ... ], meta: { ... } }
       // 2) { data: { data: [ ... ], meta: { ... } } }
       const apiData = responseData.data;
+      
+      // Extract pagination metadata
+      const meta = responseData.meta || apiData?.meta;
+      if (meta) {
+        setCurrentPage(meta.page);
+        setTotalPages(meta.pageCount);
+      }
+      
       // Exclude reports that are still in PENDING (draft) state – admin only needs submitted ones
       const reportsDataRaw = Array.isArray(apiData)
         ? apiData
@@ -70,8 +82,8 @@ export default function AdminReportsAllPage() {
   }, []);
 
   useEffect(() => {
-    fetchReports();
-  }, [fetchReports]);
+    fetchReports(currentPage);
+  }, [fetchReports, currentPage]);
 
   // Handle report action completion (approve, reject, reimburse)
   const handleReportActionComplete = useCallback(
@@ -95,15 +107,50 @@ export default function AdminReportsAllPage() {
     return <div className="text-red-500 text-center p-4">{error}</div>;
   }
 
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   return (
     <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
       <ReportsTable
         data={reports}
         enableRowSelection={false}
-        showPagination={true}
+        showPagination={false} /* Disable built-in pagination */
         variant="page"
         onReportActionComplete={handleReportActionComplete}
       />
+      
+      {/* Custom server-side pagination controls */}
+      <div className="flex items-center justify-end space-x-2 mt-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handlePreviousPage}
+          disabled={currentPage <= 1 || isLoading}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <div className="text-sm text-muted-foreground">
+          Page {currentPage} of {totalPages}
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleNextPage}
+          disabled={currentPage >= totalPages || isLoading}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
     </div>
   );
 }
