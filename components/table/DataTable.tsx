@@ -37,6 +37,7 @@ export interface DataTableProps<TData, TValue> {
   columnVisibility?: VisibilityState;
   className?: string;
   isAllRowsSelected?: boolean;
+  selectedRows?: TData[];
 }
 
 export function DataTable<TData, TValue>({
@@ -50,6 +51,7 @@ export function DataTable<TData, TValue>({
   columnVisibility = {},
   className = "",
   isAllRowsSelected = false,
+  selectedRows,
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [rowSelection, setRowSelection] = React.useState<RowSelectionState>({});
@@ -109,12 +111,47 @@ export function DataTable<TData, TValue>({
   // Use a ref to store previous selection to prevent unnecessary updates
   const prevSelectionRef = React.useRef<string>("");
 
+  // Effect to handle external selection changes
+  React.useEffect(() => {
+    if (enableRowSelection) {
+      if (isAllRowsSelected) {
+        // Force select all rows directly
+        const allRowsSelected: Record<number, boolean> = {};
+        data.forEach((_, index) => {
+          allRowsSelected[index] = true;
+        });
+        table.setRowSelection(allRowsSelected);
+      } else if (selectedRows) {
+        // Clear current selection
+        table.resetRowSelection();
+        
+        // Set new selection based on selectedRows prop
+        const rowIds: Record<number, boolean> = {};
+        selectedRows.forEach((row) => {
+          // Find the row index in the current data
+          const rowIndex = data.findIndex(item => 
+            JSON.stringify(item) === JSON.stringify(row));
+          if (rowIndex >= 0) {
+            rowIds[rowIndex] = true;
+          }
+        });
+        
+        table.setRowSelection(rowIds);
+      }
+    }
+  }, [selectedRows, isAllRowsSelected, table, data, enableRowSelection]);
+
   React.useEffect(() => {
     // Programmatically update selection state when isAllRowsSelected prop changes
-    if (enableRowSelection) {
-      table.toggleAllRowsSelected(isAllRowsSelected);
+    if (enableRowSelection && isAllRowsSelected) {
+      // Force select all rows directly
+      const allRowsSelected: Record<number, boolean> = {};
+      data.forEach((_, index) => {
+        allRowsSelected[index] = true;
+      });
+      table.setRowSelection(allRowsSelected);
     }
-  }, [isAllRowsSelected, table, enableRowSelection]);
+  }, [isAllRowsSelected, table, enableRowSelection, data]);
 
   // Notify parent component when selection changes
   React.useEffect(() => {

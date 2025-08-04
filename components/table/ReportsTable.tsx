@@ -33,11 +33,14 @@ export function ReportsTable({
   isAllRowsSelected = false,
   onReportActionComplete,
 }: ReportsTableProps) {
+  // Track selected rows internally to sync with parent component
+  const [selectedRows, setSelectedRows] = React.useState<Report[]>([]);
   const router = useRouter();
   const pathname = usePathname();
 
   const handleSelectedRowsChange = React.useCallback(
     (selectedRows: Report[]) => {
+      setSelectedRows(selectedRows);
       if (onSelectedRowsChange) {
         onSelectedRowsChange(selectedRows);
       }
@@ -66,6 +69,15 @@ export function ReportsTable({
     return getReportsColumns();
   }, [variant, pathname, onReportActionComplete]);
 
+  // Effect to update internal state when external selection changes
+  React.useEffect(() => {
+    if (isAllRowsSelected) {
+      setSelectedRows([...data]);
+    } else if (isAllRowsSelected === false) { // Explicitly check for false
+      setSelectedRows([]);
+    }
+  }, [isAllRowsSelected, data]);
+
   return (
     <DataTable
       columns={columns}
@@ -76,6 +88,7 @@ export function ReportsTable({
       onRowClick={handleRowClick}
       className={className}
       isAllRowsSelected={isAllRowsSelected}
+      selectedRows={selectedRows}
     />
   );
 }

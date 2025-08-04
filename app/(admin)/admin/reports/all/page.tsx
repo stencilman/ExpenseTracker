@@ -11,7 +11,6 @@ export default function AdminReportsAllPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedReports, setSelectedReports] = useState<Report[]>([]);
 
   const fetchReports = useCallback(async () => {
     try {
@@ -28,12 +27,14 @@ export default function AdminReportsAllPage() {
       // 2) { data: { data: [ ... ], meta: { ... } } }
       const apiData = responseData.data;
       // Exclude reports that are still in PENDING (draft) state – admin only needs submitted ones
-      const reportsDataRaw = Array.isArray(apiData) ? apiData : apiData?.data ?? [];
+      const reportsDataRaw = Array.isArray(apiData)
+        ? apiData
+        : apiData?.data ?? [];
       const reportsData = reportsDataRaw.filter((r: any) => {
         const label = typeof r.status === "string" ? r.status : r.status?.label;
         return label !== "PENDING"; // keep everything except drafts
       });
-      
+
       // Map API reports to UI format with proper status object
       const formattedReports = reportsData.map((report: any) => {
         // Ensure status object
@@ -58,7 +59,7 @@ export default function AdminReportsAllPage() {
         }
         return report;
       });
-      
+
       setReports(formattedReports);
     } catch (err) {
       console.error("Error fetching reports:", err);
@@ -71,10 +72,6 @@ export default function AdminReportsAllPage() {
   useEffect(() => {
     fetchReports();
   }, [fetchReports]);
-
-  const handleSelectedRowsChange = (reports: Report[]) => {
-    setSelectedReports(reports);
-  };
 
   // Handle report action completion (approve, reject, reimburse)
   const handleReportActionComplete = useCallback(
@@ -101,8 +98,7 @@ export default function AdminReportsAllPage() {
   return (
     <ReportsTable
       data={reports}
-      enableRowSelection={true}
-      onSelectedRowsChange={handleSelectedRowsChange}
+      enableRowSelection={false}
       showPagination={true}
       variant="page"
       onReportActionComplete={handleReportActionComplete}
