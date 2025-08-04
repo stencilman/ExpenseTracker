@@ -9,22 +9,21 @@ export default function AdminReportsAwaitingReimbursementPage() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedReports, setSelectedReports] = useState<Report[]>([]);
 
   const fetchReports = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/reports/awaiting-reimbursement');
-      
+      const response = await fetch("/api/admin/reports/awaiting-reimbursement");
+
       if (!response.ok) {
-        throw new Error('Failed to fetch reports');
+        throw new Error("Failed to fetch reports");
       }
-      
+
       const data = await response.json();
       setReports(data.data);
     } catch (err) {
-      console.error('Error fetching reports:', err);
-      setError('Failed to load reports. Please try again.');
+      console.error("Error fetching reports:", err);
+      setError("Failed to load reports. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -34,19 +33,22 @@ export default function AdminReportsAwaitingReimbursementPage() {
     fetchReports();
   }, [fetchReports]);
 
-  const handleSelectedRowsChange = (reports: Report[]) => {
-    setSelectedReports(reports);
-  };
-
   // Handle report action completion (approve, reject, reimburse)
-  const handleReportActionComplete = useCallback((updatedReport: Report) => {
-    // Refresh the reports list
-    fetchReports();
-    toast.success(`Report ${updatedReport.id} status updated successfully`);
-  }, [fetchReports]);
+  const handleReportActionComplete = useCallback(
+    (updatedReport: Report) => {
+      // Refresh the reports list
+      fetchReports();
+      toast.success(`Report ${updatedReport.id} status updated successfully`);
+    },
+    [fetchReports]
+  );
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><Loader /></div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader />
+      </div>
+    );
   }
 
   if (error) {
@@ -56,8 +58,6 @@ export default function AdminReportsAwaitingReimbursementPage() {
   return (
     <ReportsTable
       data={reports}
-      enableRowSelection={true}
-      onSelectedRowsChange={handleSelectedRowsChange}
       onReportActionComplete={handleReportActionComplete}
       showPagination={true}
       variant="page"

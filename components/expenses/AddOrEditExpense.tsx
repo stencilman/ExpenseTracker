@@ -27,7 +27,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DropZone } from "@/components/ui/drop-zone";
 import { ExpenseCategory } from "@prisma/client";
 import { ExpenseWithUI } from "@/types/expense"; // Assuming this type is available
-import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import {
   Drawer,
   DrawerClose,

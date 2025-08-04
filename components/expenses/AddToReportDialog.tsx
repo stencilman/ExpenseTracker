@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { useDebounce } from "@/lib/hooks/use-debounce";
+import { useDebounce } from "@/hooks/use-debounce";
 import { Search, Loader } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -134,8 +134,12 @@ export function AddToReportDialog({
         if (!response.ok) throw new Error(`Error: ${response.status}`);
 
         const count = expenseIds.length;
-        toast.success(`${count} expense${count !== 1 ? 's' : ''} added to report: ${selectedReportTitle}`);
-      } 
+        toast.success(
+          `${count} expense${
+            count !== 1 ? "s" : ""
+          } added to report: ${selectedReportTitle}`
+        );
+      }
       // Handle single expense update
       else if (expenseId) {
         const response = await fetch(`/api/expenses/${expenseId}`, {
@@ -150,7 +154,7 @@ export function AddToReportDialog({
 
         toast.success(`Expense added to report: ${selectedReportTitle}`);
       }
-      
+
       onClose(); // This will trigger the state reset via the useEffect above
       router.refresh();
     } catch (error) {
@@ -175,9 +179,11 @@ export function AddToReportDialog({
         <DialogHeader>
           <DialogTitle>Add to Report</DialogTitle>
           <DialogDescription>
-            {expenseIds && expenseIds.length > 0 
-              ? `Select a report to add ${expenseIds.length} expense${expenseIds.length !== 1 ? 's' : ''} to.`
-              : 'Select a report to add this expense to.'}
+            {expenseIds && expenseIds.length > 0
+              ? `Select a report to add ${expenseIds.length} expense${
+                  expenseIds.length !== 1 ? "s" : ""
+                } to.`
+              : "Select a report to add this expense to."}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
