@@ -35,6 +35,14 @@ export async function createReport(data: ReportCreateInput, userId: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
             expenses: true,
@@ -119,6 +127,14 @@ export async function getReports(
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
             expenses: {
@@ -136,6 +152,14 @@ export async function getReports(
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
         },
@@ -193,6 +217,14 @@ export async function getReportById(id: number, userId?: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
             expenses: {
@@ -203,6 +235,14 @@ export async function getReportById(id: number, userId?: string) {
                             firstName: true,
                             lastName: true,
                             email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                         },
                     },
                 },
@@ -213,6 +253,14 @@ export async function getReportById(id: number, userId?: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
         },
@@ -262,6 +310,14 @@ export async function updateReport(id: number, data: ReportUpdateInput, userId?:
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
             expenses: true,
@@ -271,6 +327,14 @@ export async function updateReport(id: number, data: ReportUpdateInput, userId?:
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
         },
@@ -430,6 +494,14 @@ export async function submitReport(id: number, userId: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
             expenses: true,
@@ -439,6 +511,14 @@ export async function submitReport(id: number, userId: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
+                            approver: {
+                                select: {
+                                    id: true,
+                                    firstName: true,
+                                    lastName: true,
+                                    email: true,
+                                },
+                            },
                 },
             },
         },

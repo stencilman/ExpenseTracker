@@ -1,20 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/auth";
 import { getAdminUsers } from "@/data/users";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
-    // For testing, return mock data directly
-    const mockAdminUsers = [
-      { id: "1", name: "Admin User 1", email: "admin1@example.com" },
-      { id: "2", name: "Admin User 2", email: "admin2@example.com" },
-      { id: "3", name: "Admin User 3", email: "admin3@example.com" },
-    ];
-    
-    return NextResponse.json({ data: mockAdminUsers }, { status: 200 });
-    
-    // Uncomment this when authentication is working
-    // const adminUsers = await getAdminUsers();
-    // return NextResponse.json({ data: adminUsers }, { status: 200 });
+    // Verify admin session (optional – you can relax this if needed)
+    const session = await auth();
+    if (!session?.user?.id || session.user.role !== "ADMIN") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const adminUsers = await getAdminUsers();
+    return NextResponse.json({ data: adminUsers }, { status: 200 });
   } catch (error) {
     console.error("Error fetching admin users:", error);
     return NextResponse.json(

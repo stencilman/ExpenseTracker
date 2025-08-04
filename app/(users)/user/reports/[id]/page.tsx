@@ -79,6 +79,12 @@ interface ApiReport {
     firstName: string;
     lastName: string;
     email: string;
+    approver?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+    } | null;
   };
 }
 
@@ -486,17 +492,21 @@ export default function ReportDetailPage() {
             <div className="flex items-center">
               <div className="bg-yellow-100 rounded-full h-6 w-6 flex items-center justify-center mr-2">
                 <span className="text-xs font-bold text-yellow-800">
-                  {/* TODO: Change it to the name of the approver */}
-                  {report.user.firstName.charAt(0).toUpperCase()}
+                  {report.user.approver
+                    ? `${report.user.approver.firstName
+                        .charAt(0)
+                        .toUpperCase()}${report.user.approver.lastName
+                        .charAt(0)
+                        .toUpperCase()}`
+                    : report.user.firstName.charAt(0).toUpperCase()}
                 </span>
               </div>
               <div className="text-sm">
-                {report.user.firstName} {report.user.lastName}
+                {report.user.approver
+                  ? `${report.user.approver.firstName} ${report.user.approver.lastName}`
+                  : `${report.user.firstName} ${report.user.lastName}`}
               </div>
             </div>
-            <Button variant="link" className="text-blue-600 p-0 h-auto text-sm">
-              View approval flow
-            </Button>
 
             <div className="pt-4 border-t">
               <div className="text-sm text-gray-500 mb-1">Business Purpose</div>

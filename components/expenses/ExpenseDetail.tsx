@@ -338,7 +338,7 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
         </DialogContent>
       </Dialog>
 
-      <div className="p-4 h-[calc(100vh-10rem)] overflow-y-auto overflow-x-hidden w-full">
+      <div className="p-4 w-full">
         <div className="flex justify-between items-center mb-4">
           {!readOnly && (
             <div className="flex gap-2">

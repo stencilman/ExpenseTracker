@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { db } from "@/lib/db";
 import { createReport, getReports } from "@/data/report";
 import { errorResponse, jsonResponse, parsePaginationParams, parseQueryParams } from "@/lib/api-utils";
 import { ReportCreateSchema, ReportFilterSchema } from "@/schemas/report";
@@ -41,8 +42,23 @@ export async function GET(req: Request) {
       return errorResponse(`Invalid filter parameters: ${filterResult.error.message}`, 400);
     }
 
+    // Ensure we have the correct user ID (some auth providers may not include id)
+    let userId: string | undefined = session.user.id ?? undefined;
+    if (!userId) {
+      // Fallback: look up user by email
+      const userRecord = await db.user.findUnique({
+        where: { email: session.user.email ?? "" },
+        select: { id: true },
+      });
+      userId = userRecord?.id;
+    }
+
     // Get reports with filters
-    const reports = await getReports(session.user.id, filterResult.data as any);
+    if (!userId) {
+      return errorResponse("User not found", 404);
+    }
+
+    const reports = await getReports(userId, filterResult.data as any);
 
     return jsonResponse(reports);
   } catch (error) {
