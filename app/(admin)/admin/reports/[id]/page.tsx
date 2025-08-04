@@ -79,6 +79,9 @@ export default function ReportDetailPage() {
 
         const data = await response.json();
         const reportData = data.data;
+        
+        // Debug report data structure
+        console.log("Report data:", reportData);
 
         // If API already returns a formatted status object
         if (
@@ -594,17 +597,13 @@ export default function ReportDetailPage() {
             </div>
             <div className="flex items-center">
               <div className="bg-yellow-100 rounded-full h-6 w-6 flex items-center justify-center mr-2">
-                <span className="text-xs font-bold text-yellow-800">P</span>
+                <span className="text-xs font-bold text-yellow-800">
+                  {report.submitter ? report.submitter[0].toUpperCase() : ''}
+                </span>
               </div>
-              <div className="text-sm">prabal</div>
-            </div>
-            <Button variant="link" className="text-blue-600 p-0 h-auto text-sm">
-              View approval flow
-            </Button>
-
-            <div className="pt-4 border-t">
-              <div className="text-sm text-gray-500 mb-1">Policy</div>
-              <div className="font-medium">Fast Code AI</div>
+              <div className="text-sm">
+                {report.submitter || 'Unknown User'}
+              </div>
             </div>
 
             <div className="pt-4 border-t">
