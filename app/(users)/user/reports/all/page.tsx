@@ -63,7 +63,9 @@ export default function AllReportsPage() {
 
         // Convert API reports to UI reports format
         const uiReports: Report[] = reportsArray.map((report) => {
-          const approverName = report.approver ? `${report.approver.firstName} ${report.approver.lastName}` : undefined;
+          const approverName = report.approver
+            ? `${report.approver.firstName} ${report.approver.lastName}`
+            : undefined;
           // Get status display from utility function
           const statusDisplay = mapReportStatusToDisplay(
             report.status,
@@ -140,7 +142,9 @@ export default function AllReportsPage() {
 
         // Same conversion logic as above (simplified for brevity)
         const uiReports: Report[] = reportsArray.map((report: ApiReport) => {
-          const approverName = report.approver ? `${report.approver.firstName} ${report.approver.lastName}` : undefined;
+          const approverName = report.approver
+            ? `${report.approver.firstName} ${report.approver.lastName}`
+            : undefined;
 
           // Calculate reimbursable amount based on claimReimbursement flag
           const reimbursableAmount = report.expenses.reduce(
@@ -155,10 +159,10 @@ export default function AllReportsPage() {
             title: report.title,
             dateRange:
               report.startDate && report.endDate
-                ? `${format(new Date(report.startDate), "dd/MM/yyyy")} - ${format(
-                    new Date(report.endDate),
+                ? `${format(
+                    new Date(report.startDate),
                     "dd/MM/yyyy"
-                  )}`
+                  )} - ${format(new Date(report.endDate), "dd/MM/yyyy")}`
                 : "No date range",
             total: `Rs.${report.totalAmount.toLocaleString()}.00`,
             expenseCount: report.expenses.length,
@@ -189,7 +193,7 @@ export default function AllReportsPage() {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
       <div className="flex justify-end items-center">
         <Button variant="outline" onClick={() => setIsAddReportOpen(true)}>
           New Report

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { getUserNotifications, getUnreadNotificationsCount, markAllNotificationsAsRead } from "@/lib/data/notifications";
+import { getUserNotifications, getUnreadNotificationsCount, markAllNotificationsAsRead } from "@/data/notifications";
 
 // GET /api/user/notifications - Get all notifications for the current user
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     }
     const notifications = await getUserNotifications(userId);
     const unreadCount = await getUnreadNotificationsCount(userId);
-    
+
     return NextResponse.json({
       notifications,
       unreadCount,
@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -57,7 +57,7 @@ export async function PATCH(req: NextRequest) {
       );
     }
     await markAllNotificationsAsRead(userId);
-    
+
     return NextResponse.json({
       success: true,
       message: "All notifications marked as read",

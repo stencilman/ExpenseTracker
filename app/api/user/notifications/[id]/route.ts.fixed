@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/auth";
-import { markNotificationAsRead, deleteNotification } from "@/data/notifications";
+import { markNotificationAsRead, deleteNotification } from "@/lib/data/notifications";
 import { db } from "@/lib/db";
 
 // PATCH /api/user/notifications/[id] - Mark a notification as read
@@ -10,7 +10,7 @@ export async function PATCH(
 ) {
   try {
     const session = await auth();
-
+    
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -25,32 +25,32 @@ export async function PATCH(
         { status: 400 }
       );
     }
-
+    
     const notificationId = context.params.id;
-
+    
     // Verify the notification belongs to the user
     const notification = await db.notification.findUnique({
       where: {
         id: notificationId,
       },
     });
-
+    
     if (!notification) {
       return NextResponse.json(
         { error: "Notification not found" },
         { status: 404 }
       );
     }
-
+    
     if (notification.userId !== userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
       );
     }
-
+    
     await markNotificationAsRead(notificationId);
-
+    
     return NextResponse.json({
       success: true,
       message: "Notification marked as read",
@@ -71,14 +71,14 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-
+    
     if (!session?.user) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 401 }
       );
     }
-
+    
     const userId = session.user.id;
     if (!userId) {
       return NextResponse.json(
@@ -86,32 +86,32 @@ export async function DELETE(
         { status: 400 }
       );
     }
-
+    
     const notificationId = context.params.id;
-
+    
     // Verify the notification belongs to the user
     const notification = await db.notification.findUnique({
       where: {
         id: notificationId,
       },
     });
-
+    
     if (!notification) {
       return NextResponse.json(
         { error: "Notification not found" },
         { status: 404 }
       );
     }
-
+    
     if (notification.userId !== userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
       );
     }
-
+    
     await deleteNotification(notificationId);
-
+    
     return NextResponse.json({
       success: true,
       message: "Notification deleted",

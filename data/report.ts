@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { ReportEventType, ReportStatus } from "@prisma/client";
 import { createReportHistoryEntry } from "./report-history";
+import { sendReportStatusNotification } from "@/lib/services/notification-service";
 
 // Import types from the schema
 type ReportCreateInput = {
@@ -567,6 +568,9 @@ export async function submitReport(id: number, userId: string) {
         details: `Report submitted for approval with total amount $${totalAmount.toFixed(2)}`,
         performedById: userId,
     });
+    
+    // Send notification to the approver
+    await sendReportStatusNotification(id, "SUBMITTED", userId);
     
     return updatedReport;
 }
