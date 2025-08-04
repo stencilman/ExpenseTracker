@@ -23,10 +23,7 @@ export default function AdminSettingsPage() {
         <SettingsSection
           header="Users and Control"
           icon={Users}
-          items={[
-            { label: "Users", href: "/admin/settings/users" },
-            { label: "Roles & Permissions", href: "/admin/settings/roles" },
-          ]}
+          items={[{ label: "Users", href: "/admin/settings/users" }]}
         />
       </div>
     </div>
