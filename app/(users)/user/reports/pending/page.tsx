@@ -223,7 +223,10 @@ export default function PendingReportsPage() {
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? (
-                    <Loader size="sm" text="Submitting..." />
+                    <div className="flex items-center gap-2">
+                      <Loader size="sm" />
+                      <span>Submitting...</span>
+                    </div>
                   ) : (
                     "Submit"
                   )}
@@ -234,7 +237,14 @@ export default function PendingReportsPage() {
                   onClick={() => setIsDeleteDialogOpen(true)}
                   disabled={isSubmitting}
                 >
-                  Delete Reports
+                  {isSubmitting ? (
+                    <div className="flex items-center gap-2">
+                      <Loader size="sm" />
+                      <span>Deleting...</span>
+                    </div>
+                  ) : (
+                    "Delete Reports"
+                  )}
                 </Button>
               </>
             ) : (

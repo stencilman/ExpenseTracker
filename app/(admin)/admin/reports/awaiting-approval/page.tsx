@@ -186,7 +186,10 @@ export default function AdminReportsAwaitingApprovalPage() {
                   disabled={isProcessing}
                 >
                   {isProcessing ? (
-                    <Loader size="sm" text="Approving..." />
+                    <div className="flex items-center gap-2">
+                      <Loader size="sm" />
+                      <span>Approving...</span>
+                    </div>
                   ) : (
                     "Approve All"
                   )}
@@ -198,7 +201,10 @@ export default function AdminReportsAwaitingApprovalPage() {
                   disabled={isProcessing}
                 >
                   {isProcessing ? (
-                    <Loader size="sm" text="Rejecting..." />
+                    <div className="flex items-center gap-2">
+                      <Loader size="sm" />
+                      <span>Rejecting...</span>
+                    </div>
                   ) : (
                     "Reject All"
                   )}
