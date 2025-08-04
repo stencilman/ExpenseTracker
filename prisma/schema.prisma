@@ -43,6 +43,7 @@ model User {
   approvedReports Report[] @relation("ReportApprovals") // Reports approved by this user
   expenseActions ExpenseHistory[] @relation("ExpenseActions") // Actions performed on expenses
   reportActions ReportHistory[] @relation("ReportActions") // Actions performed on reports
+  notifications Notification[]         // Notifications for this user
   
   // System fields
   role          UserRole  @default(USER)
@@ -231,4 +232,32 @@ model Organization {
   country         String
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+enum NotificationType {
+  REPORT_SUBMITTED
+  REPORT_APPROVED
+  REPORT_REJECTED
+  REPORT_REIMBURSED
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum EntityType {
+  REPORT
+  EXPENSE
+  SYSTEM
+}
+
+model Notification {
+  id                String           @id @default(cuid())
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String
+  message           String
+  type              NotificationType
+  read              Boolean          @default(false)
+  relatedEntityId   String?
+  relatedEntityType EntityType?
+  createdAt         DateTime         @default(now())
+  expiresAt         DateTime?
 }

@@ -4,6 +4,7 @@ import { ReportStatus, ReportEventType } from "@prisma/client";
 import { auth } from "@/auth";
 import { formatReportForUI } from "@/lib/format-utils";
 import { createReportHistoryEntry } from "@/data/report-history";
+import { sendReportStatusNotification } from "@/lib/services/notification-service";
 
 /**
  * POST /api/admin/reports/[id]/approve
@@ -93,6 +94,13 @@ export async function POST(
       details: "Report approved by admin",
       performedById: session.user.id,
     });
+
+    // Send notification to the report submitter
+    await sendReportStatusNotification(
+      reportId,
+      ReportStatus.APPROVED,
+      session.user.id
+    );
 
     // Format the report for UI
     const formattedReport = formatReportForUI(updatedReport as any);

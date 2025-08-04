@@ -4,6 +4,7 @@ import { ReportStatus, ReportEventType } from "@prisma/client";
 import { auth } from "@/auth";
 import { formatReportForUI } from "@/lib/format-utils";
 import { createReportHistoryEntry } from "@/data/report-history";
+import { sendReportStatusNotification } from "@/lib/services/notification-service";
 
 /**
  * POST /api/admin/reports/[id]/reimburse
@@ -100,6 +101,13 @@ export async function POST(
         ? `Report reimbursed with payment reference: ${paymentReference}` 
         : "Report marked as reimbursed",
     });
+
+    // Send notification to the report submitter
+    await sendReportStatusNotification(
+      reportId,
+      ReportStatus.REIMBURSED,
+      session.user.id
+    );
 
     // Format the report for UI
     const formattedReport = formatReportForUI(updatedReport as any);
