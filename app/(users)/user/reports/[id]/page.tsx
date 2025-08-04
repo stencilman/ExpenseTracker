@@ -100,6 +100,9 @@ export default function ReportDetailPage() {
   const [deleting, setDeleting] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
+  // A report is locked once approved or reimbursed
+  const isLocked = report ? (report.status === ReportStatus.APPROVED || report.status === ReportStatus.REIMBURSED) : false;
+
   // History state
   const [historyData, setHistoryData] = useState<ReportHistoryItem[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -344,17 +347,24 @@ export default function ReportDetailPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit Report
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => setDeleteDialogOpen(true)}
-                className="text-red-600 focus:text-red-600"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Report
-              </DropdownMenuItem>
+              {!isLocked ? (
+                <>
+                  <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit Report
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => setDeleteDialogOpen(true)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Report
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <DropdownMenuItem disabled>
+                  Report locked
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

@@ -293,6 +293,18 @@ export async function getReportById(id: number, userId?: string) {
  * Update a report
  */
 export async function updateReport(id: number, data: ReportUpdateInput, userId?: string) {
+    // Prevent editing if report is locked (APPROVED or REIMBURSED)
+    const baseWhere: any = { id };
+    if (userId) baseWhere.userId = userId;
+
+    const existing = await db.report.findUnique({ where: baseWhere, select: { status: true } });
+    if (!existing) {
+        throw new Error("Report not found");
+    }
+    if (existing.status === "APPROVED" || existing.status === "REIMBURSED") {
+        throw new Error("Report is locked and cannot be modified");
+    }
+    // proceed to update
     const where: any = { id };
 
     // If userId is provided, ensure the report belongs to the user
@@ -345,6 +357,14 @@ export async function updateReport(id: number, data: ReportUpdateInput, userId?:
  * Delete a report and update associated expenses to UNREPORTED status
  */
 export async function deleteReport(id: number, userId?: string) {
+    // Disallow deletion if report is locked (APPROVED/REIMBURSED)
+    const lockedCheck = await db.report.findUnique({ where: { id }, select: { status: true } });
+    if (!lockedCheck) {
+        throw new Error("Report not found");
+    }
+    if (lockedCheck.status === "APPROVED" || lockedCheck.status === "REIMBURSED") {
+        throw new Error("Report is locked and cannot be deleted");
+    }
     const where: any = { id };
 
     // If userId is provided, ensure the report belongs to the user
@@ -374,6 +394,14 @@ export async function deleteReport(id: number, userId?: string) {
  * Add expenses to a report
  */
 export async function addExpensesToReport(reportId: number, expenseIds: number[], userId?: string) {
+    // Prevent modification on locked reports
+    const lockedCheck = await db.report.findUnique({ where: { id: reportId }, select: { status: true } });
+    if (!lockedCheck) {
+        throw new Error("Report not found");
+    }
+    if (lockedCheck.status === "APPROVED" || lockedCheck.status === "REIMBURSED") {
+        throw new Error("Report is locked and cannot be modified");
+    }
     // Update each expense to associate with the report and create history entries
     const updatePromises = expenseIds.map((expenseId) => {
         // Create a history entry for the expense
@@ -425,6 +453,14 @@ export async function addExpensesToReport(reportId: number, expenseIds: number[]
  * Remove expenses from a report
  */
 export async function removeExpensesFromReport(reportId: number, expenseIds: number[]) {
+    // Prevent modification on locked reports
+    const lockedCheck = await db.report.findUnique({ where: { id: reportId }, select: { status: true } });
+    if (!lockedCheck) {
+        throw new Error("Report not found");
+    }
+    if (lockedCheck.status === "APPROVED" || lockedCheck.status === "REIMBURSED") {
+        throw new Error("Report is locked and cannot be modified");
+    }
     // Update each expense to disassociate from the report
     const updatePromises = expenseIds.map((expenseId) =>
         db.expense.update({

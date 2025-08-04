@@ -210,6 +210,13 @@ export async function updateExpense(id: number, data: ExpenseUpdate, userId: str
     if (!existingExpense) {
       throw new Error("Expense not found");
     }
+    // Disallow edits if the expense is attached to an approved or reimbursed report
+    if (existingExpense.reportId) {
+      const parent = await db.report.findUnique({ where: { id: existingExpense.reportId }, select: { status: true } });
+      if (parent && (parent.status === "APPROVED" || parent.status === "REIMBURSED")) {
+        throw new Error("Expense belongs to a locked report and cannot be modified");
+      }
+    }
 
     // Process date if provided
     const updateData: any = { ...data };
@@ -322,6 +329,13 @@ export async function deleteExpense(id: number, userId: string) {
 
     if (!existingExpense) {
       throw new Error("Expense not found");
+    }
+    // Disallow delete if part of locked report
+    if (existingExpense.reportId) {
+      const parent = await db.report.findUnique({ where: { id: existingExpense.reportId }, select: { status: true } });
+      if (parent && (parent.status === "APPROVED" || parent.status === "REIMBURSED")) {
+        throw new Error("Expense belongs to a locked report and cannot be deleted");
+      }
     }
 
     await db.expense.delete({

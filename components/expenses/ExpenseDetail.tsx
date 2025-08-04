@@ -149,6 +149,42 @@ export interface ExpenseDetailProps {
 }
 
 export default function ExpenseDetail({ expense, onClose, hideClose = false, readOnly = false }: ExpenseDetailProps) {
+  // An expense is locked only if it belongs to a report that is APPROVED or REIMBURSED
+  // We need to fetch the report status when the component loads
+  const [reportStatus, setReportStatus] = useState<string | null>(null);
+  const [isLoadingStatus, setIsLoadingStatus] = useState<boolean>(!!expense.reportId);
+  
+  const isLocked = readOnly || 
+    (expense.reportId && 
+     (reportStatus === 'APPROVED' || reportStatus === 'REIMBURSED'));
+     
+  // Fetch report status if expense belongs to a report
+  useEffect(() => {
+    if (expense.reportId) {
+      setIsLoadingStatus(true);
+      const fetchReportStatus = async () => {
+        try {
+          const response = await fetch(`/api/reports/${expense.reportId}`);
+          if (response.ok) {
+            const reportData = await response.json();
+            setReportStatus(reportData.status);
+          } else {
+            console.error('Failed to fetch report status');
+          }
+        } catch (error) {
+          console.error('Error fetching report status:', error);
+        } finally {
+          setIsLoadingStatus(false);
+        }
+      };
+      
+      fetchReportStatus();
+    } else {
+      setIsLoadingStatus(false);
+    }
+  }, [expense.reportId]);
+
+
   // States for component
   const router = useRouter();
   const { deleteExpense, updateExpense } = useExpenses();
@@ -253,7 +289,7 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
   return (
     <>
       {/* Edit Expense Dialog */}
-      {!readOnly && (
+      {!isLocked && (
         <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
           <DialogContent className="max-w-3xl">
             <DialogTitle className="sr-only">Edit Expense</DialogTitle>
@@ -269,7 +305,7 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
         </Dialog>
       )}
       {/* Delete Confirmation Dialog */}
-      {!readOnly && (
+      {!isLocked && (
         <DeleteExpenseDialog
           expenseIds={expense.id}
           isOpen={isDeleteDialogOpen}
@@ -279,13 +315,14 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
       )}
 
       {/* Add to Report Dialog */}
-      {!readOnly && (
+      {!isLocked && (
         <AddToReportDialog
           expenseId={expense.id}
           isOpen={isAddToReportOpen}
           onClose={() => {
             setIsAddToReportOpen(false);
-            onClose(); // Also close the main detail panel on success
+            // Don't close the main detail panel when dialog is closed
+            // Only close the main panel on successful report addition
           }}
         />
       )}
@@ -340,28 +377,35 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
 
       <div className="p-4 w-full">
         <div className="flex justify-between items-center mb-4">
-          {!readOnly && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditOpen(true)}
-                className="flex items-center gap-1"
-              >
-                <Edit className="h-4 w-4" />
-                Edit
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsDeleteDialogOpen(true)}
-                className="flex items-center gap-1 text-red-500 hover:text-red-600"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete
-              </Button>
-            </div>
-          )}
+          <div className="flex gap-2">
+            {isLoadingStatus ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-sm text-muted-foreground">Loading...</span>
+              </div>
+            ) : !isLocked ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsEditOpen(true)}
+                  className="flex items-center gap-1"
+                >
+                  <Edit className="h-4 w-4" />
+                  Edit
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  className="flex items-center gap-1 text-red-500 hover:text-red-600"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </Button>
+              </>
+            ) : null}
+          </div>
           {!hideClose && (
             <Button
               variant="ghost"
