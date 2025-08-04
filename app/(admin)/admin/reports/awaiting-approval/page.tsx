@@ -5,7 +5,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Loader } from "@/components/ui/loader";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
 export default function AdminReportsAwaitingApprovalPage() {
@@ -20,17 +26,17 @@ export default function AdminReportsAwaitingApprovalPage() {
   const fetchReports = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch('/api/admin/reports/awaiting-approval');
-      
+      const response = await fetch("/api/admin/reports/awaiting-approval");
+
       if (!response.ok) {
-        throw new Error('Failed to fetch reports');
+        throw new Error("Failed to fetch reports");
       }
-      
+
       const data = await response.json();
       setReports(data.data);
     } catch (err) {
-      console.error('Error fetching reports:', err);
-      setError('Failed to load reports. Please try again.');
+      console.error("Error fetching reports:", err);
+      setError("Failed to load reports. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -43,7 +49,9 @@ export default function AdminReportsAwaitingApprovalPage() {
   const handleSelectedRowsChange = (selectedRows: Report[]) => {
     setSelectedReports(selectedRows);
     // Check if all reports are selected
-    setSelectAll(selectedRows.length > 0 && selectedRows.length === reports.length);
+    setSelectAll(
+      selectedRows.length > 0 && selectedRows.length === reports.length
+    );
   };
 
   const handleSelectAll = () => {
@@ -51,20 +59,20 @@ export default function AdminReportsAwaitingApprovalPage() {
     const allReports = [...reports];
     setSelectedReports(allReports);
     setSelectAll(true);
-    
+
     // Force a re-render after a short delay to ensure UI updates
     setTimeout(() => {
-      setSelectAll(state => state);
+      setSelectAll((state) => state);
     }, 50);
   };
-  
+
   const handleClearSelection = () => {
     setSelectedReports([]);
     setSelectAll(false);
-    
+
     // Force a re-render after a short delay to ensure UI updates
     setTimeout(() => {
-      setSelectAll(state => state);
+      setSelectAll((state) => state);
     }, 50);
   };
 
@@ -86,7 +94,9 @@ export default function AdminReportsAwaitingApprovalPage() {
       }
 
       const result = await response.json();
-      toast.success(result.message || `${result.count} reports approved successfully`);
+      toast.success(
+        result.message || `${result.count} reports approved successfully`
+      );
       fetchReports();
       setSelectedReports([]);
     } catch (err) {
@@ -115,7 +125,9 @@ export default function AdminReportsAwaitingApprovalPage() {
       }
 
       const result = await response.json();
-      toast.success(result.message || `${result.count} reports rejected successfully`);
+      toast.success(
+        result.message || `${result.count} reports rejected successfully`
+      );
       fetchReports();
       setSelectedReports([]);
     } catch (err) {
@@ -127,14 +139,21 @@ export default function AdminReportsAwaitingApprovalPage() {
   };
 
   // Handle report action completion (approve, reject, reimburse)
-  const handleReportActionComplete = useCallback((updatedReport: Report) => {
-    // Refresh the reports list
-    fetchReports();
-    toast.success(`Report ${updatedReport.id} status updated successfully`);
-  }, [fetchReports]);
+  const handleReportActionComplete = useCallback(
+    (updatedReport: Report) => {
+      // Refresh the reports list
+      fetchReports();
+      toast.success(`Report ${updatedReport.id} status updated successfully`);
+    },
+    [fetchReports]
+  );
 
   if (isLoading) {
-    return <div className="flex justify-center items-center h-64"><Loader /></div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader />
+      </div>
+    );
   }
 
   if (error) {
@@ -142,7 +161,7 @@ export default function AdminReportsAwaitingApprovalPage() {
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">

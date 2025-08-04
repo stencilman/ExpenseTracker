@@ -96,12 +96,14 @@ export default function AdminReportsAllPage() {
   }
 
   return (
-    <ReportsTable
-      data={reports}
-      enableRowSelection={false}
-      showPagination={true}
-      variant="page"
-      onReportActionComplete={handleReportActionComplete}
-    />
+    <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
+      <ReportsTable
+        data={reports}
+        enableRowSelection={false}
+        showPagination={true}
+        variant="page"
+        onReportActionComplete={handleReportActionComplete}
+      />
+    </div>
   );
 }

@@ -44,5 +44,9 @@ export default function AdminReportsReimbursedPage() {
     return <div className="text-red-500 text-center p-4">{error}</div>;
   }
 
-  return <ReportsTable data={reports} showPagination={true} variant="page" />;
+  return (
+    <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
+      <ReportsTable data={reports} showPagination={true} variant="page" />
+    </div>
+  );
 }

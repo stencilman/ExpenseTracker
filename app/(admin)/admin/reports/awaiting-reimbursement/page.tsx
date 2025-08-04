@@ -56,11 +56,13 @@ export default function AdminReportsAwaitingReimbursementPage() {
   }
 
   return (
-    <ReportsTable
-      data={reports}
-      onReportActionComplete={handleReportActionComplete}
-      showPagination={true}
-      variant="page"
-    />
+    <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
+      <ReportsTable
+        data={reports}
+        onReportActionComplete={handleReportActionComplete}
+        showPagination={true}
+        variant="page"
+      />
+    </div>
   );
 }
