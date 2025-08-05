@@ -608,24 +608,6 @@ export default function ReportDetailPage() {
               </div>
             </div>
 
-            {report.approver && (
-              <div className="flex items-center mt-2">
-                <div className="bg-blue-100 rounded-full h-6 w-6 flex items-center justify-center mr-2">
-                  <span className="text-xs font-bold text-blue-800">
-                    {report.approver ? report.approver[0].toUpperCase() : ""}
-                  </span>
-                </div>
-                <div className="flex flex-col">
-                  <div className="text-sm font-medium">
-                    {report.approver || "No Approver"}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {report.approverEmail || ""}
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="pt-4 border-t">
               <div className="text-sm text-gray-500 mb-1">Business Purpose</div>
               <div className="text-gray-400">-</div>
