@@ -195,7 +195,8 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
 
         // Update state
         setAllExpenses((prev) => [...prev, newExpense]);
-        if (!newExpense.reportName) {
+        // Only add to unreported expenses if it doesn't have a reportId
+        if (!newExpense.reportId) {
           setUnreportedExpenses((prev) => [...prev, newExpense]);
         }
 
