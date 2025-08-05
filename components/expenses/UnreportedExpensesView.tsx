@@ -235,6 +235,9 @@ export default function UnreportedExpensesView({
           onClose={() => {
             setIsAddExpenseOpen(false);
             setDroppedFiles([]); // Clear dropped files when closing
+            // Refresh the expenses list after closing the dialog
+            // This will ensure newly created expenses are displayed
+            router.refresh();
           }}
           mode="add"
           initialFiles={droppedFiles}

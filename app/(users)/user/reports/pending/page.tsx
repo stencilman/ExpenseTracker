@@ -344,6 +344,11 @@ export default function PendingReportsPage() {
         <AddReportDialog
           open={isAddReportOpen}
           onOpenChange={setIsAddReportOpen}
+          onReportAdded={() => {
+            // Reset to first page and refresh reports
+            setCurrentPage(1);
+            fetchReports(1);
+          }}
         />
         <DeleteReportsDialog
           open={isDeleteDialogOpen}

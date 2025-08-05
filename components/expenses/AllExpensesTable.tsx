@@ -81,7 +81,12 @@ export default function AllExpensesTableView({
       {isAddExpenseOpen && (
         <AddOrEditExpense
           isOpen={isAddExpenseOpen}
-          onClose={() => setIsAddExpenseOpen(false)}
+          onClose={() => {
+            setIsAddExpenseOpen(false);
+            // Refresh the expenses list after closing the dialog
+            // This will ensure newly created expenses are displayed
+            router.refresh();
+          }}
           mode="add"
         />
       )}

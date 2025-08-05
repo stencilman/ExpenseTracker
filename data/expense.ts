@@ -64,7 +64,10 @@ export async function getExpenses(
     // Get expenses with pagination
     const expenses = await db.expense.findMany({
       where,
-      orderBy: { date: "desc" },
+      orderBy: [
+        { date: "desc" },
+        { createdAt: "desc" } // Add secondary sort by creation time
+      ],
       skip,
       take: pageSize,
       include: {
