@@ -275,7 +275,7 @@ export default function PendingReportsPage() {
                   )}
                 </Button>
               </>
-            ) : (
+            ) : reports.length > 0 ? (
               <Button
                 onClick={handleSelectAll}
                 variant="ghost"
@@ -284,7 +284,7 @@ export default function PendingReportsPage() {
               >
                 Select All
               </Button>
-            )}
+            ) : null}
           </div>
 
           {/* Right Side: New Report Button */}

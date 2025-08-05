@@ -186,7 +186,7 @@ export default function UnreportedExpensesView({
           </Button>
         </div>
       )}
-      {selectedExpenses.size === 0 && (
+      {selectedExpenses.size === 0 && processedUnreportedExpenses.length > 0 && (
         <div className="flex items-center space-x-2">
           <Button
             onClick={handleSelectAll}
