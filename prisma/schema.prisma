@@ -1,0 +1,264 @@
+// prisma/schema.prisma
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  firstName     String?
+  lastName      String?
+  email         String?    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  
+  // Additional user settings fields
+  employeeId    String?   // Employee ID
+  mobile        String?   // Mobile number
+  department    String?   // Department
+  dateOfJoining DateTime? // Date of joining
+  dateOfBirth   DateTime? // Date of birth
+  designation   String?   // Designation/job title
+  roleName      String?   // Role name (e.g., "Submitter")
+  
+  // Approver relationship - who this user submits to
+  approverId    String?   
+  approver      User?     @relation("UserApprover", fields: [approverId], references: [id])
+  subordinates  User[]    @relation("UserApprover") // Users who submit to this user
+  
+  // Relations
+  accounts       Account[]
+  expenses      Expense[]
+  reports       Report[]                // Reports created by this user
+  approvedReports Report[] @relation("ReportApprovals") // Reports approved by this user
+  expenseActions ExpenseHistory[] @relation("ExpenseActions") // Actions performed on expenses
+  reportActions ReportHistory[] @relation("ReportActions") // Actions performed on reports
+  notifications Notification[]         // Notifications for this user
+  
+  // System fields
+  role          UserRole  @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+enum ExpenseStatus {
+  UNREPORTED
+  REPORTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+enum ExpenseCategory {
+  TRAVEL
+  MEALS
+  ACCOMMODATION
+  SUPPLIES
+  SERVICES
+  ENTERTAINMENT
+  TRANSPORTATION
+  UTILITIES
+  OFFICE
+  OTHER
+}
+
+model Expense {
+  id                Int             @id @default(autoincrement())
+  amount            Float
+  merchant          String
+  date              DateTime
+  description       String?
+  category          ExpenseCategory @default(OTHER)
+  status            ExpenseStatus   @default(UNREPORTED)
+  receiptUrls       String[]
+  notes             String?
+  claimReimbursement Boolean         @default(true)
+  userId            String
+  user              User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Report relation (optional - an expense can exist without being in a report)
+  reportId          Int?
+  report            Report?         @relation(fields: [reportId], references: [id])
+  
+  // History relation
+  history           ExpenseHistory[]
+  
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+enum ReportStatus {
+  PENDING
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+model Report {
+  id              Int           @id @default(autoincrement())
+  title           String
+  description     String?
+  status          ReportStatus  @default(PENDING)
+  startDate       DateTime?
+  endDate         DateTime?
+  submittedAt     DateTime?
+  approvedAt      DateTime?
+  rejectedAt      DateTime?
+  reimbursedAt    DateTime?
+  totalAmount     Float         @default(0)
+  
+  // Foreign keys
+  userId          String
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Relations
+  expenses        Expense[]
+  expenseHistory  ExpenseHistory[]
+  history         ReportHistory[]
+  
+  // Approval information
+  approvedBy      String?
+  approvedById    String?
+  approver        User?         @relation("ReportApprovals", fields: [approvedById], references: [id])
+  
+  // Reimbursement details
+  reimbursementMethod String?
+  reimbursementRef    String?
+  reimbursementNotes  String?
+  
+  // Timestamps
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+enum ExpenseEventType {
+  CREATED
+  ADDED_TO_REPORT
+  APPROVED
+  REJECTED
+  REIMBURSED
+  EDITED
+}
+
+enum ReportEventType {
+  CREATED
+  SUBMITTED
+  APPROVED
+  REJECTED
+  REIMBURSED
+}
+
+model ExpenseHistory {
+  id          Int              @id @default(autoincrement())
+  eventType   ExpenseEventType
+  eventDate   DateTime        @default(now())
+  details     String?
+  
+  // Foreign keys
+  expenseId   Int
+  expense     Expense         @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  
+  // User who performed the action (optional)
+  performedById String?
+  performedBy   User?         @relation("ExpenseActions", fields: [performedById], references: [id])
+  
+  // Report reference (optional)
+  reportId    Int?
+  report      Report?        @relation(fields: [reportId], references: [id])
+  
+  createdAt   DateTime       @default(now())
+}
+
+model ReportHistory {
+  id          Int            @id @default(autoincrement())
+  eventType   ReportEventType
+  eventDate   DateTime      @default(now())
+  details     String?
+  
+  // Foreign keys
+  reportId    Int
+  report      Report          @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  
+  // User who performed the action (optional)
+  performedById String?
+  performedBy   User?         @relation("ReportActions", fields: [performedById], references: [id])
+  
+  createdAt   DateTime       @default(now())
+}
+
+model Organization {
+  id              String    @id @default(cuid())
+  name            String?
+  legalName       String?
+  email           String?
+  phone           String?
+  website         String?
+  address         String
+  city            String
+  state           String
+  postalCode      String
+  country         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+enum NotificationType {
+  REPORT_SUBMITTED
+  REPORT_APPROVED
+  REPORT_REJECTED
+  REPORT_REIMBURSED
+  SYSTEM_ANNOUNCEMENT
+}
+
+enum EntityType {
+  REPORT
+  EXPENSE
+  SYSTEM
+}
+
+model Notification {
+  id                String           @id @default(cuid())
+  userId            String
+  user              User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title             String
+  message           String
+  type              NotificationType
+  read              Boolean          @default(false)
+  relatedEntityId   String?
+  relatedEntityType EntityType?
+  createdAt         DateTime         @default(now())
+  expiresAt         DateTime?
+}

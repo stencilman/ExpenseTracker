@@ -6,45 +6,45 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReportsTable, Report } from "@/components/table/ReportsTable";
 import { Button } from "@/components/ui/button";
 
+interface ReportsSummary {
+  recentReports: Report[];
+  unsubmittedReports: Report[];
+  awaitingApprovalReports: Report[];
+  awaitingReimbursementReports: Report[];
+}
+
 export default function ReportsSummaryCard() {
   const [selectedReports, setSelectedReports] = React.useState<Report[]>([]);
+  const [reportsSummary, setReportsSummary] = React.useState<ReportsSummary | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    const fetchReportsSummary = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch("/api/user/dashboard/reports-summary");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch reports summary");
+        }
+        
+        const data = await response.json();
+        setReportsSummary(data.data);
+      } catch (err) {
+        console.error("Error fetching reports summary:", err);
+        setError("Failed to load reports summary");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchReportsSummary();
+  }, []);
 
   const handleSelectedRowsChange = (reports: Report[]) => {
     setSelectedReports(reports);
   };
-  // Sample data for the reports table
-  const recentReports: Report[] = [
-    {
-      id: "1",
-      iconType: "calendar",
-      title: "May-June",
-      dateRange: "30/05/2025 - 30/05/2025",
-      total: "Rs.1,995.00",
-      expenseCount: 2,
-      toBeReimbursed: "Rs.1,995.00",
-      status: {
-        label: "AWAITING APPROVAL",
-        color: "orange",
-        additionalInfo: "From 27/06/2025",
-      },
-    },
-    {
-      id: "2",
-      iconType: "file-text",
-      title: "Bhive Passes and Trial Interview expense",
-      dateRange: "16/05/2025 - 16/05/2025",
-      total: "Rs.3,486.00",
-      expenseCount: 5,
-      toBeReimbursed: "Rs.0.00",
-      status: {
-        label: "REIMBURSED",
-        color: "green",
-      },
-    },
-  ];
-
-  // Empty data for other tabs
-  const emptyReports: Report[] = [];
   return (
     <div className="w-full">
       <Card>
@@ -80,56 +80,132 @@ export default function ReportsSummaryCard() {
             </div>
 
             <TabsContent value="most-recent">
-              <div className="flex justify-between mb-4">
-                <div className="text-blue-500 font-medium">Reports</div>
-                <div>{recentReports.length} Reports</div>
-              </div>
+              {loading ? (
+                <div className="py-8 flex justify-center">
+                  <div className="animate-pulse space-y-4 w-full">
+                    <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-24 bg-gray-200 rounded w-full"></div>
+                    <div className="h-24 bg-gray-200 rounded w-full"></div>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="py-8 text-center text-red-500">
+                  Failed to load reports
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between mb-4">
+                    <div className="text-blue-500 font-medium">Reports</div>
+                    <div>{reportsSummary?.recentReports?.length || 0} Reports</div>
+                  </div>
 
-              <div className="">
-                <ReportsTable
-                  data={recentReports}
-                  enableRowSelection={true}
-                  onSelectedRowsChange={handleSelectedRowsChange}
-                />
-              </div>
+                  <div className="">
+                    <ReportsTable
+                      data={reportsSummary?.recentReports || []}
+                      enableRowSelection={true}
+                      onSelectedRowsChange={handleSelectedRowsChange}
+                    />
+                  </div>
 
-              <div className="flex justify-end mt-4">
-                {selectedReports.length > 0 && (
-                  <Button variant="outline" size="sm">
-                    Process {selectedReports.length} selected
-                  </Button>
-                )}
-              </div>
+                  <div className="flex justify-end mt-4">
+                    {selectedReports.length > 0 && (
+                      <Button variant="outline" size="sm">
+                        Process {selectedReports.length} selected
+                      </Button>
+                    )}
+                  </div>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="unsubmitted-reports">
-              <div className="flex justify-between mb-4">
-                <div className="text-blue-500 font-medium">Reports</div>
-                <div>{emptyReports.length} Reports (Rs.0.00)</div>
-              </div>
-              <div className="">
-                <ReportsTable data={emptyReports} />
-              </div>
+              {loading ? (
+                <div className="py-8 flex justify-center">
+                  <div className="animate-pulse space-y-4 w-full">
+                    <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-24 bg-gray-200 rounded w-full"></div>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="py-8 text-center text-red-500">
+                  Failed to load reports
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between mb-4">
+                    <div className="text-blue-500 font-medium">Reports</div>
+                    <div>{reportsSummary?.unsubmittedReports?.length || 0} Reports</div>
+                  </div>
+
+                  <div className="">
+                    <ReportsTable
+                      data={reportsSummary?.unsubmittedReports || []}
+                      enableRowSelection={true}
+                      onSelectedRowsChange={handleSelectedRowsChange}
+                    />
+                  </div>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="awaiting-approvals">
-              <div className="flex justify-between mb-4">
-                <div className="text-blue-500 font-medium">Reports</div>
-                <div> {emptyReports.length} Reports (Rs.0.00)</div>
-              </div>
-              <div className="">
-                <ReportsTable data={emptyReports} />
-              </div>
+              {loading ? (
+                <div className="py-8 flex justify-center">
+                  <div className="animate-pulse space-y-4 w-full">
+                    <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-24 bg-gray-200 rounded w-full"></div>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="py-8 text-center text-red-500">
+                  Failed to load reports
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between mb-4">
+                    <div className="text-blue-500 font-medium">Reports</div>
+                    <div>{reportsSummary?.awaitingApprovalReports?.length || 0} Reports</div>
+                  </div>
+
+                  <div className="">
+                    <ReportsTable
+                      data={reportsSummary?.awaitingApprovalReports || []}
+                      enableRowSelection={true}
+                      onSelectedRowsChange={handleSelectedRowsChange}
+                    />
+                  </div>
+                </>
+              )}
             </TabsContent>
 
             <TabsContent value="awaiting-reimbursements">
-              <div className="flex justify-between mb-4">
-                <div className="text-blue-500 font-medium">Reports</div>
-                <div>0 Reports (Rs.0.00)</div>
-              </div>
-              <div className="">
-                <ReportsTable data={emptyReports} />
-              </div>
+              {loading ? (
+                <div className="py-8 flex justify-center">
+                  <div className="animate-pulse space-y-4 w-full">
+                    <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                    <div className="h-24 bg-gray-200 rounded w-full"></div>
+                  </div>
+                </div>
+              ) : error ? (
+                <div className="py-8 text-center text-red-500">
+                  Failed to load reports
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between mb-4">
+                    <div className="text-blue-500 font-medium">Reports</div>
+                    <div>{reportsSummary?.awaitingReimbursementReports?.length || 0} Reports</div>
+                  </div>
+
+                  <div className="">
+                    <ReportsTable
+                      data={reportsSummary?.awaitingReimbursementReports || []}
+                      enableRowSelection={true}
+                      onSelectedRowsChange={handleSelectedRowsChange}
+                    />
+                  </div>
+                </>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>

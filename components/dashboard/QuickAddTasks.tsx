@@ -38,7 +38,7 @@ export default function QuickAddTasks() {
       </CardHeader>
       <CardContent className="flex-grow">
         <div className="grid grid-cols-1 sm:grid-cols-3 sm:divide-x divide-y sm:divide-y-0 overflow-hidden">
-          <Button
+          {/* <Button
             variant="ghost"
             className="flex flex-col items-center text-center h-auto py-4 hover:bg-slate-50 rounded-none cursor-pointer"
             onClick={() => setDrawerOpen(true)}
@@ -53,7 +53,7 @@ export default function QuickAddTasks() {
             <p className="text-xs text-muted-foreground">
               or click here to attach
             </p>
-          </Button>
+          </Button> */}
 
           <Link
             href="/user/expenses"
