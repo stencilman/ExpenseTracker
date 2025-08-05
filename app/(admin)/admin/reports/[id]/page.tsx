@@ -439,7 +439,7 @@ export default function ReportDetailPage() {
               disabled={isActionLoading}
             >
               {isActionLoading ? (
-                <Loader className="h-4 w-4 animate-spin mr-2" />
+                <Loader className="h-4 w-4 animate-spin mr-2 text-white" />
               ) : (
                 <Check className="h-4 w-4 mr-1" />
               )}

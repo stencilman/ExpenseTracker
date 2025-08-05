@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useExpenses } from "@/components/providers/ExpenseProvider";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -32,57 +33,49 @@ export function DeleteExpenseDialog({
   onSuccess,
 }: DeleteExpenseDialogProps) {
   const router = useRouter();
+  const { deleteExpense } = useExpenses();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Check if we're dealing with multiple expenses
+  // Determine if multiple expenses are being deleted
   const isMultiple = Array.isArray(expenseIds) && expenseIds.length > 1;
-  const count = isMultiple ? expenseIds.length : 1;
+  const count = isMultiple ? (expenseIds as (number | string)[]).length : 1;
 
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      let response;
-
+      // 1. Delete the expense(s)
       if (isMultiple) {
-        // Bulk delete
-        response = await fetch(`/api/expenses/bulk-delete`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            expenseIds: expenseIds,
-          }),
-        });
-
-        if (!response.ok) throw new Error(`Error: ${response.status}`);
-        
-        const result = await response.json();
-        toast.success(`Successfully deleted ${result.successCount} expense${result.successCount !== 1 ? 's' : ''}`);
+        await Promise.all(
+          (expenseIds as (number | string)[]).map((id) =>
+            deleteExpense(String(id))
+          )
+        );
+        toast.success(
+          `Successfully deleted ${count} expense${count !== 1 ? "s" : ""}`
+        );
       } else {
-        // Single delete
         const id = Array.isArray(expenseIds) ? expenseIds[0] : expenseIds;
-        response = await fetch(`/api/expenses/${id}`, {
-          method: "DELETE",
-        });
-
-        if (!response.ok) throw new Error(`Error: ${response.status}`);
-        
+        await deleteExpense(String(id));
         toast.success("Expense deleted successfully");
       }
 
-      // Call the onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess();
-      } else {
-        // Default behavior: refresh the page
-        router.refresh();
-      }
-
-      // Close the dialog
+      // 2. Close the dialog after deletion succeeds
       onOpenChange(false);
+
+      // 3. After the dialog close animation, fire the success callback or fallback refresh
+      const DIALOG_CLOSE_DELAY = 300;
+      setTimeout(() => {
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          // Fallback: ensure any stale data is cleared (when dialog used from list view)
+          router.refresh();
+        }
+      }, DIALOG_CLOSE_DELAY);
     } catch (error) {
       console.error("Error deleting expense(s):", error);
-      toast.error(`Failed to delete expense${isMultiple ? 's' : ''}`);
-    } finally {
+      toast.error(`Failed to delete expense${isMultiple ? "s" : ""}`);
+      // Reset loader state on error so user can try again or cancel
       setIsDeleting(false);
     }
   };
@@ -101,7 +94,8 @@ export function DeleteExpenseDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
+          {/* Use a regular button instead of AlertDialogAction to keep the dialog open until deletion completes */}
+          <Button
             onClick={handleDelete}
             className="bg-red-500 hover:bg-red-600"
             disabled={isDeleting}
@@ -114,7 +108,7 @@ export function DeleteExpenseDialog({
             ) : (
               "Delete"
             )}
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

@@ -743,7 +743,7 @@ export default function AddOrEditExpense({
                   >
                     {isLoading ? (
                       <>
-                        <Loader size="sm" className="mr-2" />
+                        <Loader size="sm" className="mr-2 text-white" />
                         Saving...
                       </>
                     ) : isEditMode ? (

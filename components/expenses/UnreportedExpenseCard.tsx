@@ -208,14 +208,6 @@ export default function UnreportedExpenseCard({
                       >
                         Add To Report
                       </Button>
-
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:bg-gray-100"
-                      >
-                        <MoreHorizontal className="h-4 w-4 text-gray-600" />
-                      </Button>
                     </div>
                   </div>
                 </div>

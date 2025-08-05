@@ -289,7 +289,16 @@ export default function ExpenseDetail({
 
   // Handle successful deletion
   const handleDeleteSuccess = () => {
-    router.push("/user/expenses/all");
+    // Ensure fresh data reload
+    router.refresh();
+
+    // Determine destination based on whether expense is reported
+    const destination = expense.reportId
+      ? `/user/expenses/all?refresh=${Date.now()}`
+      : `/user/expenses/unreported?refresh=${Date.now()}`;
+
+    // Navigate without adding a new entry to history
+    router.replace(destination);
   };
 
   // Content to be rendered

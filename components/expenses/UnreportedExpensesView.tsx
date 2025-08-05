@@ -73,18 +73,18 @@ export default function UnreportedExpensesView({
       setIsBulkAddToReportOpen(true);
     }
   };
-  
+
   // Handle bulk delete expenses
   const handleBulkDelete = () => {
     if (selectedExpenses.size === 0) return;
     setIsDeleteDialogOpen(true);
   };
-  
+
   // Handle successful bulk deletion
   const handleDeleteSuccess = () => {
     // Clear selected expenses
     setSelectedExpenses(new Set());
-    
+
     // Refresh the page to update the list
     router.refresh();
   };
@@ -186,18 +186,19 @@ export default function UnreportedExpensesView({
           </Button>
         </div>
       )}
-      {selectedExpenses.size === 0 && processedUnreportedExpenses.length > 0 && (
-        <div className="flex items-center space-x-2">
-          <Button
-            onClick={handleSelectAll}
-            variant="ghost"
-            size="sm"
-            className="text-gray-500 hover:text-gray-700"
-          >
-            Select All
-          </Button>
-        </div>
-      )}
+      {selectedExpenses.size === 0 &&
+        processedUnreportedExpenses.length > 0 && (
+          <div className="flex items-center space-x-2">
+            <Button
+              onClick={handleSelectAll}
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-gray-700"
+            >
+              Select All
+            </Button>
+          </div>
+        )}
 
       {isLoading ? (
         <div className="flex justify-center items-center py-20">
@@ -250,7 +251,7 @@ export default function UnreportedExpensesView({
         isOpen={isBulkAddToReportOpen}
         onClose={() => setIsBulkAddToReportOpen(false)}
       />
-      
+
       {/* Bulk Delete Dialog */}
       <DeleteExpenseDialog
         expenseIds={Array.from(selectedExpenses)}

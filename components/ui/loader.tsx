@@ -30,7 +30,7 @@ export function Loader({
       )}
     >
       <Loader2
-        className={cn("animate-spin text-blue-600", sizeClasses[size])}
+        className={cn("animate-spin", sizeClasses[size], className ? undefined : "text-blue-600")}
       />
       {text && <p className="text-sm text-slate-600">{text}</p>}
     </div>
