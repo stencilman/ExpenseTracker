@@ -381,9 +381,11 @@ export default function ReportDetailPage() {
               <TabsList className="mb-4">
                 <TabsTrigger value="expenses" className="relative w-64">
                   EXPENSES
-                  <span className="absolute -top-1 -right-0 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {report.expenses.length}
-                  </span>
+                  {report.expenses.length > 0 && (
+                    <span className="absolute -top-1 -right-0 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {report.expenses.length}
+                    </span>
+                  )}
                 </TabsTrigger>
                 <TabsTrigger value="history">HISTORY</TabsTrigger>
               </TabsList>
