@@ -35,19 +35,44 @@ export async function POST(req: Request) {
     // Log for debugging
     console.log("Processing report IDs:", reportIdsInt);
     
-    // Update all reports to APPROVED status
-    const updatedReports = await db.report.updateMany({
+    // First, get all the reports that need to be updated
+    const reportsToUpdate = await db.report.findMany({
       where: {
         id: {
           in: reportIdsInt,
         },
         status: ReportStatus.SUBMITTED, // Only approve reports that are in SUBMITTED status
       },
+    });
+    
+    // Get the IDs of reports that are eligible for approval
+    const eligibleReportIds = reportsToUpdate.map(report => report.id);
+    
+    // Update all eligible reports to APPROVED status
+    const updatedReports = await db.report.updateMany({
+      where: {
+        id: {
+          in: eligibleReportIds,
+        },
+      },
       data: {
         status: ReportStatus.APPROVED,
         approvedAt: new Date(),
       },
     });
+    
+    // For each report, update the approver relationship individually
+    // This is needed because updateMany doesn't support relations
+    await Promise.all(
+      eligibleReportIds.map(reportId =>
+        db.report.update({
+          where: { id: reportId },
+          data: {
+            approver: { connect: { id: session.user.id } },
+          },
+        })
+      )
+    );
 
     // Create history entries for each report
     await Promise.all(

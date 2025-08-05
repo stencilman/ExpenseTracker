@@ -772,6 +772,7 @@ export default function AddOrEditExpense({
                           </h4>
                           <Button
                             variant="ghost"
+                            type="button"
                             size="sm"
                             className="h-6 w-6 p-0"
                             onClick={() => {
@@ -809,6 +810,7 @@ export default function AddOrEditExpense({
                                 <Button
                                   variant="destructive"
                                   size="sm"
+                                  type="button"
                                   className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full opacity-0 group-hover:opacity-100"
                                   onClick={() => removeExistingReceipt(index)}
                                 >

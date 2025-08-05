@@ -95,10 +95,7 @@ export default function AllReportsPage() {
             "dd/MM/yyyy"
           )}`;
         } else if (report.endDate) {
-          dateRange = `Until ${format(
-            new Date(report.endDate),
-            "dd/MM/yyyy"
-          )}`;
+          dateRange = `Until ${format(new Date(report.endDate), "dd/MM/yyyy")}`;
         }
 
         // Calculate the correct total amount based on expenses
@@ -180,14 +177,8 @@ export default function AllReportsPage() {
         </div>
       ) : (
         <>
-          <ReportsTable
-            data={reports}
-            enableRowSelection={true}
-            onSelectedRowsChange={handleSelectedRowsChange}
-            variant="page"
-            showPagination={false}
-          />
-          
+          <ReportsTable data={reports} variant="page" showPagination={false} />
+
           {/* Server-side pagination controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-end space-x-2 py-4">
@@ -206,7 +197,9 @@ export default function AllReportsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage >= totalPages}
               >
                 <ChevronRight className="h-4 w-4" />

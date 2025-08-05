@@ -151,7 +151,18 @@ export default function PendingReportsPage() {
   const handleBulkSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const reportIds = selectedReports.map((r) => parseInt(r.id, 10));
+      // Filter out reports with no expenses
+      const reportsWithExpenses = selectedReports.filter(report => report.expenseCount > 0);
+      const reportsWithoutExpenses = selectedReports.filter(report => report.expenseCount === 0);
+      
+      if (reportsWithExpenses.length === 0) {
+        toast.error("None of the selected reports have expenses. Please add expenses before submitting.");
+        setIsSubmitting(false);
+        return;
+      }
+      
+      // Only submit reports that have expenses
+      const reportIds = reportsWithExpenses.map((r) => parseInt(r.id, 10));
       const response = await fetch("/api/reports/bulk-submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -162,9 +173,17 @@ export default function PendingReportsPage() {
         throw new Error("Failed to submit reports");
       }
 
-      toast.success(
-        `${selectedReports.length} report(s) submitted successfully.`
-      );
+      // Show appropriate success message
+      if (reportsWithoutExpenses.length > 0) {
+        toast.success(
+          `${reportsWithExpenses.length} report(s) submitted successfully. ${reportsWithoutExpenses.length} report(s) were skipped because they have no expenses.`
+        );
+      } else {
+        toast.success(
+          `${reportsWithExpenses.length} report(s) submitted successfully.`
+        );
+      }
+      
       setSelectedReports([]);
       // Refresh the list of reports
       fetchReports(1); // Reset to first page after submission
@@ -217,7 +236,7 @@ export default function PendingReportsPage() {
                   {selectedReports.length !== 1 ? "s" : ""} selected
                 </span>
                 <Button
-                  onClick={() => setSelectedReports([])}
+                  onClick={handleDeselectAll}
                   variant="ghost"
                   size="sm"
                   className="text-gray-500 hover:text-gray-700"
@@ -228,7 +247,8 @@ export default function PendingReportsPage() {
                   variant="outline"
                   className="border-blue-500 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
                   onClick={handleBulkSubmit}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || selectedReports.every(report => report.expenseCount === 0)}
+                  title={selectedReports.every(report => report.expenseCount === 0) ? "Reports must have at least one expense to submit" : ""}
                 >
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
