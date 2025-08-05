@@ -11,7 +11,9 @@ import { ExpenseWithUI } from "@/types/expense";
 export interface Report {
   id: string;
   submitter: string;
+  submitterEmail?: string;
   approver: string | undefined;
+  approverEmail?: string;
   iconType: "calendar" | "file-text" | "receipt" | "credit-card";
   title: string;
   dateRange: string;

@@ -50,6 +50,13 @@ export async function GET(
       approvedAt: report.approvedAt,
       rejectedAt: report.rejectedAt,
       reimbursedAt: report.reimbursedAt,
+      // Include user and approver information for email display
+      user: {
+        email: report.user.email
+      },
+      approver: report.approver ? {
+        email: report.approver.email
+      } : null
     };
     return jsonResponse({ data: enrichedReport });
   } catch (error) {

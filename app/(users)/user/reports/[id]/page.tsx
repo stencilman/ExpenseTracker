@@ -506,10 +506,17 @@ export default function ReportDetailPage() {
                     : report.user.firstName.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="text-sm">
-                {report.user.approver
-                  ? `${report.user.approver.firstName} ${report.user.approver.lastName}`
-                  : `${report.user.firstName} ${report.user.lastName}`}
+              <div className="flex flex-col">
+                <div className="text-sm font-medium">
+                  {report.user.approver
+                    ? `${report.user.approver.firstName} ${report.user.approver.lastName}`
+                    : `${report.user.firstName} ${report.user.lastName}`}
+                </div>
+                <div className="text-xs text-gray-500">
+                  {report.user.approver
+                    ? report.user.approver.email
+                    : report.user.email}
+                </div>
               </div>
             </div>
 

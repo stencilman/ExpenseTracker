@@ -104,7 +104,9 @@ export function formatReportForUI(report: ReportWithRelations): ReportUI {
   return {
     id: report.id.toString(),
     submitter: submitterName,
+    submitterEmail: report.user.email,
     approver: approverName,
+    approverEmail: report.approver?.email,
     iconType: "file-text",
     title: report.title,
     dateRange,
