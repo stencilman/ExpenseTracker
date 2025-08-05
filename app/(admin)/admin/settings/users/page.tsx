@@ -167,7 +167,7 @@ export default function UsersPage() {
           <Button
             className="flex items-center gap-1"
             onClick={() => setIsAddNewUserDialogOpen(true)}
-            disabled={true}
+            disabled={false}
           >
             <PlusCircle className="h-4 w-4" />
             <span>New User</span>

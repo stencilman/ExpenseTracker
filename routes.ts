@@ -10,7 +10,7 @@ export const publicRoutes = ["/"];
  * These routes will redirect login user to /settings
  * @type {string[]}
  */
-export const authRoutes = ["/auth/login", "/auth/register"];
+export const authRoutes = ["/auth/login", "/auth/register", "/auth/error"];
 
 /**
  * The prefix for the api routes that are used to authentication
@@ -46,10 +46,10 @@ export const DEFAULT_USER_REDIRECT = "/user/dashboard";
  * The default redirect url for the login user with ADMIN role
  * @type {string}
  */
-export const DEFAULT_ADMIN_REDIRECT = "/admin/settings";
+export const DEFAULT_ADMIN_REDIRECT = "/admin/dashboard";
 
 /**
  * The default redirect url for the login user
  * @type {string}
  */
-export const DEFAULT_LOGIN_REDIRECT = "/user/settings";
+export const DEFAULT_LOGIN_REDIRECT = "/user/dashboard";

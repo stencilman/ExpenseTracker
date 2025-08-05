@@ -7,14 +7,14 @@ import { z } from "zod";
 import { getUserByEmail } from "@/data/user";
 
 export async function register(values: z.infer<typeof RegisterSchema>) {
-    const validateFields = RegisterSchema.safeParse(values);
-    console.log(validateFields);
+  const validateFields = RegisterSchema.safeParse(values);
+  console.log(validateFields);
 
   if (!validateFields.success) {
     return { error: "Invalid fields" };
   }
 
-  const {email, password, reEnterPassword, firstName, lastName} = values;
+  const { email, password, reEnterPassword, firstName, lastName } = values;
 
   const hashedPassword = await bcrypt.hash(reEnterPassword, 10);
 
@@ -24,17 +24,19 @@ export async function register(values: z.infer<typeof RegisterSchema>) {
     return { error: "User already exists" };
   }
 
-   await db.user.create({
+  const name = `${firstName} ${lastName}`;
+
+  await db.user.create({
     data: {
       email,
+      name,
       password: hashedPassword,
       firstName,
       lastName,
     },
   });
 
-//   Todo: send verification token email
+  //   Todo: send verification token email
 
   return { success: "User created" };
 }
-

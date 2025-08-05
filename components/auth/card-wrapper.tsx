@@ -10,6 +10,8 @@ import {
 } from "@/components/ui/card";
 import { Header } from "@/components/auth/header";
 import { Social } from "@/components/auth/social";
+import { Button } from "../ui/button";
+import Link from "next/link";
 
 interface CardWrapperProps {
   children: React.ReactNode;
@@ -25,6 +27,8 @@ export const CardWrapper = ({
   headerLabel,
   showSocial,
   headerMessage,
+  backButtonHref,
+  backButtonLabel,
 }: CardWrapperProps) => {
   return (
     <Card className="w-[80%] sm:w-[70%] md:w-[50%] max-w-[430px]">
@@ -35,6 +39,13 @@ export const CardWrapper = ({
       {showSocial && (
         <CardFooter>
           <Social />
+        </CardFooter>
+      )}
+      {backButtonHref && backButtonLabel && (
+        <CardFooter>
+          <Button variant="outline" className="w-full">
+            <Link href={backButtonHref}>{backButtonLabel}</Link>
+          </Button>
         </CardFooter>
       )}
     </Card>

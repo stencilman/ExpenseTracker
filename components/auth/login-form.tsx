@@ -25,11 +25,18 @@ import { FormSuccess } from "@/components/form-success";
 import { useState, useTransition } from "react";
 import Link from "next/link";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { LoginSchema } from "@/schemas";
 import { login } from "@/actions/login";
 
 export const LoginForm = () => {
+  const searchParams = useSearchParams();
+
+  const urlError =
+    searchParams.get("error") === "OAuthAccountNotLinked"
+      ? "Email already in use"
+      : "";
+
   const router = useRouter();
   const [transition, startTransition] = useTransition();
 
@@ -69,8 +76,9 @@ export const LoginForm = () => {
     <Suspense>
       <CardWrapper
         headerLabel="Welcome to Expense Tracker"
-        // backButtonHref="/register"
+        // backButtonHref="/auth/register"
         // backButtonLabel="Don't have an account?"
+        showSocial={true}
       >
         {/* <CompanyLoginForm /> */}
         <Form {...form}>
@@ -115,7 +123,7 @@ export const LoginForm = () => {
                           onClick={() => {
                             setShowPassword(true);
                           }}
-                          className="cursor-pointer absolute top-[15px] right-[13px]"
+                          className="cursor-pointer absolute top-[14px] right-[13px] w-4 h-4"
                         />
 
                         {showPassword && (
@@ -123,7 +131,7 @@ export const LoginForm = () => {
                             onClick={() => {
                               setShowPassword(false);
                             }}
-                            className="cursor-pointer absolute top-[15px] right-[13px]"
+                            className="cursor-pointer absolute top-[14px] right-[13px] w-4 h-4"
                           />
                         )}
                       </div>
@@ -136,12 +144,12 @@ export const LoginForm = () => {
 
             {success && <FormSuccess message={success} />}
 
-            {error && <FormError message={error} />}
+            {error && <FormError message={error || urlError} />}
 
             <div className=" w-full gap-y-4 flex-wrap">
               <Button
                 disabled={transition}
-                className=""
+                className="w-full"
                 size="default"
                 type="submit"
               >

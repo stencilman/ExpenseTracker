@@ -1,4 +1,4 @@
-"use client";
+
 
 import React from "react";
 import {
@@ -9,13 +9,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { User } from "lucide-react";
-import { useIsAdmin } from "@/hooks/use-current-user";
+import { useCurrentUser, useIsAdmin } from "@/hooks/use-current-user";
 import Link from "next/link";
 import { handleSignOut } from "@/actions/signout";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useSession } from "next-auth/react";
 
 const NavbarOptions = () => {
   const isAdmin = useIsAdmin();
-
+  const session = useSession();
+  const user = session.data?.user;
+  console.log("user", user);
   return (
     <>
       <DropdownMenu>
@@ -25,7 +29,13 @@ const NavbarOptions = () => {
             size="icon"
             className="rounded-full bg-slate-200"
           >
-            <User className="h-5 w-5 text-slate-600" />
+            {/* <User className="h-5 w-5 text-slate-600" /> */}
+            <Avatar>
+              <AvatarImage src={user?.image || ""} />
+              <AvatarFallback className="capitalize">
+                {user?.name?.charAt(0)}
+              </AvatarFallback>
+            </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

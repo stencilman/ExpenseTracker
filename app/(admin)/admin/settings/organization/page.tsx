@@ -52,7 +52,7 @@ const organizationSchema = z.object({
   legalName: z
     .string()
     .min(2, { message: "Legal name must be at least 2 characters" }),
-  email: z.email({ message: "Invalid email address" }),
+  email: z.string().email({ message: "Invalid email address" }),
   phone: z.string().min(5, { message: "Phone number is required" }),
   website: z
     .string()

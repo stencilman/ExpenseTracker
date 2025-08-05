@@ -136,6 +136,7 @@ export const RegisterForm = () => {
         headerLabel="Create an account" // Header label for the card
         backButtonHref="/auth/login" // Link for the back button
         backButtonLabel="Already have an account?" // Label for the back button
+        showSocial={true}
       >
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -227,7 +228,7 @@ export const RegisterForm = () => {
                               showPassword ? "Hide password" : "Show password"
                             }
                           >
-                            {showPassword ? <EyeOff /> : <Eye />}{" "}
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}{" "}
                             {/* Icon changes based on state */}
                           </button>
                         </div>
@@ -265,7 +266,7 @@ export const RegisterForm = () => {
                                 : "Show password"
                             }
                           >
-                            {showReEnterPassword ? <EyeOff /> : <Eye />}{" "}
+                            {showReEnterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}{" "}
                             {/* Icon changes based on state */}
                           </button>
                         </div>
@@ -284,7 +285,7 @@ export const RegisterForm = () => {
 
             <div className="flex justify-between items-center w-full gap-y-4 flex-wrap">
               {/* Link to login page */}
-              <Button className="px-0 md:px-4 gap-1" asChild variant="link">
+              {/* <Button className="px-0 md:px-4 gap-1" asChild variant="link">
                 <Link
                   className={`text-sm font-normal text-black ${
                     isPending ? "pointer-events-none" : ""
@@ -294,12 +295,12 @@ export const RegisterForm = () => {
                   Already have an account?
                   <span className="font-semibold hidden sm:block">Login</span>
                 </Link>
-              </Button>
+              </Button> */}
 
               {/* Submit button for registration */}
               <Button
                 disabled={isPending} // Disable button during submission
-                className=""
+                className="w-full"
                 size="default"
                 type="submit"
                 variant="default"

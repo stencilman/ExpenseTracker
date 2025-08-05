@@ -48,7 +48,7 @@ import {
 // Define the form schema with Zod
 const userFormSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters" }),
-  email: z.email({ message: "Invalid email address" }),
+  email: z.string().email({ message: "Invalid email address" }),
   role: z.enum(["ADMIN", "SUBMITTER"]),
   approverId: z.string().optional(),
 });
@@ -79,7 +79,9 @@ export default function UserFormDialog({
     approverId: "",
   },
 }: UserFormDialogProps) {
-  const [adminUsers, setAdminUsers] = useState<{ id: string; name: string; email: string }[]>([]);
+  const [adminUsers, setAdminUsers] = useState<
+    { id: string; name: string; email: string }[]
+  >([]);
   const [isLoadingAdmins, setIsLoadingAdmins] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
@@ -88,14 +90,14 @@ export default function UserFormDialog({
     const fetchAdminUsers = async () => {
       setIsLoadingAdmins(true);
       try {
-        const response = await fetch('/api/admin/users/admins');
+        const response = await fetch("/api/admin/users/admins");
         if (!response.ok) {
-          throw new Error('Failed to fetch admin users');
+          throw new Error("Failed to fetch admin users");
         }
         const data = await response.json();
         setAdminUsers(data.data || []);
       } catch (error) {
-        console.error('Error fetching admin users:', error);
+        console.error("Error fetching admin users:", error);
       } finally {
         setIsLoadingAdmins(false);
       }
@@ -116,8 +118,8 @@ export default function UserFormDialog({
     onOpenChange(false);
     form.reset();
   };
-  
-  const watchRole = form.watch('role');
+
+  const watchRole = form.watch("role");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -192,10 +194,10 @@ export default function UserFormDialog({
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel>Submits to</FormLabel>
-                    <Select 
-                      value={field.value} 
+                    <Select
+                      value={field.value}
                       onValueChange={(value) => {
-                        console.log('Selected approver ID:', value);
+                        console.log("Selected approver ID:", value);
                         field.onChange(value);
                       }}
                     >

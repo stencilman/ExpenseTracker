@@ -518,7 +518,9 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 items-center">
                   <div className="text-sm text-slate-500">Name</div>
                   <div>
-                    {userSettings?.firstName} {userSettings?.lastName}
+                    {userSettings?.firstName && userSettings?.lastName
+                      ? `${userSettings?.firstName} ${userSettings?.lastName}`
+                      : userSettings?.name || "-"}
                   </div>
                 </div>
 

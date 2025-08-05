@@ -25,6 +25,20 @@ export default auth((req) => {
   console.log("Route: ", pathname);
   console.log("Is logged in: ", isLoggedIn);
 
+  console.log("session----->", session);
+
+  let adminEmails 
+  
+  if(session?.user?.email?.includes("prabal") ||
+    // session?.user?.email?.includes("abdul") ||
+    session?.user?.email?.includes("arjun") ||
+    session?.user?.email?.includes("admin")
+  ){
+    adminEmails = true;
+  }
+
+  console.log("Admin emails: ", adminEmails);
+
   const role = session?.user?.role;
   console.log("User role: ", role);
 
@@ -42,7 +56,7 @@ export default auth((req) => {
   // Redirect logged-in users from auth routes to the appropriate page
   if (isAuthRoute) {
     if (isLoggedIn) {
-      if (role === UserRole.ADMIN) {
+      if (role === UserRole.ADMIN || adminEmails) {
         return Response.redirect(new URL(DEFAULT_ADMIN_REDIRECT, nextUrl));
       }
       return Response.redirect(new URL(DEFAULT_USER_REDIRECT, nextUrl));

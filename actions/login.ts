@@ -2,7 +2,7 @@
 
 import { LoginSchema } from "@/schemas";
 import { z } from "zod";
-import { signIn } from "@/auth";
+import { auth, signIn } from "@/auth";
 import { DEFAULT_ADMIN_REDIRECT, DEFAULT_USER_REDIRECT } from "@/routes";
 import { AuthError } from "next-auth";
 import { getUserByEmail } from "@/data/user";
@@ -10,6 +10,10 @@ import { UserRole } from "@prisma/client";
 
 export async function login(values: z.infer<typeof LoginSchema>) {
   const validateFields = LoginSchema.safeParse(values);
+
+  const session = await auth();
+
+  console.log("session-----> AUTH ACTION", session);
 
   if (!validateFields.success) {
     return { error: "Invalid fields" };
@@ -23,6 +27,10 @@ export async function login(values: z.infer<typeof LoginSchema>) {
 
     if (!user) {
       return { error: "Invalid credentials!" };
+    }
+
+    if (!user.emailVerified) {
+      return { error: "Verify pending, admin needs to verify your email" };
     }
 
     // Determine redirect based on user role

@@ -15,12 +15,13 @@ enum UserRole {
 
 model User {
   id            String    @id @default(cuid())
-  firstName     String
-  lastName      String
-  email         String    @unique
-  password      String
-  image         String?
+  name          String?
+  firstName     String?
+  lastName      String?
+  email         String?    @unique
   emailVerified DateTime?
+  password      String?
+  image         String?
   
   // Additional user settings fields
   employeeId    String?   // Employee ID
@@ -37,7 +38,7 @@ model User {
   subordinates  User[]    @relation("UserApprover") // Users who submit to this user
   
   // Relations
-  Account       Account[]
+  accounts       Account[]
   expenses      Expense[]
   reports       Report[]                // Reports created by this user
   approvedReports Report[] @relation("ReportApprovals") // Reports approved by this user

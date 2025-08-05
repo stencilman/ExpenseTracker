@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
       where: { id: user.id },
       select: {
         id: true,
+        name: true,
         firstName: true,
         lastName: true,
         email: true,
@@ -91,6 +92,7 @@ export async function PATCH(req: NextRequest) {
     const updateData: any = {
       firstName: validatedData.firstName,
       lastName: validatedData.lastName,
+      name: `${validatedData.firstName} ${validatedData.lastName}`,
       employeeId: validatedData.employeeId,
       mobile: validatedData.mobile,
       department: validatedData.department,
@@ -113,6 +115,7 @@ export async function PATCH(req: NextRequest) {
         id: true,
         firstName: true,
         lastName: true,
+        name: true,
         email: true,
         image: true,
         employeeId: true,
