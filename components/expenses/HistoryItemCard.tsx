@@ -57,11 +57,11 @@ export default function HistoryItemCard({
   const getEventTitle = () => {
     switch (eventType) {
       case "APPROVED":
-        return "Expense Approved";
+        return report ? "Report Approved" : "Expense Approved";
       case "REJECTED":
-        return "Expense Rejected";
+        return report ? "Report Rejected" : "Expense Rejected";
       case "REIMBURSED":
-        return "Expense Reimbursed";
+        return report ? "Report Reimbursed" : "Expense Reimbursed";
       case "SUBMITTED":
         return "Report Submitted";
       default:

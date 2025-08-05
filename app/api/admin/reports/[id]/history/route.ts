@@ -12,6 +12,13 @@ export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
+  // Access params before awaits
+  const reportIdParam = params.id;
+  const reportId = parseInt(reportIdParam);
+  if (isNaN(reportId)) {
+    return errorResponse("Invalid report ID", 400);
+  }
+  
   try {
     // Check authentication and admin role
     const session = await auth();
@@ -23,11 +30,7 @@ export async function GET(
     if (session.user.role !== "ADMIN") {
       return errorResponse("Forbidden: Admin access required", 403);
     }
-
-    const reportId = parseInt(params.id);
-    if (isNaN(reportId)) {
-      return errorResponse("Invalid report ID", 400);
-    }
+    // Already checked reportId above
 
     // Check if the report exists
     const report = await getReportById(reportId);
@@ -64,6 +67,10 @@ export async function GET(
             name: `${item.performedBy.firstName} ${item.performedBy.lastName}`,
           }
         : null,
+      report: {
+        id: report.id,
+        title: report.title,
+      },
     }));
 
     return jsonResponse({ data: mappedHistory });

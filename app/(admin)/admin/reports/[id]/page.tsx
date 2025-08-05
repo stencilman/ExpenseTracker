@@ -79,7 +79,7 @@ export default function ReportDetailPage() {
 
         const data = await response.json();
         const reportData = data.data;
-        
+
         // Debug report data structure
         console.log("Report data:", reportData);
 
@@ -568,6 +568,7 @@ export default function ReportDetailPage() {
                           eventDate={event.eventDate}
                           details={event.details}
                           performedBy={event.performedBy}
+                          report={event.report}
                         />
                       ))}
                     </div>
@@ -598,11 +599,11 @@ export default function ReportDetailPage() {
             <div className="flex items-center">
               <div className="bg-yellow-100 rounded-full h-6 w-6 flex items-center justify-center mr-2">
                 <span className="text-xs font-bold text-yellow-800">
-                  {report.submitter ? report.submitter[0].toUpperCase() : ''}
+                  {report.submitter ? report.submitter[0].toUpperCase() : ""}
                 </span>
               </div>
               <div className="text-sm">
-                {report.submitter || 'Unknown User'}
+                {report.submitter || "Unknown User"}
               </div>
             </div>
 
