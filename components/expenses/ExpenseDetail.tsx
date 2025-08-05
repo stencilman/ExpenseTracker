@@ -57,8 +57,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-
-
 // History event interface
 interface ExpenseHistoryEvent {
   id: number;
@@ -148,16 +146,24 @@ export interface ExpenseDetailProps {
   readOnly?: boolean;
 }
 
-export default function ExpenseDetail({ expense, onClose, hideClose = false, readOnly = false }: ExpenseDetailProps) {
+export default function ExpenseDetail({
+  expense,
+  onClose,
+  hideClose = false,
+  readOnly = false,
+}: ExpenseDetailProps) {
   // An expense is locked only if it belongs to a report that is APPROVED or REIMBURSED
   // We need to fetch the report status when the component loads
   const [reportStatus, setReportStatus] = useState<string | null>(null);
-  const [isLoadingStatus, setIsLoadingStatus] = useState<boolean>(!!expense.reportId);
-  
-  const isLocked = readOnly || 
-    (expense.reportId && 
-     (reportStatus === 'APPROVED' || reportStatus === 'REIMBURSED'));
-     
+  const [isLoadingStatus, setIsLoadingStatus] = useState<boolean>(
+    !!expense.reportId
+  );
+
+  const isLocked =
+    readOnly ||
+    (expense.reportId &&
+      (reportStatus === "APPROVED" || reportStatus === "REIMBURSED"));
+
   // Fetch report status if expense belongs to a report
   useEffect(() => {
     if (expense.reportId) {
@@ -169,21 +175,20 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
             const reportData = await response.json();
             setReportStatus(reportData.status);
           } else {
-            console.error('Failed to fetch report status');
+            console.error("Failed to fetch report status");
           }
         } catch (error) {
-          console.error('Error fetching report status:', error);
+          console.error("Error fetching report status:", error);
         } finally {
           setIsLoadingStatus(false);
         }
       };
-      
+
       fetchReportStatus();
     } else {
       setIsLoadingStatus(false);
     }
   }, [expense.reportId]);
-
 
   // States for component
   const router = useRouter();
@@ -255,7 +260,9 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
     setHistoryError(null);
 
     try {
-      const historyEndpoint = readOnly ? `/api/admin/expenses/${expenseId}/history` : `/api/expenses/${expenseId}/history`;
+      const historyEndpoint = readOnly
+        ? `/api/admin/expenses/${expenseId}/history`
+        : `/api/expenses/${expenseId}/history`;
       const response = await fetch(historyEndpoint);
 
       if (!response.ok) {
@@ -321,8 +328,8 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
           isOpen={isAddToReportOpen}
           onClose={() => {
             setIsAddToReportOpen(false);
-            // Don't close the main detail panel when dialog is closed
-            // Only close the main panel on successful report addition
+            // Redirect to the all expenses detail page with a query param to indicate refresh
+            router.push(`/user/expenses/all/${expense.id}?refresh=true`);
           }}
         />
       )}
@@ -381,7 +388,9 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
             {isLoadingStatus ? (
               <div className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm text-muted-foreground">Loading...</span>
+                <span className="text-sm text-muted-foreground">
+                  Loading...
+                </span>
               </div>
             ) : !isLocked ? (
               <>
@@ -543,13 +552,15 @@ export default function ExpenseDetail({ expense, onClose, hideClose = false, rea
                 <div className="text-sm text-muted-foreground flex items-center gap-2">
                   <span>
                     {expense.date
-                       ? typeof expense.date === "string"
-                         ? (() => {
-                             const parsed = new Date(expense.date);
-                             return isNaN(parsed.getTime()) ? expense.date : format(parsed, "PPP");
-                           })()
-                         : format(new Date(expense.date), "PPP")
-                       : "-"}
+                      ? typeof expense.date === "string"
+                        ? (() => {
+                            const parsed = new Date(expense.date);
+                            return isNaN(parsed.getTime())
+                              ? expense.date
+                              : format(parsed, "PPP");
+                          })()
+                        : format(new Date(expense.date), "PPP")
+                      : "-"}
                   </span>
                 </div>
                 <h2 className="text-lg md:text-xl font-semibold mt-1 md:mt-2">

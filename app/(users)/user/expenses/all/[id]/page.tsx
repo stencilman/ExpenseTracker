@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useExpenses } from "@/components/providers/ExpenseProvider";
 import { useLoading } from "@/components/providers/LoadingProvider";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,10 @@ import ExpenseDetail from "@/components/expenses/ExpenseDetail";
 export default function ExpenseDetailPage() {
   const router = useRouter();
   const { id } = useParams();
-  const { allExpenses, stopLoading, isLoading } = useExpenses();
+  const searchParams = useSearchParams();
+  const needsRefresh = searchParams.get('refresh') === 'true';
+  const [hasRefreshed, setHasRefreshed] = useState(false);
+  const { allExpenses, stopLoading, isLoading, fetchExpenses } = useExpenses();
   const { stopLoading: stopPageLoading } = useLoading();
 
   // Find the expense with the matching ID
@@ -39,10 +42,31 @@ export default function ExpenseDetailPage() {
     return false;
   });
 
+  // Handle refetching when needed and stop loading indicators
   useEffect(() => {
-    stopLoading();
-    stopPageLoading();
-  }, [stopLoading, stopPageLoading]);
+    const handleRefreshIfNeeded = async () => {
+      // If we need to refresh and haven't already done so
+      if (needsRefresh && !hasRefreshed) {
+        try {
+          // Set flag to prevent multiple refreshes
+          setHasRefreshed(true);
+          // Refetch expenses
+          await fetchExpenses();
+          // Remove the refresh param from the URL without triggering a navigation
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        } catch (error) {
+          console.error("Error refetching expenses:", error);
+        }
+      }
+      
+      // Always stop loading indicators
+      stopLoading();
+      stopPageLoading();
+    };
+    
+    handleRefreshIfNeeded();
+  }, [needsRefresh, hasRefreshed, fetchExpenses, stopLoading, stopPageLoading]);
 
   const handleBack = () => {
     router.push("/user/expenses/all");

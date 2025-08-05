@@ -101,7 +101,10 @@ export default function ReportDetailPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   // A report is locked once approved or reimbursed
-  const isLocked = report ? (report.status === ReportStatus.APPROVED || report.status === ReportStatus.REIMBURSED) : false;
+  const isLocked = report
+    ? report.status === ReportStatus.APPROVED ||
+      report.status === ReportStatus.REIMBURSED
+    : false;
 
   // History state
   const [historyData, setHistoryData] = useState<ReportHistoryItem[]>([]);
@@ -353,17 +356,13 @@ export default function ReportDetailPage() {
                     <Pencil className="h-4 w-4 mr-2" />
                     Edit Report
                   </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
+                  <DropdownMenuItem onClick={() => setDeleteDialogOpen(true)}>
                     <Trash2 className="h-4 w-4 mr-2" />
                     Delete Report
                   </DropdownMenuItem>
                 </>
               ) : (
-                <DropdownMenuItem disabled>
-                  Report locked
-                </DropdownMenuItem>
+                <DropdownMenuItem disabled>Report locked</DropdownMenuItem>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
@@ -421,10 +420,6 @@ export default function ReportDetailPage() {
                         (-) Rs.{report.nonReimbursableAmount.toLocaleString()}
                         .00
                       </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Applied Advance Amount</span>
-                      <span className="font-medium">(-) 0.00</span>
                     </div>
                     <div className="flex justify-between text-sm font-medium pt-2 border-t">
                       <span>Amount to be Reimbursed</span>

@@ -538,10 +538,6 @@ export default function ReportDetailPage() {
                       (-) {formatCurrency(getNonReimbursableAmount())}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Applied Advance Amount</span>
-                    <span className="font-medium">(-) 0.00</span>
-                  </div>
                   <div className="flex justify-between text-lg font-bold pt-2 border-t">
                     <span>Amount to be Reimbursed</span>
                     <span>{formatCurrency(getAmountToBeReimbursed())}</span>
