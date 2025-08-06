@@ -32,10 +32,11 @@ export const {
       // console.log("profile----->", profile);
       // console.log("isNewUser----->", isNewUser);
       if (
-        user.email?.includes("prabal") ||
+        user.email?.includes("prabal@fastcode.ai") ||
         // user.email?.includes("abdul") ||
-        user.email?.includes("arjun") ||
-        user.email?.includes("admin")
+        user.email?.includes("priyanka@fastcode.ai") ||
+        user.email?.includes("arjun@fastcode.ai") ||
+        user.email?.includes("admin@fastcode.ai")
       ) {
         console.log("Setting role to admin-----******--->", user.email);
         await db.user.update({

@@ -29,10 +29,11 @@ export default auth((req) => {
 
   let adminEmails 
   
-  if(session?.user?.email?.includes("prabal") ||
+  if(session?.user?.email?.includes("prabal@fastcode.ai") ||
     // session?.user?.email?.includes("abdul") ||
-    session?.user?.email?.includes("arjun") ||
-    session?.user?.email?.includes("admin")
+    session?.user?.email?.includes("priyanka@fastcode.ai") ||
+    session?.user?.email?.includes("arjun@fastcode.ai") ||
+    session?.user?.email?.includes("admin@fastcode.ai")
   ){
     adminEmails = true;
   }
