@@ -38,11 +38,11 @@ export async function POST(req: NextRequest) {
     // Convert file to buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Upload to S3
+    // Upload to S3: returns the key
     const result = await uploadFileToS3(buffer, file.name, file.type);
 
-    // Return the URL
-    return jsonResponse({ url: result.url }, 201);
+    // Return the key so the client can store it; presigned URLs will be generated on demand
+    return jsonResponse({ key: result.key }, 201);
   } catch (error: any) {
     console.error("Error in POST /api/uploads:", error);
     return errorResponse(

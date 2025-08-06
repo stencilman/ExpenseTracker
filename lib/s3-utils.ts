@@ -24,7 +24,7 @@ export async function uploadFileToS3(
     file: Buffer,
     fileName: string,
     contentType: string
-): Promise<{ url: string }> {
+): Promise<{ key: string }> {
     // Create a unique file name to prevent overwriting
     const uniqueFileName = `${Date.now()}-${fileName}`;
 
@@ -41,15 +41,8 @@ export async function uploadFileToS3(
         // Upload the file to S3
         await s3Client.send(new PutObjectCommand(params));
 
-        // Generate a presigned URL that's valid for 24 hours
-        const getObjectParams = {
-            Bucket: BUCKET_NAME,
-            Key: uniqueFileName
-        };
-        const command = new GetObjectCommand(getObjectParams);
-        const presignedUrl = await getSignedUrl(s3Client, command, { expiresIn: 86400 }); // 24 hours
-
-        return { url: presignedUrl };
+        // Return only the key; presigned URLs will be generated on demand
+        return { key: uniqueFileName };
     } catch (error) {
         console.error('Error uploading file to S3:', error);
         throw new Error(`Failed to upload file to S3: ${error instanceof Error ? error.message : 'Unknown error'}`);

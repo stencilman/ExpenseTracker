@@ -250,6 +250,11 @@ export default function ExpenseDetail({
       }
     }
 
+    // If it's just a key (no slashes), convert directly to proxy URL
+    if (!url.includes("/")) {
+      return `/api/files/${encodeURIComponent(url)}`;
+    }
+
     // For any other URL format, return as is
     return url;
   };
