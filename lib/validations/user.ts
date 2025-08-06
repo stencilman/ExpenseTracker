@@ -11,7 +11,7 @@ export const UserSettingsSchema = z.object({
   dateOfJoining: z.date().optional().nullable(),
   dateOfBirth: z.date().optional().nullable(),
   designation: z.string().optional().nullable(),
-  roleName: z.enum(ROLE_NAMES).optional().nullable(),
+  roleName: z.union([z.enum(ROLE_NAMES), z.literal("")]).optional().nullable(),
   approverId: z.string().optional().nullable(),
 });
 

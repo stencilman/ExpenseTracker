@@ -109,7 +109,7 @@ export default function SettingsPage() {
             ? new Date(data.dateOfBirth)
             : undefined,
           designation: data.designation || "",
-          roleName: data.roleName || "",
+          roleName: data.roleName ?? undefined,
           approverId: data.approverId || "",
         });
       } catch (error: any) {
@@ -209,38 +209,7 @@ export default function SettingsPage() {
                   <Pencil className="h-4 w-4" />
                   Edit
                 </Button>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setIsEditing(false);
-                    // Reset form to current values
-                    if (userSettings) {
-                      form.reset({
-                        firstName: userSettings.firstName || "",
-                        lastName: userSettings.lastName || "",
-                        employeeId: userSettings.employeeId || "",
-                        mobile: userSettings.mobile || "",
-                        department: userSettings.department || "",
-                        dateOfJoining: userSettings.dateOfJoining
-                          ? new Date(userSettings.dateOfJoining)
-                          : undefined,
-                        dateOfBirth: userSettings.dateOfBirth
-                          ? new Date(userSettings.dateOfBirth)
-                          : undefined,
-                        designation: userSettings.designation || "",
-                        roleName: userSettings.roleName || "",
-                        approverId: userSettings.approverId || "",
-                      });
-                    }
-                  }}
-                  className="flex items-center gap-1"
-                >
-                  <X className="h-4 w-4" />
-                  Cancel
-                </Button>
-              )}
+              ) : null}
               <SignoutButton />
             </div>
           </div>
@@ -371,6 +340,9 @@ export default function SettingsPage() {
                             >
                               <Calendar
                                 mode="single"
+                                captionLayout="dropdown"
+                                startMonth={new Date(1900, 0)}
+                                endMonth={new Date(new Date().getFullYear(), 11)}
                                 selected={field.value ?? undefined}
                                 onSelect={(date) =>
                                   field.onChange(date || undefined)
@@ -418,6 +390,9 @@ export default function SettingsPage() {
                             >
                               <Calendar
                                 mode="single"
+                                captionLayout="dropdown"
+                                startMonth={new Date(1900, 0)}
+                                endMonth={new Date(new Date().getFullYear(), 11)}
                                 selected={field.value ?? undefined}
                                 onSelect={(date) =>
                                   field.onChange(date || undefined)
@@ -452,45 +427,40 @@ export default function SettingsPage() {
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="roleName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value ?? undefined}
-                            disabled={currentUser?.role === "USER"}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a role" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {ROLE_NAMES.map((role) => (
-                                <SelectItem key={role} value={role}>
-                                  {role}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {currentUser?.role === "USER" && (
-                            <FormDescription>
-                              Your role is managed by your administrator.
-                            </FormDescription>
-                          )}
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
                     {/* Approver is set by admins, not by users themselves */}
                   </div>
                 </div>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-3">
+                  <Button
+                    variant="secondary"
+                    type="button"
+                    onClick={() => {
+                      setIsEditing(false);
+                      if (userSettings) {
+                        form.reset({
+                          firstName: userSettings.firstName || "",
+                          lastName: userSettings.lastName || "",
+                          employeeId: userSettings.employeeId || "",
+                          mobile: userSettings.mobile || "",
+                          department: userSettings.department || "",
+                          dateOfJoining: userSettings.dateOfJoining
+                            ? new Date(userSettings.dateOfJoining)
+                            : undefined,
+                          dateOfBirth: userSettings.dateOfBirth
+                            ? new Date(userSettings.dateOfBirth)
+                            : undefined,
+                          designation: userSettings.designation || "",
+                          roleName: userSettings.roleName ?? undefined,
+                          approverId: userSettings.approverId || "",
+                        });
+                      }
+                    }}
+                    className="flex items-center gap-1"
+                  >
+                    <X className="h-4 w-4" />
+                    Cancel
+                  </Button>
                   <Button
                     type="submit"
                     className="w-full md:w-auto flex items-center gap-1"
