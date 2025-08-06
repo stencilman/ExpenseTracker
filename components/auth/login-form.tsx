@@ -40,7 +40,7 @@ export const LoginForm = () => {
   const router = useRouter();
   const [transition, startTransition] = useTransition();
 
-  const [error, setError] = useState<string | undefined>("");
+  const [error, setError] = useState<string | undefined>(urlError || "");
   const [success, setSuccess] = useState<string | undefined>("");
   const [showPassword, setShowPassword] = useState<boolean | undefined>();
 
@@ -144,7 +144,7 @@ export const LoginForm = () => {
 
             {success && <FormSuccess message={success} />}
 
-            {error || urlError && <FormError message={error || urlError} />}
+            {error && <FormError message={error || urlError} />}
 
             <div className=" w-full gap-y-4 flex-wrap">
               <Button
