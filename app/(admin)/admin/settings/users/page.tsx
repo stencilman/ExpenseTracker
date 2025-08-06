@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Search, PlusCircle, MoreVertical, Loader2 } from "lucide-react";
 import UserCard from "@/components/admin/settings/user/UserCard";
 import AddNewUserDialog from "@/components/admin/settings/user/AddNewUserDialog";
+import { useSession } from "next-auth/react";
 
 export interface UserData {
   id: string;
@@ -18,6 +19,7 @@ export interface UserData {
   designation?: string;
   roleName?: string | null;
   approverId?: string | null;
+  emailVerified?: Date | null;
   approver?: {
     id: string;
     firstName: string;
@@ -29,6 +31,9 @@ export interface UserData {
 // Users will be fetched from the API
 
 export default function UsersPage() {
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
+  
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [usersList, setUsersList] = useState<UserData[]>([]);
@@ -60,23 +65,23 @@ export default function UsersPage() {
     const fetchUsers = async () => {
       try {
         setIsLoading(true);
-        const response = await fetch('/api/admin/users');
-        
+        const response = await fetch("/api/admin/users");
+
         if (!response.ok) {
-          throw new Error('Failed to fetch users');
+          throw new Error("Failed to fetch users");
         }
-        
+
         const { data } = await response.json();
         setUsersList(data);
         setError(null);
       } catch (err) {
-        console.error('Error fetching users:', err);
-        setError('Failed to load users. Please try again.');
+        console.error("Error fetching users:", err);
+        setError("Failed to load users. Please try again.");
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     fetchUsers();
   }, []);
 
@@ -85,30 +90,28 @@ export default function UsersPage() {
     try {
       // Map UI role names to Prisma roles
       const mappedData = {
-        role: userData.role === 'SUBMITTER' ? 'USER' : userData.role,
+        role: userData.role === "SUBMITTER" ? "USER" : userData.role,
         approverId: userData.approverId || null,
-        roleName: userData.role === 'SUBMITTER' ? 'SUBMITTER' : null
+        roleName: userData.role === "SUBMITTER" ? "SUBMITTER" : null,
       };
-      
+
       const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(mappedData),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Failed to update user');
+        throw new Error("Failed to update user");
       }
-      
+
       const { data } = await response.json();
-      
+
       // Update the user in the local state
-      setUsersList(prevUsers => 
-        prevUsers.map(user => 
-          user.id === userId ? data : user
-        )
+      setUsersList((prevUsers) =>
+        prevUsers.map((user) => (user.id === userId ? data : user))
       );
     } catch (err) {
       console.error(`Error updating user ${userId}:`, err);
@@ -124,14 +127,28 @@ export default function UsersPage() {
   };
 
   // Handler for deleting a user
-  const handleDeleteUser = (userId: string) => {
-    console.log(`Deleting user ${userId}`);
-    setUsersList(prevUsers => prevUsers.filter(user => user.id !== userId));
-    // Also remove from selection if selected
-    if (selectedUsers.has(userId)) {
-      const newSelected = new Set(selectedUsers);
-      newSelected.delete(userId);
-      setSelectedUsers(newSelected);
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete user');
+      }
+
+      // Update local state after successful deletion
+      setUsersList((prevUsers) => prevUsers.filter((user) => user.id !== userId));
+      
+      // Also remove from selection if selected
+      if (selectedUsers.has(userId)) {
+        const newSelected = new Set(selectedUsers);
+        newSelected.delete(userId);
+        setSelectedUsers(newSelected);
+      }
+    } catch (err) {
+      console.error(`Error deleting user ${userId}:`, err);
+      // You could add a toast notification here
     }
   };
 
@@ -141,9 +158,10 @@ export default function UsersPage() {
 
     const query = searchQuery.toLowerCase();
     const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-    const approverName = user.approver ? 
-      `${user.approver.firstName} ${user.approver.lastName}`.toLowerCase() : '';
-    
+    const approverName = user.approver
+      ? `${user.approver.firstName} ${user.approver.lastName}`.toLowerCase()
+      : "";
+
     return (
       fullName.includes(query) ||
       user.email.toLowerCase().includes(query) ||
@@ -163,19 +181,6 @@ export default function UsersPage() {
             <span className="inline-flex items-center">🟢</span>
             <span>Active Users: {usersList.length}</span>
           </div>
-          {/* Disabled for now as per requirements */}
-          <Button
-            className="flex items-center gap-1"
-            onClick={() => setIsAddNewUserDialogOpen(true)}
-            disabled={false}
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>New User</span>
-          </Button>
-
-          <Button variant="outline" size="icon" disabled={true}>
-            <MoreVertical className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
@@ -232,14 +237,24 @@ export default function UsersPage() {
                     id={user.id}
                     name={`${user.firstName} ${user.lastName}`}
                     email={user.email}
-                    role={user.role === "ADMIN" ? "ADMIN" : "SUBMITTER" as "SUBMITTER"}
+                    role={
+                      user.role === "ADMIN"
+                        ? "ADMIN"
+                        : ("SUBMITTER" as "SUBMITTER")
+                    }
                     company={user.department || ""}
-                    approver={user.approver ? `${user.approver.firstName} ${user.approver.lastName}` : undefined}
+                    approver={
+                      user.approver
+                        ? `${user.approver.firstName} ${user.approver.lastName}`
+                        : undefined
+                    }
                     approverId={user.approverId || undefined}
+                    emailVerified={user.emailVerified}
                     isSelected={selectedUsers.has(user.id)}
                     onToggleSelect={toggleUserSelection}
                     onEditUser={handleEditUser}
                     onMarkInactive={handleMarkInactive}
+                    currentUserId={currentUserId}
                     onDeleteUser={handleDeleteUser}
                   />
                 ))

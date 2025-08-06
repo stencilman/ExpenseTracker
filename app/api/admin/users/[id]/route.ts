@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdmin } from "@/lib/auth";
-import { updateUserRoleAndApprover } from "@/data/users";
+import { updateUserRoleAndApprover, deleteUser, verifyUserEmail } from "@/data/users";
 import { z } from "zod";
 
 // User update schema for role and approver
@@ -10,10 +10,15 @@ const userUpdateSchema = z.object({
   roleName: z.string().nullable().optional(),
 });
 
+// User verification schema
+const userVerifySchema = z.object({
+  verify: z.boolean(),
+});
+
 // PATCH /api/admin/users/:id
 export async function PATCH(
   request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Check if user is authenticated and is an admin
@@ -23,9 +28,8 @@ export async function PATCH(
     }
 
     // Get the user ID from the URL
-    const { id } = await params;
-    const userId = parseInt(id);
-    if (!userId) {
+    const { id } = params;
+    if (!id) {
       return NextResponse.json(
         { error: "User ID is required" },
         { status: 400 }
@@ -34,6 +38,16 @@ export async function PATCH(
 
     // Parse and validate request body
     const body = await request.json();
+    
+    // Check if this is a verification request
+    const verifyResult = userVerifySchema.safeParse(body);
+    if (verifyResult.success && verifyResult.data.verify) {
+      // This is a verification request
+      const verifiedUser = await verifyUserEmail(id);
+      return NextResponse.json({ data: verifiedUser });
+    }
+    
+    // Otherwise, treat as a regular user update
     const validationResult = userUpdateSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -45,7 +59,7 @@ export async function PATCH(
 
     // Update user role and approver
     const updatedUser = await updateUserRoleAndApprover(
-      userId.toString(),
+      id,
       validationResult.data
     );
 
@@ -54,6 +68,40 @@ export async function PATCH(
     console.error("Error updating user:", error);
     return NextResponse.json(
       { error: "Failed to update user" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/admin/users/:id
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    // Check if user is authenticated and is an admin
+    const isUserAdmin = await isAdmin();
+    if (!isUserAdmin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Get the user ID from the URL
+    const { id } = params;
+    if (!id) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Delete the user
+    await deleteUser(id);
+
+    return NextResponse.json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return NextResponse.json(
+      { error: "Failed to delete user" },
       { status: 500 }
     );
   }
