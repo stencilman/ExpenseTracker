@@ -18,7 +18,7 @@ const userVerifySchema = z.object({
 // PATCH /api/admin/users/:id
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check if user is authenticated and is an admin
@@ -28,7 +28,7 @@ export async function PATCH(
     }
 
     // Get the user ID from the URL
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
         { error: "User ID is required" },
@@ -76,7 +76,7 @@ export async function PATCH(
 // DELETE /api/admin/users/:id
 export async function DELETE(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check if user is authenticated and is an admin
@@ -86,7 +86,7 @@ export async function DELETE(
     }
 
     // Get the user ID from the URL
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
         { error: "User ID is required" },
