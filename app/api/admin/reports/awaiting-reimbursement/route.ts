@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
     });
 
     // Format reports for UI
-    const formattedReports = reports.map(report => formatReportForUI(report));
+    const formattedReports = reports.map((report) => formatReportForUI(report as any));
 
     return NextResponse.json({
       data: formattedReports,

@@ -10,11 +10,12 @@ import { db } from "@/lib/db";
  */
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
   // Access params before awaits
-  const reportIdNum = Number(params.id);
-  if (Number.isNaN(reportIdNum)) {
+  const { id } = await params;
+  const reportIdNum = parseInt(id);
+  if (isNaN(reportIdNum)) {
     return errorResponse("Invalid report ID", 400);
   }
   try {

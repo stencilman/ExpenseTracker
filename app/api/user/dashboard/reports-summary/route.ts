@@ -148,10 +148,10 @@ export async function GET() {
     });
 
     // Format reports for UI
-    const formattedRecentReports = recentReports.map(formatReportForUI);
-    const formattedUnsubmittedReports = unsubmittedReports.map(formatReportForUI);
-    const formattedAwaitingApprovalReports = awaitingApprovalReports.map(formatReportForUI);
-    const formattedAwaitingReimbursementReports = awaitingReimbursementReports.map(formatReportForUI);
+    const formattedRecentReports = recentReports.map((report) => formatReportForUI(report as any));
+    const formattedUnsubmittedReports = unsubmittedReports.map((report) => formatReportForUI(report as any));
+    const formattedAwaitingApprovalReports = awaitingApprovalReports.map((report) => formatReportForUI(report as any));
+    const formattedAwaitingReimbursementReports = awaitingReimbursementReports.map((report) => formatReportForUI(report as any));
 
     // Format the response
     const reportsSummary = {

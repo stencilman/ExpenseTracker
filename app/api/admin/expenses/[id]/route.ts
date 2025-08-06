@@ -9,7 +9,7 @@ import { errorResponse, jsonResponse } from "@/lib/api-utils";
  */
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Authenticate requester
@@ -23,8 +23,11 @@ export async function GET(
       return errorResponse("Forbidden: Admin access required", 403);
     }
 
+    // Await the params promise
+    const { id } = await params;
+
     // Validate ID
-    const expenseId = parseInt(params.id);
+    const expenseId = parseInt(id);
     if (isNaN(expenseId)) {
       return errorResponse("Invalid expense ID", 400);
     }
@@ -54,7 +57,7 @@ export async function GET(
 
     return jsonResponse({ data: expenseWithReportName });
   } catch (error: any) {
-    console.error(`Error fetching admin expense ${params.id}:`, error);
+    console.error(`Error fetching admin expense:`, error);
     return errorResponse(error.message || "Failed to fetch expense", 500);
   }
 }

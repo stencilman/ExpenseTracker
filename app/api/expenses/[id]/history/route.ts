@@ -8,11 +8,12 @@ import { errorResponse, jsonResponse } from "@/lib/api-utils";
  */
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Access dynamic route params BEFORE any awaits (Next.js requirement)
-  const expenseId = Number(params.id);
-  if (Number.isNaN(expenseId)) {
+  const { id } = await params;
+  const expenseId = parseInt(id);
+  if (isNaN(expenseId)) {
     return errorResponse("Invalid expense ID", 400);
   }
 

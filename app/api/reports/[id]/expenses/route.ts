@@ -9,7 +9,7 @@ import { AddExpensesToReportSchema } from "@/schemas/report";
  */
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -19,7 +19,7 @@ export async function POST(
     }
 
     // Ensure params is properly awaited
-    const { id } = params;
+    const { id } = await params;
     const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return errorResponse("Invalid report ID", 400);
@@ -59,7 +59,7 @@ export async function POST(
  */
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -69,7 +69,7 @@ export async function DELETE(
     }
 
     // Ensure params is properly awaited
-    const { id } = params;
+    const { id } = await params;
     const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return errorResponse("Invalid report ID", 400);

@@ -22,7 +22,7 @@ const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME;
  */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { key: string } }
+  { params }: { params: Promise<{ key: string }> }
 ) {
   try {
     // Check authentication
@@ -32,7 +32,7 @@ export async function GET(
     }
 
     // Get the file key from the URL
-    const { key } = params;
+    const { key } = await params;
     if (!key) {
       return errorResponse("No file key provided", 400);
     }

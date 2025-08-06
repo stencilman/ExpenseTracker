@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 // PATCH /api/user/notifications/[id] - Mark a notification as read
 export async function PATCH(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -26,12 +26,13 @@ export async function PATCH(
       );
     }
 
-    const notificationId = context.params.id;
+    const { id } = await params;
+    const notificationId = parseInt(id);
 
     // Verify the notification belongs to the user
     const notification = await db.notification.findUnique({
       where: {
-        id: notificationId,
+        id: notificationId.toString(),
       },
     });
 
@@ -49,7 +50,7 @@ export async function PATCH(
       );
     }
 
-    await markNotificationAsRead(notificationId);
+    await markNotificationAsRead(notificationId.toString());
 
     return NextResponse.json({
       success: true,
@@ -67,7 +68,7 @@ export async function PATCH(
 // DELETE /api/user/notifications/[id] - Delete a notification
 export async function DELETE(
   req: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await auth();
@@ -87,12 +88,13 @@ export async function DELETE(
       );
     }
 
-    const notificationId = context.params.id;
+    const { id } = await params;
+    const notificationId = parseInt(id);
 
     // Verify the notification belongs to the user
     const notification = await db.notification.findUnique({
       where: {
-        id: notificationId,
+        id: notificationId.toString(),
       },
     });
 
@@ -110,7 +112,7 @@ export async function DELETE(
       );
     }
 
-    await deleteNotification(notificationId);
+    await deleteNotification(notificationId.toString());
 
     return NextResponse.json({
       success: true,

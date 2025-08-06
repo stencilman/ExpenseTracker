@@ -36,8 +36,8 @@ export default function SideNav({ onNavItemClick }: SideNavProps) {
 
   const navItems = [
     { name: "Home", href: "/user/dashboard", icon: Home },
-    { name: "Reports", href: "/user/reports", icon: FileText },
     { name: "Expenses", href: "/user/expenses", icon: Receipt },
+    { name: "Reports", href: "/user/reports", icon: FileText },
     { name: "Settings", href: "/user/settings", icon: Settings },
   ];
 

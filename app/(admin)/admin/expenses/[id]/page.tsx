@@ -1,21 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ExpensesProvider } from "@/components/providers/ExpenseProvider";
 import ExpenseDetail from "@/components/expenses/ExpenseDetail";
 import { Loader } from "@/components/ui/loader";
 import { toast } from "sonner";
 
-export default function AdminExpenseDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const expenseId = parseInt(params.id);
+export default function AdminExpenseDetailPage() {
+  const { id } = useParams();
   const router = useRouter();
   const [expense, setExpense] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Handle the id parameter - it can be a string or array of strings
+  const expenseId =
+    typeof id === "string"
+      ? parseInt(id)
+      : Array.isArray(id)
+      ? parseInt(id[0])
+      : NaN;
 
   useEffect(() => {
     if (isNaN(expenseId)) {

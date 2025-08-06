@@ -144,7 +144,7 @@ export const LoginForm = () => {
 
             {success && <FormSuccess message={success} />}
 
-            {error && <FormError message={error || urlError} />}
+            {error || urlError && <FormError message={error || urlError} />}
 
             <div className=" w-full gap-y-4 flex-wrap">
               <Button
