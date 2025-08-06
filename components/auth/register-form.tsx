@@ -29,9 +29,6 @@ import { toast } from "sonner"; // Toast notification library
 import { register } from "@/actions/register";
 import { RegisterSchema } from "@/schemas";
 
-
-
-
 // Registration Form Component
 export const RegisterForm = () => {
   const router = useRouter(); // Initialize Next.js router
@@ -60,7 +57,6 @@ export const RegisterForm = () => {
     setError(""); // Reset error message
 
     startTransition(async () => {
-    
       register(data).then((result: any) => {
         setError(result.error);
         setSuccess(result.success);
@@ -137,11 +133,12 @@ export const RegisterForm = () => {
         backButtonHref="/auth/login" // Link for the back button
         backButtonLabel="Already have an account?" // Label for the back button
         showSocial={true}
+        headerMessage="Welcome to FastcodeAI Expense Tracker"
       >
-        <Form {...form}>
+        {/* <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="space-y-6">
-              {/* First Name Field */}
+            
               <FormField
                 name="firstName"
                 control={form.control}
@@ -152,16 +149,16 @@ export const RegisterForm = () => {
                       <Input
                         {...field}
                         placeholder="First Name"
-                        disabled={isPending} // Disable input during submission
+                        disabled={isPending} 
                         className="h-11"
                       />
                     </FormControl>
-                    <FormMessage /> {/* Display validation message */}
+                    <FormMessage /> 
                   </FormItem>
                 )}
               />
 
-              {/* Last Name Field */}
+           
               <FormField
                 name="lastName"
                 control={form.control}
@@ -172,16 +169,16 @@ export const RegisterForm = () => {
                       <Input
                         {...field}
                         placeholder="Last Name"
-                        disabled={isPending} // Disable input during submission
+                        disabled={isPending}
                         className="h-11"
                       />
                     </FormControl>
-                    <FormMessage /> {/* Display validation message */}
+                    <FormMessage /> 
                   </FormItem>
                 )}
               />
 
-              {/* Email Field */}
+           
               <FormField
                 name="email"
                 control={form.control}
@@ -193,18 +190,18 @@ export const RegisterForm = () => {
                         {...field}
                         placeholder="Email"
                         type="email"
-                        disabled={isPending} // Disable input during submission
+                        disabled={isPending}
                         className="h-11"
                       />
                     </FormControl>
-                    <FormMessage /> {/* Display validation message */}
+                    <FormMessage /> 
                   </FormItem>
                 )}
               />
 
-              {/* Password and Confirm Password Fields */}
+             
               <div className="flex flex-col md:flex-row gap-4 w-full">
-                {/* Password Field */}
+            
                 <FormField
                   name="password"
                   control={form.control}
@@ -216,29 +213,29 @@ export const RegisterForm = () => {
                           <Input
                             {...field}
                             placeholder="Password"
-                            type={showPassword ? "text" : "password"} // Toggle password visibility
-                            disabled={isPending} // Disable input during submission
+                            type={showPassword ? "text" : "password"} 
+                            disabled={isPending} 
                             className="pr-[30px] h-11"
                           />
                           <button
                             type="button"
-                            onClick={() => setShowPassword(!showPassword)} // Toggle show/hide password
+                            onClick={() => setShowPassword(!showPassword)} 
                             className="absolute top-[15px] right-[13px]"
                             aria-label={
                               showPassword ? "Hide password" : "Show password"
                             }
                           >
                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}{" "}
-                            {/* Icon changes based on state */}
+                         
                           </button>
                         </div>
                       </FormControl>
-                      <FormMessage /> {/* Display validation message */}
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
 
-                {/* Confirm Password Field */}
+              
                 <FormField
                   name="reEnterPassword"
                   control={form.control}
@@ -250,14 +247,14 @@ export const RegisterForm = () => {
                           <Input
                             {...field}
                             placeholder="Confirm Password"
-                            type={showReEnterPassword ? "text" : "password"} // Toggle password visibility
-                            disabled={isPending} // Disable input during submission
+                            type={showReEnterPassword ? "text" : "password"} 
+                            disabled={isPending} 
                             className="pr-[30px] h-11"
                           />
                           <button
                             type="button"
                             onClick={
-                              () => setShowReEnterPassword(!showReEnterPassword) // Toggle show/hide password
+                              () => setShowReEnterPassword(!showReEnterPassword) 
                             }
                             className="absolute top-[15px] right-[13px]"
                             aria-label={
@@ -267,50 +264,37 @@ export const RegisterForm = () => {
                             }
                           >
                             {showReEnterPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}{" "}
-                            {/* Icon changes based on state */}
+                          
                           </button>
                         </div>
                       </FormControl>
-                      <FormMessage /> {/* Display validation message */}
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
             </div>
 
-            {/* Display success message if any */}
-            {success && <FormSuccess message={success} />}
-            {/* Display error message if any */}
-            {error && <FormError message={error} />}
-
+          
             <div className="flex justify-between items-center w-full gap-y-4 flex-wrap">
-              {/* Link to login page */}
-              {/* <Button className="px-0 md:px-4 gap-1" asChild variant="link">
-                <Link
-                  className={`text-sm font-normal text-black ${
-                    isPending ? "pointer-events-none" : ""
-                  }`}
-                  href="/"
-                >
-                  Already have an account?
-                  <span className="font-semibold hidden sm:block">Login</span>
-                </Link>
-              </Button> */}
-
-              {/* Submit button for registration */}
+             
               <Button
-                disabled={isPending} // Disable button during submission
+                disabled={isPending} 
                 className="w-full"
                 size="default"
                 type="submit"
                 variant="default"
               >
                 {isPending ? "Submitting..." : "Next"}{" "}
-                {/* Button label changes based on state */}
+             
               </Button>
             </div>
           </form>
-        </Form>
+        </Form> */}
+        {/* Display success message if any */}
+        {success && <FormSuccess message={success} />}
+        {/* Display error message if any */}
+        {error && <FormError message={error} />}
       </CardWrapper>
     </Suspense>
   );

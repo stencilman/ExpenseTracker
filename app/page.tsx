@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useLoading } from "@/components/providers/LoadingProvider";
 import { LoginForm } from "@/components/auth/login-form";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 
 export default function Home() {
   const router = useRouter();
@@ -22,7 +23,10 @@ export default function Home() {
     //   </div>
     // </div>
     <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-2xl font-bold">Expense Tracker</h1>
+      <div className="flex flex-col items-center justify-center">
+        <Image src="/brain.png" alt="FastcodeAI" width={50} height={50} />
+        <h1 className="text-2xl font-bold">Expense Tracker</h1>
+      </div>
       <Button className="mt-4" onClick={() => router.push("/auth/login")}>
         Login
       </Button>
