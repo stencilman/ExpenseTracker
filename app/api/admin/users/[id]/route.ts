@@ -13,7 +13,7 @@ const userUpdateSchema = z.object({
 // PATCH /api/admin/users/:id
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check if user is authenticated and is an admin
@@ -23,7 +23,8 @@ export async function PATCH(
     }
 
     // Get the user ID from the URL
-    const userId = params.id;
+    const { id } = await params;
+    const userId = parseInt(id);
     if (!userId) {
       return NextResponse.json(
         { error: "User ID is required" },
@@ -44,7 +45,7 @@ export async function PATCH(
 
     // Update user role and approver
     const updatedUser = await updateUserRoleAndApprover(
-      userId,
+      userId.toString(),
       validationResult.data
     );
 

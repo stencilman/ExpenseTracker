@@ -8,15 +8,16 @@ import { errorResponse, jsonResponse } from "@/lib/api-utils";
  */
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Access dynamic route params BEFORE any awaits (Next.js requirement)
-  const expenseId = Number(params.id);
-  if (Number.isNaN(expenseId)) {
-    return errorResponse("Invalid expense ID", 400);
-  }
-
   try {
+    // Await the params promise
+    const { id } = await params;
+    const expenseId = Number(id);
+    if (Number.isNaN(expenseId)) {
+      return errorResponse("Invalid expense ID", 400);
+    }
+
     const session = await auth();
     if (!session?.user?.id) {
       return errorResponse("Unauthorized", 401);
@@ -25,8 +26,6 @@ export async function GET(
     if (session.user.role !== "ADMIN") {
       return errorResponse("Forbidden: Admin access required", 403);
     }
-
-    
 
     // Fetch expense w/out ownership restriction
     const expense = await db.expense.findUnique({ where: { id: expenseId } });
@@ -71,7 +70,11 @@ export async function GET(
           }
         : null,
       report: evt.report
-        ? { id: evt.report.id, title: evt.report.title, status: evt.report.status }
+        ? {
+            id: evt.report.id,
+            title: evt.report.title,
+            status: evt.report.status,
+          }
         : null,
     }));
 
@@ -86,7 +89,7 @@ export async function GET(
       history: formattedHistory,
     });
   } catch (err: any) {
-    console.error(`Error fetching admin expense history ${expenseId}:`, err);
+    console.error(`Error fetching admin expense history:`, err);
     return errorResponse(err.message || "Failed to fetch expense history", 500);
   }
 }

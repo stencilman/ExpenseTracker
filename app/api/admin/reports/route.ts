@@ -54,7 +54,7 @@ export async function GET(req: Request) {
     
     // Format each report for UI consumption with proper status objects
     const formattedReports = {
-      data: reports.data.map(report => formatReportForUI(report)),
+      data: reports.data.map((report) => formatReportForUI(report as any)),
       meta: reports.meta
     };
     

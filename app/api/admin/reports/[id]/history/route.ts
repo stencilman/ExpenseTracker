@@ -10,16 +10,16 @@ import { db } from "@/lib/db";
  */
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  // Access params before awaits
-  const reportIdParam = params.id;
-  const reportId = parseInt(reportIdParam);
-  if (isNaN(reportId)) {
-    return errorResponse("Invalid report ID", 400);
-  }
-  
   try {
+    // Await the params promise
+    const { id } = await params;
+    const reportId = parseInt(id);
+    if (isNaN(reportId)) {
+      return errorResponse("Invalid report ID", 400);
+    }
+
     // Check authentication and admin role
     const session = await auth();
     if (!session?.user?.id) {
@@ -30,7 +30,6 @@ export async function GET(
     if (session.user.role !== "ADMIN") {
       return errorResponse("Forbidden: Admin access required", 403);
     }
-    // Already checked reportId above
 
     // Check if the report exists
     const report = await getReportById(reportId);

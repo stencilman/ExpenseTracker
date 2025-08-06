@@ -30,8 +30,7 @@ export default function AddNewUserDialog({
         name: "",
         email: "",
         role: "SUBMITTER",
-        company: "",
-        approver: "",
+        approverId: "",
       }}
     />
   );

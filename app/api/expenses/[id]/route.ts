@@ -9,7 +9,7 @@ import { ExpenseUpdateSchema } from "@/schemas/expense";
  */
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -19,7 +19,8 @@ export async function GET(
     }
 
     // Parse expense ID
-    const expenseId = parseInt(context.params.id);
+    const { id } = await params;
+    const expenseId = parseInt(id);
     if (isNaN(expenseId)) {
       return errorResponse("Invalid expense ID", 400);
     }
@@ -32,7 +33,7 @@ export async function GET(
 
     return jsonResponse(expense);
   } catch (error: any) {
-    console.error(`Error in GET /api/expenses/${context.params.id}:`, error);
+    console.error(`Error in GET /api/expenses:`, error);
     return errorResponse(error.message || "Failed to get expense", 500);
   }
 }
@@ -43,7 +44,7 @@ export async function GET(
  */
 export async function PUT(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -53,7 +54,8 @@ export async function PUT(
     }
 
     // Parse expense ID
-    const expenseId = parseInt(context.params.id);
+    const { id } = await params;
+    const expenseId = parseInt(id);
     if (isNaN(expenseId)) {
       return errorResponse("Invalid expense ID", 400);
     }
@@ -63,13 +65,15 @@ export async function PUT(
     const validation = ExpenseUpdateSchema.safeParse(body);
 
     if (!validation.success) {
-      console.error(`Error validating expense update for ID ${context.params.id}:`, validation.error);
-      // Extract error messages in a non-deprecated way
-      const errorMessages = validation.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
-      return errorResponse(
-        `Invalid expense data: ${errorMessages}`,
-        400
+      console.error(
+        `Error validating expense update for ID ${expenseId}:`,
+        validation.error
       );
+      // Extract error messages in a non-deprecated way
+      const errorMessages = validation.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join(", ");
+      return errorResponse(`Invalid expense data: ${errorMessages}`, 400);
     }
 
     // Update expense
@@ -81,7 +85,7 @@ export async function PUT(
 
     return jsonResponse(expense);
   } catch (error: any) {
-    console.error(`Error in PUT /api/expenses/${context.params.id}:`, error);
+    console.error(`Error in PUT /api/expenses:`, error);
     return errorResponse(error.message || "Failed to update expense", 500);
   }
 }
@@ -92,7 +96,7 @@ export async function PUT(
  */
 export async function DELETE(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -102,7 +106,8 @@ export async function DELETE(
     }
 
     // Parse expense ID
-    const expenseId = parseInt(context.params.id);
+    const { id } = await params;
+    const expenseId = parseInt(id);
     if (isNaN(expenseId)) {
       return errorResponse("Invalid expense ID", 400);
     }
@@ -112,7 +117,7 @@ export async function DELETE(
 
     return new Response(null, { status: 204 });
   } catch (error: any) {
-    console.error(`Error in DELETE /api/expenses/${context.params.id}:`, error);
+    console.error(`Error in DELETE /api/expenses:`, error);
     return errorResponse(error.message || "Failed to delete expense", 500);
   }
 }

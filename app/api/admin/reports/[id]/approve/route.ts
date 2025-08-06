@@ -8,12 +8,12 @@ import { sendReportStatusNotification } from "@/lib/services/notification-servic
 
 /**
  * POST /api/admin/reports/[id]/approve
- * 
+ *
  * Approve a report by ID (admin only)
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the session to verify admin access
@@ -22,7 +22,9 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 403 });
     }
 
-    const reportId = parseInt(params.id);
+    // Await the params promise
+    const { id } = await params;
+    const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return new NextResponse("Invalid report ID", { status: 400 });
     }
@@ -47,7 +49,9 @@ export async function POST(
     }
 
     if (report.status !== ReportStatus.SUBMITTED) {
-      return new NextResponse("Report is not in SUBMITTED status", { status: 400 });
+      return new NextResponse("Report is not in SUBMITTED status", {
+        status: 400,
+      });
     }
 
     // Update the report status to APPROVED

@@ -13,7 +13,7 @@ import { sendReportStatusNotification } from "@/lib/services/notification-servic
  */
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Get the session to verify admin access
@@ -21,8 +21,9 @@ export async function POST(
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 403 });
     }
-
-    const reportId = parseInt(params.id);
+   // Await the params promise
+   const { id } = await params;
+    const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return new NextResponse("Invalid report ID", { status: 400 });
     }

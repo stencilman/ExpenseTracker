@@ -9,7 +9,7 @@ import { db } from "@/lib/db";
  */
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -19,7 +19,7 @@ export async function POST(
     }
 
     // Ensure params is properly awaited
-    const { id } = params;
+    const { id } = await params;
     const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return errorResponse("Invalid report ID", 400);

@@ -9,7 +9,7 @@ import { RecordReimbursementSchema } from "@/schemas/report";
  */
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -23,7 +23,8 @@ export async function POST(
       return errorResponse("Only admins can record reimbursements", 403);
     }
 
-    const reportId = parseInt(params.id);
+    const { id } = await params;
+    const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return errorResponse("Invalid report ID", 400);
     }
