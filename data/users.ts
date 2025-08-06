@@ -17,6 +17,7 @@ export async function getUsers() {
         designation: true,
         roleName: true,
         approverId: true,
+        emailVerified: true,
         approver: {
           select: {
             id: true,
@@ -127,5 +128,59 @@ export async function updateUserRoleAndApprover(
   } catch (error) {
     console.error(`Error updating user ${userId}:`, error);
     throw new Error("Failed to update user");
+  }
+}
+
+/**
+ * Delete user by ID (admin only)
+ */
+export async function deleteUser(userId: string) {
+  try {
+    const deleted = await prisma.user.delete({
+      where: { id: userId },
+      select: { id: true },
+    });
+    return deleted;
+  } catch (error) {
+    console.error(`Error deleting user ${userId}:`, error);
+    throw new Error("Failed to delete user");
+  }
+}
+
+/**
+ * Verify a user's email by setting emailVerified to current time
+ */
+export async function verifyUserEmail(userId: string) {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        emailVerified: new Date(),
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        role: true,
+        department: true,
+        designation: true,
+        roleName: true,
+        approverId: true,
+        emailVerified: true,
+        approver: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+          }
+        }
+      }
+    });
+    return updatedUser;
+  } catch (error) {
+    console.error(`Error verifying user ${userId}:`, error);
+    throw new Error("Failed to verify user");
   }
 }

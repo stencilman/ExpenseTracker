@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { Loader } from "@/components/ui/loader";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ const userFormSchema = z.object({
 export type UserFormValues = z.infer<typeof userFormSchema>;
 
 interface UserFormDialogProps {
+  disableNameEmail?: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: UserFormValues) => void;
@@ -78,6 +80,7 @@ export default function UserFormDialog({
     role: "SUBMITTER",
     approverId: "",
   },
+  disableNameEmail = false,
 }: UserFormDialogProps) {
   const [adminUsers, setAdminUsers] = useState<
     { id: string; name: string; email: string }[]
@@ -113,10 +116,14 @@ export default function UserFormDialog({
     defaultValues,
   });
 
-  const handleSubmit = (data: UserFormValues) => {
-    onSubmit(data);
-    onOpenChange(false);
-    form.reset();
+  const handleSubmit = async (data: UserFormValues) => {
+    try {
+      await onSubmit(data);
+      onOpenChange(false);
+      form.reset();
+    } catch (error) {
+      console.error("Submit error", error);
+    }
   };
 
   const watchRole = form.watch("role");
@@ -141,7 +148,11 @@ export default function UserFormDialog({
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input
+                      placeholder="John Doe"
+                      {...field}
+                      disabled={disableNameEmail}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -155,7 +166,11 @@ export default function UserFormDialog({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="john.doe@example.com" {...field} />
+                    <Input
+                      placeholder="john.doe@example.com"
+                      {...field}
+                      disabled={disableNameEmail}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -241,7 +256,13 @@ export default function UserFormDialog({
               >
                 Cancel
               </Button>
-              <Button type="submit">{submitButtonText}</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? (
+                  <Loader size="sm" className="text-white" />
+                ) : (
+                  submitButtonText
+                )}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
