@@ -148,7 +148,11 @@ export default function UserFormDialog({
                 <FormItem>
                   <FormLabel>Full Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} disabled={disableNameEmail} />
+                    <Input
+                      placeholder="John Doe"
+                      {...field}
+                      disabled={disableNameEmail}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -162,7 +166,11 @@ export default function UserFormDialog({
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="john.doe@example.com" {...field} disabled={disableNameEmail} />
+                    <Input
+                      placeholder="john.doe@example.com"
+                      {...field}
+                      disabled={disableNameEmail}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -249,7 +257,11 @@ export default function UserFormDialog({
                 Cancel
               </Button>
               <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? <Loader size="sm" /> : submitButtonText}
+                {form.formState.isSubmitting ? (
+                  <Loader size="sm" className="text-white" />
+                ) : (
+                  submitButtonText
+                )}
               </Button>
             </DialogFooter>
           </form>

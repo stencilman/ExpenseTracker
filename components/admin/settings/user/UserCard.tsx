@@ -65,6 +65,9 @@ export default function UserCard({
   currentUserId,
 }: UserCardProps) {
   const router = useRouter();
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [localEmailVerified, setLocalEmailVerified] = useState(emailVerified);
 
   // Dialog visibility states
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -106,9 +109,19 @@ export default function UserCard({
           <div className="flex flex-col">
             <div className="font-medium flex items-center gap-2">
               {name}
-              {!emailVerified && (
+              {!localEmailVerified && (
                 <span className="inline-flex items-center rounded-md bg-yellow-50 px-2 py-1 text-xs font-medium text-yellow-800 ring-1 ring-inset ring-yellow-600/20">
                   Unverified
+                </span>
+              )}
+              {isVerifying && (
+                <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-800 ring-1 ring-inset ring-blue-600/20">
+                  Verifying...
+                </span>
+              )}
+              {localEmailVerified && !isVerifying && (
+                <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-800 ring-1 ring-inset ring-green-600/20">
+                  Verified
                 </span>
               )}
             </div>
@@ -151,11 +164,12 @@ export default function UserCard({
                 Edit
               </DropdownMenuItem>
               
-              {!emailVerified && (
+              {!localEmailVerified && (
                 <DropdownMenuItem
                   className="flex items-center gap-2 cursor-pointer"
                   onClick={async () => {
                     try {
+                      setIsVerifying(true);
                       const response = await fetch(`/api/admin/users/${id}`, {
                         method: "PATCH",
                         headers: {
@@ -165,15 +179,30 @@ export default function UserCard({
                       });
                       
                       if (response.ok) {
+                        // Update local state instead of refreshing the page
+                        setLocalEmailVerified(new Date());
+                        // Also refresh the router to update other components
                         router.refresh();
                       }
                     } catch (error) {
                       console.error("Error verifying user:", error);
+                    } finally {
+                      setIsVerifying(false);
                     }
                   }}
+                  disabled={isVerifying}
                 >
-                  <CheckCircle className="h-4 w-4" />
-                  Verify User
+                  {isVerifying ? (
+                    <>
+                      <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></span>
+                      Verifying...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4" />
+                      Verify User
+                    </>
+                  )}
                 </DropdownMenuItem>
               )}
 
@@ -277,13 +306,28 @@ export default function UserCard({
               variant="destructive"
               onClick={async () => {
                 if (onDeleteUser) {
-                  await onDeleteUser(id);
-                  setIsDeleteDialogOpen(false);
-                  router.refresh();
+                  try {
+                    setIsDeleting(true);
+                    await onDeleteUser(id);
+                    setIsDeleteDialogOpen(false);
+                    router.refresh();
+                  } catch (error) {
+                    console.error("Error deleting user:", error);
+                  } finally {
+                    setIsDeleting(false);
+                  }
                 }
               }}
+              disabled={isDeleting}
             >
-              Delete User
+              {isDeleting ? (
+                <>
+                  <span className="inline-block h-4 w-4 mr-2 animate-spin rounded-full border-2 border-solid border-current border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></span>
+                  Deleting...
+                </>
+              ) : (
+                "Delete User"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
