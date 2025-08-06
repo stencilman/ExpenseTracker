@@ -361,7 +361,13 @@ export default function AddOrEditExpense({
       }
 
       let receiptUrls: string[] = existingReceipts.map(
-        (receipt) => receipt.url
+        (receipt) => {
+          // If the existing receipt is already a key (no slash), use it directly
+          // Otherwise extract the key from the URL (last segment)
+          if (!receipt.url.includes("/")) return receipt.url;
+          const parts = receipt.url.split("/");
+          return parts[parts.length - 1];
+        }
       );
 
       if (files.length > 0) {
@@ -379,7 +385,8 @@ export default function AddOrEditExpense({
             );
           }
           const uploadResult = await uploadResponse.json();
-          receiptUrls.push(uploadResult.url);
+          // uploadResult.key contains the S3 object key
+          receiptUrls.push(uploadResult.key);
         }
       }
 
