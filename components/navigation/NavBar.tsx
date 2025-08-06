@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import NotificationsDropdown from "@/components/notification/NotificationsDropdown";
 import NavbarOptions from "@/components/navigation/navbar-options";
+import Image from "next/image";
 
 export default function NavBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -31,7 +32,10 @@ export default function NavBar() {
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="text-lg sm:text-xl font-bold">Expense Tracker</h1>
+          <div className="flex items-center gap-2">
+            <Image src="/brain.png" alt="FastcodeAI" width={25} height={25} />
+            <h1 className="text-lg sm:text-xl font-bold">Expense Tracker</h1>
+          </div>
         </div>
 
         <div className="flex-1"></div>

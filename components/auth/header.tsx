@@ -17,16 +17,19 @@ export const Header = ({ label, message }: HeaderProps) => {
     <>
       {resetPath || forgetPassPath ? (
         <div className="flex gap-4">
-          <Image src="/auth/lock.svg" height="38" width="46" alt="lock_icon" />
+          <Image src="/brain.svg" alt="FastcodeAI" width={50} height={50} />
           <div className="w-full flex flex-col gap-y-1 ">
             <p className="text-2xl font-semibold text-primary">{label}</p>
             <p className="text-sm">{message}</p>
           </div>
         </div>
       ) : (
-        <div className="w-full flex flex-col gap-y-1 ">
-          <p className="text-sm ">{message}</p>
-          <p className="text-primary text-2xl font-semibold ">{label}</p>
+        <div className="w-full flex flex-row gap-5 ">
+          <Image src="/brain.svg" alt="FastcodeAI" width={50} height={50} />
+          <div>
+            <p className="text-primary text-2xl font-semibold ">{label}</p>
+            <p className="text-sm ">{message}</p>
+          </div>
         </div>
       )}
     </>

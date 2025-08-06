@@ -32,7 +32,7 @@ export const CardWrapper = ({
 }: CardWrapperProps) => {
   return (
     <Card className="w-[80%] sm:w-[70%] md:w-[50%] max-w-[430px]">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-center gap-2">
         <Header label={headerLabel} message={headerMessage} />
       </CardHeader>
       <CardContent>{children}</CardContent>

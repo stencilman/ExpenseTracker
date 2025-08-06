@@ -75,14 +75,15 @@ export const LoginForm = () => {
   return (
     <Suspense>
       <CardWrapper
-        headerLabel="Welcome to Expense Tracker"
+        headerLabel="Login"
         // backButtonHref="/auth/register"
         // backButtonLabel="Don't have an account?"
         showSocial={true}
+        headerMessage="Welcome to FastcodeAI Expense Tracker"
       >
         {/* <CompanyLoginForm /> */}
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {/* <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 ">
             <div className="space-y-6">
               <FormField
                 name="email"
@@ -142,10 +143,6 @@ export const LoginForm = () => {
               ></FormField>
             </div>
 
-            {success && <FormSuccess message={success} />}
-
-            {error && <FormError message={error || urlError} />}
-
             <div className=" w-full gap-y-4 flex-wrap">
               <Button
                 disabled={transition}
@@ -157,7 +154,10 @@ export const LoginForm = () => {
               </Button>
             </div>
           </form>
-        </Form>
+        </Form> */}
+        {success && <FormSuccess message={success} />}
+
+        {error && <FormError message={error || urlError} />}
       </CardWrapper>
     </Suspense>
   );
