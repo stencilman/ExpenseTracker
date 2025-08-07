@@ -36,20 +36,20 @@ export async function createReport(data: ReportCreateInput, userId: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
             expenses: true,
         },
     });
-    
+
     // Create history entry for report creation
     await createReportHistoryEntry({
         reportId: report.id,
@@ -57,7 +57,7 @@ export async function createReport(data: ReportCreateInput, userId: string) {
         details: "Report created",
         performedById: userId,
     });
-    
+
     return report;
 }
 
@@ -87,7 +87,7 @@ export async function getReports(
 
     // Build where clause
     const where: any = {};
-    
+
     // Add userId filter if provided (for regular users)
     // If userId is undefined, don't filter by user (for admin access)
 
@@ -95,7 +95,7 @@ export async function getReports(
     if (userId) {
         where.userId = userId;
     }
-    
+
     if (status) {
         where.status = status;
     }
@@ -128,14 +128,14 @@ export async function getReports(
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
             expenses: {
@@ -153,14 +153,14 @@ export async function getReports(
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
         },
@@ -175,7 +175,7 @@ export async function getReports(
     const updatedReports = reports.map(report => {
         // Calculate the sum of all expense amounts
         const calculatedTotal = report.expenses.reduce((sum, expense) => sum + expense.amount, 0);
-        
+
         // If the report has expenses but totalAmount is 0, update it
         if (report.expenses.length > 0 && report.totalAmount === 0) {
             return {
@@ -183,7 +183,7 @@ export async function getReports(
                 totalAmount: calculatedTotal
             };
         }
-        
+
         return report;
     });
 
@@ -218,14 +218,14 @@ export async function getReportById(id: number, userId?: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
             expenses: {
@@ -254,31 +254,31 @@ export async function getReportById(id: number, userId?: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
         },
     });
-    
+
     // Calculate total amount and non-reimbursable amount from all expenses
     if (report && report.expenses) {
         const totalAmount = report.expenses.reduce((sum, expense) => sum + expense.amount, 0);
-        
+
         // Calculate non-reimbursable amount (sum of expenses where claimReimbursement is false)
         const nonReimbursableAmount = report.expenses
             .filter(expense => expense.claimReimbursement === false)
             .reduce((sum, expense) => sum + expense.amount, 0);
-        
+
         // Calculate amount to be reimbursed (total - non-reimbursable)
         const amountToBeReimbursed = totalAmount - nonReimbursableAmount;
-        
+
         return {
             ...report,
             totalAmount,
@@ -286,7 +286,7 @@ export async function getReportById(id: number, userId?: string) {
             amountToBeReimbursed
         };
     }
-    
+
     return report;
 }
 
@@ -323,14 +323,14 @@ export async function updateReport(id: number, data: ReportUpdateInput, userId?:
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
             expenses: true,
@@ -340,14 +340,14 @@ export async function updateReport(id: number, data: ReportUpdateInput, userId?:
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
         },
@@ -372,7 +372,7 @@ export async function deleteReport(id: number, userId?: string) {
     if (userId) {
         where.userId = userId;
     }
-    
+
     // Use a transaction to ensure both operations succeed or fail together
     return db.$transaction(async (tx) => {
         // First, find all expenses associated with this report and update their status
@@ -383,7 +383,7 @@ export async function deleteReport(id: number, userId?: string) {
                 status: "UNREPORTED"
             }
         });
-        
+
         // Then delete the report
         return tx.report.delete({
             where,
@@ -502,18 +502,18 @@ export async function submitReport(id: number, userId: string) {
     const expenses = await db.expense.findMany({
         where: { reportId: id }
     });
-    
+
     // Calculate total amount
     const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
-    
+
     // Calculate non-reimbursable amount
     const nonReimbursableAmount = expenses
         .filter(expense => expense.claimReimbursement === false)
         .reduce((sum, expense) => sum + expense.amount, 0);
-    
+
     // Calculate amount to be reimbursed
     const amountToBeReimbursed = totalAmount - nonReimbursableAmount;
-    
+
     // Update the report
     const updatedReport = await db.report.update({
         where: { id, userId },
@@ -531,14 +531,14 @@ export async function submitReport(id: number, userId: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
             expenses: true,
@@ -548,30 +548,30 @@ export async function submitReport(id: number, userId: string) {
                     firstName: true,
                     lastName: true,
                     email: true,
-                            approver: {
-                                select: {
-                                    id: true,
-                                    firstName: true,
-                                    lastName: true,
-                                    email: true,
-                                },
-                            },
+                    approver: {
+                        select: {
+                            id: true,
+                            firstName: true,
+                            lastName: true,
+                            email: true,
+                        },
+                    },
                 },
             },
         },
     });
-    
+
     // Create history entry for report submission
     await createReportHistoryEntry({
         reportId: id,
         eventType: ReportEventType.SUBMITTED,
-        details: `Report submitted for approval with total amount $${totalAmount.toFixed(2)}`,
+        details: `Report submitted for approval with total amount Rs. ${totalAmount.toFixed(2)}`,
         performedById: userId,
     });
-    
+
     // Send notification to the approver
     await sendReportStatusNotification(id, "SUBMITTED", userId);
-    
+
     return updatedReport;
 }
 
@@ -588,7 +588,7 @@ export async function approveReport(id: number, approverUserId: string) {
             approvedById: approverUserId,
         },
     });
-    
+
     // Create history entry for report approval
     await createReportHistoryEntry({
         reportId: id,
@@ -596,7 +596,7 @@ export async function approveReport(id: number, approverUserId: string) {
         details: "Report approved",
         performedById: approverUserId,
     });
-    
+
     return updatedReport;
 }
 
@@ -613,7 +613,7 @@ export async function rejectReport(id: number, approverUserId: string) {
             approvedById: approverUserId,
         },
     });
-    
+
     // Create history entry for report rejection
     await createReportHistoryEntry({
         reportId: id,
@@ -621,7 +621,7 @@ export async function rejectReport(id: number, approverUserId: string) {
         details: "Report rejected",
         performedById: approverUserId,
     });
-    
+
     return updatedReport;
 }
 
@@ -648,7 +648,7 @@ export async function recordReimbursement(
             reimbursementNotes: data.reimbursementNotes,
         },
     });
-    
+
     // Create history entry for report reimbursement
     await createReportHistoryEntry({
         reportId: id,
@@ -656,6 +656,6 @@ export async function recordReimbursement(
         details: `Report reimbursed via ${data.reimbursementMethod}${data.reimbursementRef ? ` (Ref: ${data.reimbursementRef})` : ''}`,
         performedById,
     });
-    
+
     return updatedReport;
 }
