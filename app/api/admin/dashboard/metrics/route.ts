@@ -1,9 +1,103 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ReportStatus } from "@prisma/client";
+import { ExpenseCategory, ReportStatus } from "@prisma/client";
 import { auth } from "@/auth";
 
-export async function GET() {
+type DateRange = {
+  startDate: Date;
+  endDate: Date;
+};
+
+// Helper functions to calculate date ranges
+function getDateRangeForToday(): DateRange {
+  const now = new Date();
+  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return {
+    startDate: startOfDay,
+    endDate: now
+  };
+}
+
+function getDateRangeForThisWeek(): DateRange {
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as first day of week
+  startOfWeek.setHours(0, 0, 0, 0);
+  return {
+    startDate: startOfWeek,
+    endDate: now
+  };
+}
+
+function getDateRangeForThisMonth(): DateRange {
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  return {
+    startDate: startOfMonth,
+    endDate: now
+  };
+}
+
+function getDateRangeForThisQuarter(): DateRange {
+  const now = new Date();
+  const currentQuarter = Math.floor(now.getMonth() / 3);
+  const startOfQuarter = new Date(now.getFullYear(), currentQuarter * 3, 1);
+  return {
+    startDate: startOfQuarter,
+    endDate: now
+  };
+}
+
+function getDateRangeForThisYear(): DateRange {
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 1);
+  return {
+    startDate: startOfYear,
+    endDate: now
+  };
+}
+
+function getDateRangeForAllTime(): DateRange {
+  const now = new Date();
+  const startOfTime = new Date(2000, 0, 1); // Arbitrary past date
+  return {
+    startDate: startOfTime,
+    endDate: now
+  };
+}
+
+// Function to get total reimbursed amount within a date range
+async function getTotalReimbursedAmount(dateRange: DateRange, category?: string): Promise<number> {
+  const reimbursedReports = await prisma.report.findMany({
+    where: {
+      status: ReportStatus.REIMBURSED,
+      reimbursedAt: {
+        gte: dateRange.startDate,
+        lte: dateRange.endDate
+      }
+    },
+    include: {
+      expenses: category ? {
+        where: {
+          category: category as ExpenseCategory
+        }
+      } : true
+    }
+  });
+
+  return reimbursedReports.reduce(
+    (total: number, report: any) => {
+      const reportTotal = report.expenses.reduce(
+        (sum: number, expense: any) => sum + expense.amount,
+        0
+      );
+      return total + reportTotal;
+    },
+    0
+  );
+}
+
+export async function GET(request: Request) {
   try {
     const session = await auth();
     
@@ -13,6 +107,10 @@ export async function GET() {
         { status: 401 }
       );
     }
+    
+    // Get category from query parameters
+    const url = new URL(request.url);
+    const category = url.searchParams.get("category");
 
     // Get current date and calculate dates for filtering
     const now = new Date();
@@ -145,6 +243,14 @@ export async function GET() {
       },
     });
 
+    // Calculate total reimbursed amounts for different time periods
+    const todayReimbursed = await getTotalReimbursedAmount(getDateRangeForToday(), category || undefined);
+    const thisWeekReimbursed = await getTotalReimbursedAmount(getDateRangeForThisWeek(), category || undefined);
+    const thisMonthReimbursed = await getTotalReimbursedAmount(getDateRangeForThisMonth(), category || undefined);
+    const thisQuarterReimbursed = await getTotalReimbursedAmount(getDateRangeForThisQuarter(), category || undefined);
+    const thisYearReimbursed = await getTotalReimbursedAmount(getDateRangeForThisYear(), category || undefined);
+    const allTimeReimbursed = await getTotalReimbursedAmount(getDateRangeForAllTime(), category || undefined);
+
     return NextResponse.json({
       financialOverview: {
         pendingReimbursementAmount,
@@ -156,6 +262,14 @@ export async function GET() {
         awaitingApprovalCount,
         awaitingReimbursementCount,
         pendingOverSevenDaysCount,
+      },
+      reimbursedAmounts: {
+        today: todayReimbursed,
+        thisWeek: thisWeekReimbursed,
+        thisMonth: thisMonthReimbursed,
+        thisQuarter: thisQuarterReimbursed,
+        thisYear: thisYearReimbursed,
+        allTime: allTimeReimbursed,
       },
       recentActivity,
     });

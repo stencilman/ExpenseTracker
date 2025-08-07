@@ -422,7 +422,7 @@ export default function ReportDetailPage() {
                 ? "bg-orange-100 text-orange-800"
                 : statusLabel === "REJECTED"
                 ? "bg-red-100 text-red-800"
-                : statusLabel === "REIMBURSED"
+                : statusLabel === "REIMBURSED" || statusLabel === "APPROVED"
                 ? "bg-green-100 text-green-800"
                 : "bg-gray-100 text-gray-800"
             }`}
@@ -657,6 +657,7 @@ export default function ReportDetailPage() {
                 onClose={() => setExpenseDialogOpen(false)}
                 hideClose
                 readOnly
+                isAdminView={true}
               />
             </ExpensesProvider>
           ) : null}

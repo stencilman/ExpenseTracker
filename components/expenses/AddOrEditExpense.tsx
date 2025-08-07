@@ -360,15 +360,13 @@ export default function AddOrEditExpense({
         expenseData.reportId = parseInt(values.report, 10);
       }
 
-      let receiptUrls: string[] = existingReceipts.map(
-        (receipt) => {
-          // If the existing receipt is already a key (no slash), use it directly
-          // Otherwise extract the key from the URL (last segment)
-          if (!receipt.url.includes("/")) return receipt.url;
-          const parts = receipt.url.split("/");
-          return parts[parts.length - 1];
-        }
-      );
+      let receiptUrls: string[] = existingReceipts.map((receipt) => {
+        // If the existing receipt is already a key (no slash), use it directly
+        // Otherwise extract the key from the URL (last segment)
+        if (!receipt.url.includes("/")) return receipt.url;
+        const parts = receipt.url.split("/");
+        return parts[parts.length - 1];
+      });
 
       if (files.length > 0) {
         for (const file of files) {
@@ -643,22 +641,17 @@ export default function AddOrEditExpense({
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Currency</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                          // disabled={isEditMode}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="INR">INR</SelectItem>
-                            <SelectItem value="USD">USD</SelectItem>
-                            <SelectItem value="EUR">EUR</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormControl>
+                          <Input
+                            value="INR"
+                            disabled
+                            className="bg-muted"
+                            onChange={(e) => {
+                              // This ensures the field value is always INR
+                              field.onChange("INR");
+                            }}
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}

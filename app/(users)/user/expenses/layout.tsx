@@ -19,6 +19,10 @@ export default function ExpensesLayout({
               href: "/user/expenses/unreported",
             },
             {
+              label: "Reported Expenses",
+              href: "/user/expenses/reported",
+            },
+            {
               label: "All Expenses",
               href: "/user/expenses/all",
             },
