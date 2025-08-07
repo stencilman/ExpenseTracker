@@ -9,9 +9,10 @@ import { Button } from "@/components/ui/button";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { formatCurrency } from "@/lib/format-utils";
+import { formatCurrency } from "@/lib/utils/format-utils";
 import { ExpenseCategory } from "@prisma/client";
 import { DateRange } from "react-day-picker";
+import CategoryBreakdownDialog from "@/components/dashboard/CategoryBreakdownDialog";
 
 export default function UserMetricsCard() {
   const [timeframe, setTimeframe] = useState("thisMonth");
@@ -25,6 +26,7 @@ export default function UserMetricsCard() {
   const [reimbursedAmount, setReimbursedAmount] = useState<number>(0);
   const [pendingAmount, setPendingAmount] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
+  const [showCategoryBreakdown, setShowCategoryBreakdown] = useState(false);
 
   // Fetch categories
   useEffect(() => {
@@ -216,6 +218,16 @@ export default function UserMetricsCard() {
                 formatCurrency(reimbursedAmount)
               )}
             </div>
+            <div className="flex justify-end mt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowCategoryBreakdown(true)}
+                className="text-xs"
+              >
+                See category-wise detail
+              </Button>
+            </div>
           </div>
           <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
             <div className="text-sm text-muted-foreground mb-1">Pending Payment</div>
@@ -229,6 +241,17 @@ export default function UserMetricsCard() {
           </div>
         </div>
       </CardContent>
+
+      {/* Category Breakdown Dialog */}
+      <CategoryBreakdownDialog
+        open={showCategoryBreakdown}
+        onOpenChange={setShowCategoryBreakdown}
+        timeframe={timeframe}
+        startDate={dateRange.from || undefined}
+        endDate={dateRange.to || undefined}
+        category={category || undefined}
+        isAdmin={false}
+      />
     </Card>
   );
 }

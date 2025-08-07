@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader } from "@/components/ui/loader";
 import { formatCurrency } from "@/lib/utils/format-utils";
 import { Badge } from "@/components/ui/badge";
+import DashboardRecentActivityItem, { RecentActivity } from "@/components/dashboard/DashboardRecentActivityItem";
+import CategoryBreakdownDialog from "@/components/dashboard/CategoryBreakdownDialog";
 import {
   Select,
   SelectContent,
@@ -71,6 +73,10 @@ export default function AdminDashboardPage() {
     start: Date | null;
     end: Date | null;
   }>({ start: null, end: null });
+  
+  // State for category breakdown dialog
+  const [showCategoryBreakdown, setShowCategoryBreakdown] = useState(false);
+
   const [customAmount, setCustomAmount] = useState<number>(0);
   const [isLoadingCustomAmount, setIsLoadingCustomAmount] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -208,9 +214,9 @@ export default function AdminDashboardPage() {
 
       const data = await response.json();
       setMetrics(data);
-      
+
       // Fetch the initial reimbursed amount for thisMonth using the filtered-total endpoint
-      const initialAmount = await fetchMetrics("thisMonth");      
+      const initialAmount = await fetchMetrics("thisMonth");
       setReimbursedAmount(initialAmount);
     } catch (err) {
       console.error("Error fetching dashboard metrics:", err);
@@ -362,6 +368,16 @@ export default function AdminDashboardPage() {
                       {format(customDateRange.end, "MMM d, yyyy")}
                     </p>
                   )}
+                <div className="flex justify-end mt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowCategoryBreakdown(true)}
+                    className="text-xs"
+                  >
+                    See category-wise detail
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -579,6 +595,17 @@ export default function AdminDashboardPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Category Breakdown Dialog */}
+      <CategoryBreakdownDialog
+        open={showCategoryBreakdown}
+        onOpenChange={setShowCategoryBreakdown}
+        timeframe={selectedTimeframe}
+        startDate={customDateRange.start || undefined}
+        endDate={customDateRange.end || undefined}
+        category={selectedCategory || undefined}
+        isAdmin={true}
+      />
+
       <div>
         <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
         <Card>
@@ -586,23 +613,10 @@ export default function AdminDashboardPage() {
             <div className="divide-y">
               {metrics?.recentActivity?.length > 0 ? (
                 metrics.recentActivity.map((activity) => (
-                  <div
-                    key={activity.id}
-                    className="px-4 flex items-center justify-between"
-                  >
-                    <div>
-                      <p className="font-medium">{activity.title}</p>
-                      <p className="text-sm text-gray-500">{`${activity.user.firstName} ${activity.user.lastName}`}</p>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getStatusBadgeColor(activity.status)}>
-                        {activity.status}
-                      </Badge>
-                      <span className="text-sm text-gray-500">
-                        {new Date(activity.updatedAt).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </div>
+                  <DashboardRecentActivityItem 
+                    key={activity.id} 
+                    activity={activity} 
+                  />
                 ))
               ) : (
                 <div className="py-2 px-4 text-center text-gray-500">
