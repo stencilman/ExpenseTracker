@@ -4,6 +4,7 @@ import Header from "@/components/dashboard/Header";
 import PendingTasksCard from "@/components/dashboard/PendingTasksCard";
 import QuickAddTasks from "@/components/dashboard/QuickAddTasks";
 import ReportsSummaryCard from "@/components/dashboard/ReportsSummaryCard";
+import UserMetricsCard from "@/components/dashboard/UserMetricsCard";
 import { useLoading } from "@/components/providers/LoadingProvider";
 import { useEffect } from "react";
 
@@ -27,6 +28,10 @@ export default function Dashboard() {
         <div className="w-full xl:w-2/3 mt-4 lg:mt-0">
           <QuickAddTasks />
         </div>
+      </div>
+      
+      <div className="mt-4 sm:mt-6">
+        <UserMetricsCard />
       </div>
 
       <div className="mt-4 sm:mt-6">
