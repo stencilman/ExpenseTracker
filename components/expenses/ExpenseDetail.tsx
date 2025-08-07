@@ -123,6 +123,24 @@ const getStatusClasses = (expense: ExpenseWithUI): string => {
     : "bg-blue-100 text-blue-800";
 };
 
+// Helper function to get status classes based on report status
+const getReportStatusClasses = (status: string): string => {
+  switch (status) {
+    case "PENDING":
+      return "bg-orange-100 text-orange-800";
+    case "SUBMITTED":
+      return "bg-blue-100 text-blue-800";
+    case "APPROVED":
+      return "bg-green-100 text-green-800";
+    case "REJECTED":
+      return "bg-red-100 text-red-800";
+    case "REIMBURSED":
+      return "bg-green-100 text-green-800";
+    default:
+      return "bg-blue-100 text-blue-800";
+  }
+};
+
 // Helper function to get status label based on expense status
 const getStatusLabel = (expense: ExpenseWithUI): string => {
   // If we have statusDisplay with label
@@ -144,6 +162,7 @@ export interface ExpenseDetailProps {
   onClose: () => void;
   hideClose?: boolean;
   readOnly?: boolean;
+  isAdminView?: boolean;
 }
 
 export default function ExpenseDetail({
@@ -151,6 +170,7 @@ export default function ExpenseDetail({
   onClose,
   hideClose = false,
   readOnly = false,
+  isAdminView = false,
 }: ExpenseDetailProps) {
   // An expense is locked only if it belongs to a report that is APPROVED or REIMBURSED
   // We need to fetch the report status when the component loads
@@ -583,6 +603,35 @@ export default function ExpenseDetail({
                 <div className="text-sm text-muted-foreground mt-1">
                   Merchant: {expense.merchant || "Unknown"}
                 </div>
+                {expense.reportId && !isAdminView && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    Report:{" "}
+                    <a
+                      href={`/user/reports/${expense.reportId}`}
+                      className="text-blue-600 hover:text-blue-800 hover:underline"
+                      onClick={(e) => {
+                        // Prevent closing the expense detail dialog when clicking the link
+                        e.stopPropagation();
+                      }}
+                    >
+                      {expense.reportName || `#${expense.reportId}`}
+                    </a>
+                    {isLoadingStatus ? (
+                      <span className="ml-2 inline-flex items-center">
+                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        Loading status...
+                      </span>
+                    ) : reportStatus ? (
+                      <span
+                        className={`ml-2 px-1.5 py-0.5 rounded text-xs font-medium ${getReportStatusClasses(
+                          reportStatus
+                        )}`}
+                      >
+                        {reportStatus}
+                      </span>
+                    ) : null}
+                  </div>
+                )}
               </div>
               <div className="text-left sm:text-right">
                 <div
