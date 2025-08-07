@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { ReportStatus } from "@prisma/client";
+import { ExpenseCategory, ReportStatus } from "@prisma/client";
 import { auth } from "@/auth";
 
 type DateRange = {
@@ -67,7 +67,7 @@ function getDateRangeForAllTime(): DateRange {
 }
 
 // Function to get total reimbursed amount within a date range
-async function getTotalReimbursedAmount(dateRange: DateRange): Promise<number> {
+async function getTotalReimbursedAmount(dateRange: DateRange, category?: string): Promise<number> {
   const reimbursedReports = await prisma.report.findMany({
     where: {
       status: ReportStatus.REIMBURSED,
@@ -77,7 +77,11 @@ async function getTotalReimbursedAmount(dateRange: DateRange): Promise<number> {
       }
     },
     include: {
-      expenses: true
+      expenses: category ? {
+        where: {
+          category: category as ExpenseCategory
+        }
+      } : true
     }
   });
 
@@ -93,7 +97,7 @@ async function getTotalReimbursedAmount(dateRange: DateRange): Promise<number> {
   );
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     
@@ -103,6 +107,10 @@ export async function GET() {
         { status: 401 }
       );
     }
+    
+    // Get category from query parameters
+    const url = new URL(request.url);
+    const category = url.searchParams.get("category");
 
     // Get current date and calculate dates for filtering
     const now = new Date();
@@ -236,12 +244,12 @@ export async function GET() {
     });
 
     // Calculate total reimbursed amounts for different time periods
-    const todayReimbursed = await getTotalReimbursedAmount(getDateRangeForToday());
-    const thisWeekReimbursed = await getTotalReimbursedAmount(getDateRangeForThisWeek());
-    const thisMonthReimbursed = await getTotalReimbursedAmount(getDateRangeForThisMonth());
-    const thisQuarterReimbursed = await getTotalReimbursedAmount(getDateRangeForThisQuarter());
-    const thisYearReimbursed = await getTotalReimbursedAmount(getDateRangeForThisYear());
-    const allTimeReimbursed = await getTotalReimbursedAmount(getDateRangeForAllTime());
+    const todayReimbursed = await getTotalReimbursedAmount(getDateRangeForToday(), category || undefined);
+    const thisWeekReimbursed = await getTotalReimbursedAmount(getDateRangeForThisWeek(), category || undefined);
+    const thisMonthReimbursed = await getTotalReimbursedAmount(getDateRangeForThisMonth(), category || undefined);
+    const thisQuarterReimbursed = await getTotalReimbursedAmount(getDateRangeForThisQuarter(), category || undefined);
+    const thisYearReimbursed = await getTotalReimbursedAmount(getDateRangeForThisYear(), category || undefined);
+    const allTimeReimbursed = await getTotalReimbursedAmount(getDateRangeForAllTime(), category || undefined);
 
     return NextResponse.json({
       financialOverview: {
