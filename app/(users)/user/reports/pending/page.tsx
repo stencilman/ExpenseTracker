@@ -301,7 +301,7 @@ export default function PendingReportsPage() {
           </div>
         ) : error ? (
           <div className="text-center py-8 text-red-500">{error}</div>
-        ) : reports.length > 0 ? (
+        ) : (
           <>
             <ReportsTable
               data={reports}
@@ -337,8 +337,6 @@ export default function PendingReportsPage() {
               </div>
             )}
           </>
-        ) : (
-          <div className="text-center py-8">No reports found.</div>
         )}
 
         <AddReportDialog

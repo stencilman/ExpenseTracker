@@ -17,6 +17,10 @@ export default function ReportsLayout({
             href: "/user/reports/pending",
           },
           {
+            label: "Submitted Reports",
+            href: "/user/reports/submitted",
+          },
+          {
             label: "All Reports",
             href: "/user/reports/all",
           },
