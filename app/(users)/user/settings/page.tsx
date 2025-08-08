@@ -194,23 +194,22 @@ export default function SettingsPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:justify-end items-stretch gap-2">
               <User className="h-5 w-5 text-slate-500" />
               <CardTitle>Personal Details</CardTitle>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row sm:justify-end items-stretch gap-2">
+              <SignoutButton className="flex items-center" />
               {!isEditing ? (
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-1"
+                  className="w-full sm:w-auto flex items-center gap-1"
                 >
                   <Pencil className="h-4 w-4" />
                   Edit
                 </Button>
               ) : null}
-              <SignoutButton />
             </div>
           </div>
         </CardHeader>
@@ -342,7 +341,9 @@ export default function SettingsPage() {
                                 mode="single"
                                 captionLayout="dropdown"
                                 startMonth={new Date(1900, 0)}
-                                endMonth={new Date(new Date().getFullYear(), 11)}
+                                endMonth={
+                                  new Date(new Date().getFullYear(), 11)
+                                }
                                 selected={field.value ?? undefined}
                                 onSelect={(date) =>
                                   field.onChange(date || undefined)
@@ -392,7 +393,9 @@ export default function SettingsPage() {
                                 mode="single"
                                 captionLayout="dropdown"
                                 startMonth={new Date(1900, 0)}
-                                endMonth={new Date(new Date().getFullYear(), 11)}
+                                endMonth={
+                                  new Date(new Date().getFullYear(), 11)
+                                }
                                 selected={field.value ?? undefined}
                                 onSelect={(date) =>
                                   field.onChange(date || undefined)
@@ -431,7 +434,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3">
+                <div className="flex flex-col md:flex-row md:justify-end gap-2 md:gap-3">
                   <Button
                     variant="secondary"
                     type="button"
@@ -456,14 +459,14 @@ export default function SettingsPage() {
                         });
                       }
                     }}
-                    className="flex items-center gap-1"
+                    className="w-full sm:w-auto flex items-center gap-1"
                   >
                     <X className="h-4 w-4" />
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    className="w-full md:w-auto flex items-center gap-1"
+                    className="w-full sm:w-auto flex items-center gap-1"
                     disabled={!form.formState.isDirty || isLoading}
                   >
                     {isLoading ? (
@@ -548,7 +551,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 items-center">
                   <div className="text-sm text-slate-500">Submits To</div>
                   {userSettings?.approver ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col sm:flex-row sm:justify-end items-stretch gap-2">
                       <Avatar className="h-8 w-8 bg-pink-100">
                         <AvatarFallback className="text-pink-500">
                           {userSettings.approver.firstName?.[0] || ""}
