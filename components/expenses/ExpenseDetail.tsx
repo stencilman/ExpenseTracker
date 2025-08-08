@@ -486,7 +486,7 @@ export default function ExpenseDetail({
         )}
 
         {/* Main content */}
-        <div className="flex flex-col md:flex-row h-full max-w-full">
+        <div className="flex flex-col md:flex-row max-w-full">
           {/* Left side - Receipt preview */}
           <div className="w-full md:w-1/3 bg-gray-50 p-4 md:p-6 flex flex-col items-center justify-center border-b md:border-b-0 md:border-r min-w-0">
             {expense.receiptUrls && expense.receiptUrls.length > 0 ? (
