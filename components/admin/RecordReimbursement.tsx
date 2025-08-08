@@ -66,8 +66,8 @@ export default function RecordReimbursement({
   const form = useForm<ReimbursementFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      date: "",
-      paymentMethod: "",
+      date: format(new Date(), "yyyy-MM-dd"),
+      paymentMethod: "bank_transfer",
       notes: "",
       reference: "",
     },
@@ -168,7 +168,7 @@ export default function RecordReimbursement({
                           <FormLabel>Paid Through</FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            defaultValue={field.value}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className="bg-white">
