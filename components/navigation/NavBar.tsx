@@ -4,6 +4,7 @@ import { HelpCircle, User, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import SideNav from "@/components/navigation/SideNav";
+import SideNavAdmin from "@/components/navigation/SideNavAdmin";
 
 import {
   DropdownMenu,
@@ -17,7 +18,8 @@ import NotificationsDropdown from "@/components/notification/NotificationsDropdo
 import NavbarOptions from "@/components/navigation/navbar-options";
 import Image from "next/image";
 
-export default function NavBar() {
+interface NavBarProps { isAdmin?: boolean }
+export default function NavBar({ isAdmin = false }: NavBarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -54,7 +56,11 @@ export default function NavBar() {
             onClick={() => setMobileMenuOpen(false)}
           ></div>
           <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white">
-            <SideNav onNavItemClick={() => setMobileMenuOpen(false)} />
+            {isAdmin ? (
+              <SideNavAdmin onNavItemClick={() => setMobileMenuOpen(false)} />
+            ) : (
+              <SideNav onNavItemClick={() => setMobileMenuOpen(false)} />
+            )}
           </div>
         </div>
       )}
