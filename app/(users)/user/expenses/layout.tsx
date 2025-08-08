@@ -11,7 +11,7 @@ export default function ExpensesLayout({
 }) {
   return (
     <ExpensesProvider>
-      <div className="">
+      <div className="w-screen">
         <TabNavigation
           tabs={[
             {

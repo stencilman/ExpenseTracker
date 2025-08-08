@@ -9,7 +9,7 @@ export default function ReportsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="">
+    <div className="w-screen">
       <TabNavigation
         tabs={[
           {
