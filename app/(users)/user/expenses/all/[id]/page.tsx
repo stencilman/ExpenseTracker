@@ -13,7 +13,7 @@ export default function ExpenseDetailPage() {
   const router = useRouter();
   const { id } = useParams();
   const searchParams = useSearchParams();
-  const needsRefresh = searchParams.get('refresh') === 'true';
+  const needsRefresh = searchParams.get("refresh") === "true";
   const [hasRefreshed, setHasRefreshed] = useState(false);
   const { allExpenses, stopLoading, isLoading, fetchExpenses } = useExpenses();
   const { stopLoading: stopPageLoading } = useLoading();
@@ -54,17 +54,17 @@ export default function ExpenseDetailPage() {
           await fetchExpenses();
           // Remove the refresh param from the URL without triggering a navigation
           const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
+          window.history.replaceState({}, "", newUrl);
         } catch (error) {
           console.error("Error refetching expenses:", error);
         }
       }
-      
+
       // Always stop loading indicators
       stopLoading();
       stopPageLoading();
     };
-    
+
     handleRefreshIfNeeded();
   }, [needsRefresh, hasRefreshed, fetchExpenses, stopLoading, stopPageLoading]);
 
@@ -80,7 +80,7 @@ export default function ExpenseDetailPage() {
       </div>
     );
   }
-  
+
   // Only show not found message after loading is complete
   if (!expense) {
     return (
@@ -94,5 +94,9 @@ export default function ExpenseDetailPage() {
     );
   }
 
-  return <ExpenseDetail expense={expense} onClose={handleBack} />;
+  return (
+    <div className="flex flex-col h-[calc(100vh-10rem)] overflow-y-auto">
+      <ExpenseDetail expense={expense} onClose={handleBack} />
+    </div>
+  );
 }

@@ -48,7 +48,7 @@ export default function ExpenseDetailPage() {
       </div>
     );
   }
-  
+
   // Only show not found message after loading is complete
   if (!expense) {
     return (
@@ -64,5 +64,9 @@ export default function ExpenseDetailPage() {
     );
   }
 
-  return <ExpenseDetail expense={expense} onClose={handleClose} />;
+  return (
+    <div className="flex flex-col h-[calc(100vh-10rem)] overflow-y-auto">
+      <ExpenseDetail expense={expense} onClose={handleClose} />
+    </div>
+  );
 }

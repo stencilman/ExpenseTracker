@@ -21,15 +21,15 @@ export default function UnreportedExpensesLayout({
   }, [stopLoading]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4">
+    <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-10rem)] lg:overflow-hidden gap-4">
       {isDetailView ? (
         <>
           {/* Card section - takes 1/3 of the space on desktop */}
-          <div className="lg:w-1/3 overflow-auto">
+          <div className="hidden lg:block lg:w-1/3 overflow-y-auto h-full">
             <UnreportedExpensesView compact={true} />
           </div>
           {/* Detail section - takes 2/3 of the space on desktop */}
-          <div className="lg:w-2/3 border-l lg:pl-4">{children}</div>
+          <div className="flex-1 w-full lg:w-2/3 border-l lg:pl-4 overflow-y-auto h-full">{children}</div>
         </>
       ) : (
         <div className="w-full h-[calc(100vh-10rem)] overflow-y-auto">

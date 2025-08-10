@@ -20,15 +20,15 @@ export default function ReportedExpensesLayout({
   }, [stopLoading]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-4">
+    <div className="flex flex-col lg:flex-row lg:h-[calc(100vh-10rem)] lg:overflow-hidden gap-4">
       {isDetailView ? (
         <>
           {/* Table section - takes 1/3 of the space on desktop */}
-          <div className="lg:w-1/3 overflow-auto">
+          <div className="hidden lg:block lg:w-1/3 overflow-y-auto h-full">
             <ReportedExpensesTable compact={true} />
           </div>
           {/* Detail section - takes 2/3 of the space on desktop */}
-          <div className="lg:w-2/3 border-l lg:pl-4 overflow-x-hidden overflow-y-auto h-[calc(100vh-10rem)]">
+          <div className="flex-1 w-full lg:w-2/3 border-l lg:pl-4 overflow-y-auto h-full">
             {children}
           </div>
         </>

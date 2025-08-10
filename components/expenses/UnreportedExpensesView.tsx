@@ -157,7 +157,7 @@ export default function UnreportedExpensesView({
       )}
 
       {selectedExpenses.size > 0 && (
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 ">
           <span className="text-sm font-medium">
             {selectedExpenses.size} expense
             {selectedExpenses.size !== 1 ? "s" : ""} selected
@@ -207,8 +207,8 @@ export default function UnreportedExpensesView({
       ) : (
         <div
           className={cn(
-            "flex flex-col overflow-y-auto ",
-            compact && "h-[calc(100vh-10rem)]"
+            "flex flex-col",
+            compact && "overflow-y-auto h-full"
           )}
         >
           {processedUnreportedExpenses.map((expense) => (

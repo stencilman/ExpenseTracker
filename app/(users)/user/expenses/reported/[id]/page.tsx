@@ -98,5 +98,9 @@ export default function ReportedExpenseDetailPage() {
     );
   }
 
-  return <ExpenseDetail expense={expense} onClose={handleBack} />;
+  return (
+    <div className="flex flex-col h-[calc(100vh-10rem)] overflow-y-auto">
+      <ExpenseDetail expense={expense} onClose={handleBack} />
+    </div>
+  );
 }
