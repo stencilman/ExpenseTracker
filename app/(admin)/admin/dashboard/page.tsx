@@ -279,12 +279,12 @@ export default function AdminDashboardPage() {
                 <CardTitle className="text-sm font-medium text-gray-500">
                   Total Reimbursed
                 </CardTitle>
-                <div className="flex flex-row space-x-2 items-center">
+                <div className="flex flex-col xs:flex-row gap-2 items-start xs:items-center">
                   <Select
                     value={selectedTimeframe}
                     onValueChange={setSelectedTimeframe}
                   >
-                    <SelectTrigger className="w-[120px] h-7 text-xs">
+                    <SelectTrigger className="w-full xs:w-[120px] h-7 text-xs">
                       <SelectValue placeholder="Select period" />
                     </SelectTrigger>
                     <SelectContent>
@@ -320,7 +320,7 @@ export default function AdminDashboardPage() {
                       }
                     }}
                   >
-                    <SelectTrigger className="w-[120px] h-7 text-xs">
+                    <SelectTrigger className="w-full xs:w-[120px] h-7 text-xs">
                       <SelectValue placeholder="All Categories" />
                     </SelectTrigger>
                     <SelectContent>
