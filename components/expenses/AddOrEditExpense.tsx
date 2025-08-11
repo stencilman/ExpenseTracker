@@ -739,9 +739,13 @@ export default function AddOrEditExpense({
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={isLoading || (isEditMode && !hasChanges)}
+                    disabled={
+                      form.formState.isSubmitting ||
+                      isLoading ||
+                      (isEditMode && !hasChanges)
+                    }
                   >
-                    {isLoading ? (
+                    {form.formState.isSubmitting || isLoading ? (
                       <>
                         <Loader size="sm" className="mr-2 text-white" />
                         Saving...
