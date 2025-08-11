@@ -82,7 +82,7 @@ export const TabNavigation = ({
         return "space-x-4";
       case "underline":
       default:
-        return "space-x-6 border-b border-gray-200";
+        return "space-x-6 border-b border-gray-200 relative overflow-x-auto px-7";
     }
   };
 
