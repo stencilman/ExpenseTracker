@@ -42,6 +42,7 @@ export default function UnreportedExpensesView({
     isAddExpenseOpen,
     setIsAddExpenseOpen,
     isLoading,
+    fetchExpenses,
   } = useExpenses();
 
   // Handle card click to navigate to expense detail
@@ -106,13 +107,18 @@ export default function UnreportedExpensesView({
     }
   }, [stopLoading, compact, isLoading]);
 
-  // Reset selected expenses when bulk add dialog closes
+  // Reset selected expenses and refetch data when bulk add dialog closes
   useEffect(() => {
     if (!isBulkAddToReportOpen) {
       // Only reset if the dialog was previously open and is now closed
       setSelectedExpenses(new Set());
+      
+      // Directly refetch expenses from the API to update the list
+      fetchExpenses().catch(error => {
+        console.error("Failed to refresh expenses after bulk add:", error);
+      });
     }
-  }, [isBulkAddToReportOpen]);
+  }, [isBulkAddToReportOpen, fetchExpenses]);
 
   return (
     <div className="space-y-4">

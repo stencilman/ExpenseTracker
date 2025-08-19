@@ -81,7 +81,7 @@ export default function RecordReimbursement({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[1000px]">
+      <DialogContent className="sm:max-w-[1000px] sm:max-h-none max-h-[90vh] sm:overflow-visible overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <Camera className="h-6 w-6 text-gray-400" />
@@ -92,16 +92,16 @@ export default function RecordReimbursement({
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
+            className="space-y-4 md:space-y-6"
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-md">
-                  <h3 className="text-sm font-medium text-gray-500 mb-4">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2 md:mb-4">
                     Manual Reimbursement
                   </h3>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 md:space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="amount">Amount to be Reimbursed</Label>
                       <Input
@@ -202,7 +202,7 @@ export default function RecordReimbursement({
                           <FormLabel>Notes</FormLabel>
                           <FormControl>
                             <Textarea
-                              className="bg-white resize-none h-20"
+                              className="bg-white resize-none h-16 md:h-20"
                               {...field}
                             />
                           </FormControl>
@@ -230,11 +230,11 @@ export default function RecordReimbursement({
 
               <div className="space-y-4">
                 <div className="bg-gray-50 p-4 rounded-md">
-                  <h3 className="text-sm font-medium text-gray-500 mb-4">
+                  <h3 className="text-sm font-medium text-gray-500 mb-2 md:mb-4">
                     REIMBURSEMENT SUMMARY
                   </h3>
 
-                  <div className="space-y-4">
+                  <div className="space-y-3 md:space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-600">
                         Total Reimbursable Amount
@@ -252,7 +252,7 @@ export default function RecordReimbursement({
                       </span>
                     </div>
 
-                    <div className="mt-6 bg-green-50 p-4 rounded-md">
+                    <div className="mt-4 md:mt-6 bg-green-50 p-3 md:p-4 rounded-md">
                       <div className="flex justify-between items-center text-green-700">
                         <span className="font-medium">
                           Amount to be Reimbursed
@@ -267,7 +267,7 @@ export default function RecordReimbursement({
               </div>
             </div>
 
-            <DialogFooter className="mt-6">
+            <DialogFooter className="mt-4 md:mt-6">
               <Button
                 variant="outline"
                 type="button"

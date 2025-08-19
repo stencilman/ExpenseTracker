@@ -1,5 +1,4 @@
-import NextAuth from "next-auth";
-import authConfig from "./auth.config";
+import { auth } from "./auth";
 import {
   publicRoutes,
   authRoutes,
@@ -12,7 +11,7 @@ import {
 } from "./routes";
 import { UserRole } from "@prisma/client";
 
-const { auth } = NextAuth(authConfig);
+
 
 export default auth((req) => {
   const nextUrl = req.nextUrl;
@@ -21,11 +20,6 @@ export default auth((req) => {
     auth: session,
   } = req;
   const isLoggedIn = !!session;
-
-  console.log("Route: ", pathname);
-  console.log("Is logged in: ", isLoggedIn);
-
-  console.log("session----->", session);
 
   let adminEmails 
   
@@ -38,10 +32,9 @@ export default auth((req) => {
     adminEmails = true;
   }
 
-  console.log("Admin emails: ", adminEmails);
+  console.log("adminEmails", adminEmails);
 
   const role = session?.user?.role;
-  console.log("User role: ", role);
 
   const isApiAuthRoute = pathname.startsWith(apiAuthPrefix);
   const isPublicRoute = publicRoutes.includes(pathname);
@@ -74,12 +67,12 @@ export default auth((req) => {
   if (isLoggedIn) {
     // Admins trying to access user routes
     if (role === UserRole.ADMIN && isUserRoute) {
-      return Response.redirect(new URL(DEFAULT_ADMIN_REDIRECT, nextUrl));
+      return Response.redirect(new URL("/not-authorized", nextUrl));
     }
 
     // Users trying to access admin routes
     if (role === UserRole.USER && isAdminRoute) {
-      return Response.redirect(new URL(DEFAULT_USER_REDIRECT, nextUrl));
+      return Response.redirect(new URL("/not-authorized", nextUrl));
     }
   }
 

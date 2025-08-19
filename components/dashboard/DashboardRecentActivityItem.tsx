@@ -39,9 +39,9 @@ export default function DashboardRecentActivityItem({ activity }: DashboardRecen
   };
 
   return (
-    <div className="py-3 px-5 flex items-center justify-between hover:bg-gray-50 transition-colors">
+    <div className="py-3 px-5 flex flex-col sm:flex-row sm:items-center justify-between hover:bg-gray-50 transition-colors gap-2 sm:gap-0">
       <div className="flex-1 mr-4">
-        <p className="font-medium text-gray-900 mb-1">{activity.title}</p>
+        <p className="font-medium text-gray-900 ">{activity.title}</p>
         <p className="text-sm text-gray-500">{`${activity.user.firstName} ${activity.user.lastName}`}</p>
       </div>
       <div className="flex items-center space-x-3">

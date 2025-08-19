@@ -92,16 +92,11 @@ export const {
 
       return session;
     },
-    async jwt({ token }) {
-      // console.log("jwt", token);
-
-      // token.custom = "custom";
-      if (!token.sub) return token;
-      const existingUser = await getUserById(token.sub);
-
-      if (!existingUser) return token;
-      token.role = existingUser.role;
-
+    async jwt({ token, user }) {
+      // Persist user.role in the JWT on initial sign-in; avoid DB calls in Edge runtime
+      if (user && (user as any).role) {
+        token.role = (user as any).role;
+      }
       return token;
     },
   },
