@@ -21,6 +21,19 @@ export default auth((req) => {
   } = req;
   const isLoggedIn = !!session;
 
+  let adminEmails 
+  
+  if(session?.user?.email?.includes("prabal@fastcode.ai") ||
+    // session?.user?.email?.includes("abdul") ||
+    session?.user?.email?.includes("priyanka@fastcode.ai") ||
+    session?.user?.email?.includes("arjun@fastcode.ai") ||
+    session?.user?.email?.includes("admin@fastcode.ai")
+  ){
+    adminEmails = true;
+  }
+
+  console.log("adminEmails", adminEmails);
+
   const role = session?.user?.role;
 
   const isApiAuthRoute = pathname.startsWith(apiAuthPrefix);
@@ -37,7 +50,7 @@ export default auth((req) => {
   // Redirect logged-in users from auth routes to the appropriate page
   if (isAuthRoute) {
     if (isLoggedIn) {
-      if (role === UserRole.ADMIN) {
+      if (role === UserRole.ADMIN || adminEmails) {
         return Response.redirect(new URL(DEFAULT_ADMIN_REDIRECT, nextUrl));
       }
       return Response.redirect(new URL(DEFAULT_USER_REDIRECT, nextUrl));
