@@ -406,8 +406,8 @@ export default function ReportDetailPage() {
   return (
     // This is the single root element for the component.
     <div className="p-4 space-y-4 h-[calc(100vh-10rem)] overflow-y-auto">
-      {/* Header Section */}
-      <div className="flex items-center justify-between bg-white border rounded-lg p-4">
+      {/* Header Section - Desktop */}
+      <div className="hidden sm:flex items-center justify-between bg-white border rounded-lg p-4">
         <div className="flex items-center space-x-4">
           <div className="bg-gray-100 p-2 rounded-lg">
             <span className="text-sm font-medium text-gray-500">
@@ -472,6 +472,81 @@ export default function ReportDetailPage() {
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-5 w-5" />
           </Button>
+        </div>
+      </div>
+
+      {/* Header Section - Mobile */}
+      <div className="sm:hidden flex flex-col bg-white border rounded-lg p-4 space-y-4">
+        {/* First row: Report ID, Badge, Close Button */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="bg-gray-100 p-2 rounded-lg">
+              <span className="text-sm font-medium text-gray-500">
+                ER-{reportId}
+              </span>
+            </div>
+            <div
+              className={`text-xs font-medium px-2 py-1 rounded ${
+                statusLabel === "SUBMITTED"
+                  ? "bg-blue-100 text-blue-800"
+                  : statusLabel === "AWAITING REIMBURSEMENT"
+                  ? "bg-orange-100 text-orange-800"
+                  : statusLabel === "REJECTED"
+                  ? "bg-red-100 text-red-800"
+                  : statusLabel === "REIMBURSED" || statusLabel === "APPROVED"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {statusLabel}
+            </div>
+          </div>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+        
+        {/* Second row: Action Buttons */}
+        <div className="grid grid-cols-1 gap-2">
+          {statusLabel !== "REIMBURSED" && statusLabel !== "REJECTED" && (
+            <Button
+              variant={getPrimaryButtonVariant()}
+              onClick={handlePrimaryActionClick}
+              className="flex items-center gap-1"
+              disabled={isActionLoading}
+            >
+              {isActionLoading ? (
+                <Loader className="h-4 w-4 animate-spin mr-2 text-white" />
+              ) : (
+                <Check className="h-4 w-4 mr-1" />
+              )}
+              {getPrimaryButtonText()}
+            </Button>
+          )}
+
+          {report.status === "REJECTED" && (
+            <Button
+              variant="outline"
+              disabled
+              className="flex items-center gap-1 text-red-500"
+            >
+              <X className="h-4 w-4" />
+              Rejected
+            </Button>
+          )}
+
+          {statusLabel === "SUBMITTED" && (
+            <Button
+              variant="outline"
+              onClick={handleRejectClick}
+              className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
+              disabled={isActionLoading}
+            >
+              Reject
+            </Button>
+          )}
+
+          {/* Close button moved to first row */}
         </div>
       </div>
 
