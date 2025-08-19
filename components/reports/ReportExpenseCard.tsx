@@ -53,7 +53,7 @@ export default function ReportExpenseCard({
 
   return (
     <Wrapper>
-      <div className="flex items-center p-4 border-b">
+      <div className="flex sm:items-center p-4 border-b">
         <div className="w-12">
           <div
             className={`${iconColor} h-10 w-10 rounded flex items-center justify-center`}
@@ -62,9 +62,9 @@ export default function ReportExpenseCard({
           </div>
         </div>
         <div className="flex-1">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between sm:items-center">
             <div>
-              <div className="flex items-center">
+              <div className="flex flex-col sm:flex-row sm:items-center">
                 <span className="text-sm text-gray-500 mr-2">{date}</span>
                 <span className="font-medium">{merchant}</span>
               </div>

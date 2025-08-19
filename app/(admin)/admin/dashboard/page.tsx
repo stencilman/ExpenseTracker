@@ -608,7 +608,7 @@ export default function AdminDashboardPage() {
 
       <div>
         <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-        <Card>
+        <Card className="py-0">
           <CardContent className="p-0">
             <div className="divide-y">
               {metrics?.recentActivity?.length > 0 ? (

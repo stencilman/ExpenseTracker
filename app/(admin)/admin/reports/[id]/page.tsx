@@ -554,7 +554,7 @@ export default function ReportDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Left Column */}
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white border rounded-lg p-6">
+          <div className="bg-white border rounded-lg p-6 overflow-y-auto">
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
             <p className="text-sm text-gray-500 mb-6">
               Duration:{" "}
@@ -567,7 +567,7 @@ export default function ReportDetailPage() {
                 : "N/A"}
             </p>
 
-            <Tabs defaultValue="expenses">
+            <Tabs className="min-w-[325px]" defaultValue="expenses">
               <TabsList className="mb-4">
                 <TabsTrigger value="expenses" className="relative w-60">
                   EXPENSES
@@ -651,7 +651,7 @@ export default function ReportDetailPage() {
         </div>
 
         {/* Right Column */}
-        <div className="space-y-4">
+        <div className="space-y-4 mb-4">
           <div className="bg-white border rounded-lg p-6 space-y-4">
             <div className="flex justify-between">
               <div className="text-sm text-gray-500">Total</div>
