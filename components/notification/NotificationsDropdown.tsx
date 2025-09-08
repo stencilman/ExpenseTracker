@@ -13,8 +13,10 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { useIsAdmin } from "@/hooks/use-current-user";
 
 export default function NotificationsDropdown() {
+  const isAdmin = useIsAdmin();
   const { 
     notifications, 
     unreadCount, 
@@ -81,7 +83,10 @@ export default function NotificationsDropdown() {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/user/notifications" className="w-full cursor-pointer justify-center">
+          <Link 
+            href={isAdmin ? "/admin/notifications" : "/user/notifications"} 
+            className="w-full cursor-pointer justify-center"
+          >
             <span className="text-sm text-center w-full">View all notifications</span>
           </Link>
         </DropdownMenuItem>

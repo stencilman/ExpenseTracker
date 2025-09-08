@@ -16,31 +16,30 @@ import { Badge } from "@/components/ui/badge";
 import { NotificationType } from "@prisma/client";
 
 // Map notification types to badge colors
-const typeToBadge: Record<NotificationType, { color: string; label: string }> =
-  {
-    REPORT_SUBMITTED: {
-      color: "bg-blue-100 text-blue-800",
-      label: "Report Submitted",
-    },
-    REPORT_APPROVED: {
-      color: "bg-green-100 text-green-800",
-      label: "Report Approved",
-    },
-    REPORT_REJECTED: {
-      color: "bg-red-100 text-red-800",
-      label: "Report Rejected",
-    },
-    REPORT_REIMBURSED: {
-      color: "bg-purple-100 text-purple-800",
-      label: "Reimbursed",
-    },
-    SYSTEM_ANNOUNCEMENT: {
-      color: "bg-yellow-100 text-yellow-800",
-      label: "Announcement",
-    },
-  };
+const typeToBadge: Record<NotificationType, { color: string; label: string }> = {
+  REPORT_SUBMITTED: {
+    color: "bg-blue-100 text-blue-800",
+    label: "Report Submitted",
+  },
+  REPORT_APPROVED: {
+    color: "bg-green-100 text-green-800",
+    label: "Report Approved",
+  },
+  REPORT_REJECTED: {
+    color: "bg-red-100 text-red-800",
+    label: "Report Rejected",
+  },
+  REPORT_REIMBURSED: {
+    color: "bg-purple-100 text-purple-800",
+    label: "Reimbursed",
+  },
+  SYSTEM_ANNOUNCEMENT: {
+    color: "bg-yellow-100 text-yellow-800",
+    label: "Announcement",
+  },
+};
 
-export default function NotificationsPage() {
+export default function AdminNotificationsPage() {
   const {
     notifications,
     loading,
