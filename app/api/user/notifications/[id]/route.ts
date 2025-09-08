@@ -27,12 +27,12 @@ export async function PATCH(
     }
 
     const { id } = await params;
-    const notificationId = parseInt(id);
+    // Don't parse as integer since notification IDs are UUIDs
 
     // Verify the notification belongs to the user
     const notification = await db.notification.findUnique({
       where: {
-        id: notificationId.toString(),
+        id: id,
       },
     });
 
@@ -50,7 +50,7 @@ export async function PATCH(
       );
     }
 
-    await markNotificationAsRead(notificationId.toString());
+    await markNotificationAsRead(id);
 
     return NextResponse.json({
       success: true,
@@ -89,12 +89,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
-    const notificationId = parseInt(id);
+    // Don't parse as integer since notification IDs are UUIDs
 
     // Verify the notification belongs to the user
     const notification = await db.notification.findUnique({
       where: {
-        id: notificationId.toString(),
+        id: id,
       },
     });
 
@@ -112,7 +112,7 @@ export async function DELETE(
       );
     }
 
-    await deleteNotification(notificationId.toString());
+    await deleteNotification(id);
 
     return NextResponse.json({
       success: true,
