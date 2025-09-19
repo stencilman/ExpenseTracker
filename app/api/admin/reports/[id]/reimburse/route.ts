@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { formatReportForUI } from "@/lib/format-utils";
 import { createReportHistoryEntry } from "@/data/report-history";
 import { sendReportStatusNotification } from "@/lib/services/notification-service";
+import { sendReportReimbursedEmail, formatDateForEmail } from "@/lib/email-service";
 
 /**
  * POST /api/admin/reports/[id]/reimburse
@@ -21,8 +22,8 @@ export async function POST(
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 403 });
     }
-   // Await the params promise
-   const { id } = await params;
+    // Await the params promise
+    const { id } = await params;
     const reportId = parseInt(id);
     if (isNaN(reportId)) {
       return new NextResponse("Invalid report ID", { status: 400 });
@@ -98,17 +99,34 @@ export async function POST(
       reportId,
       performedById: session.user.id,
       eventType: ReportEventType.REIMBURSED,
-      details: paymentReference 
-        ? `Report reimbursed with payment reference: ${paymentReference}` 
+      details: paymentReference
+        ? `Report reimbursed with payment reference: ${paymentReference}`
         : "Report marked as reimbursed",
     });
 
-    // Send notification to the report submitter
+    // Send in-app notification to the report submitter
     await sendReportStatusNotification(
       reportId,
       ReportStatus.REIMBURSED,
       session.user.id
     );
+    
+    // Send email notification
+    if (updatedReport.user && updatedReport.user.email) {
+      const userName = `${updatedReport.user.firstName || ''} ${updatedReport.user.lastName || ''}`.trim() || 'User';
+      
+      await sendReportReimbursedEmail(
+        updatedReport.user.email,
+        {
+          report_id: reportId,
+          report_title: updatedReport.title,
+          report_amount: updatedReport.totalAmount || 0,
+          user_name: userName,
+          reimbursement_date: formatDateForEmail(updatedReport.reimbursedAt),
+          payment_reference: paymentReference || undefined
+        }
+      );
+    }
 
     // Format the report for UI
     const formattedReport = formatReportForUI(updatedReport as any);
