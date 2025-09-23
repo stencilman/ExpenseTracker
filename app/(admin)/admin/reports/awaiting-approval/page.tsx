@@ -66,27 +66,7 @@ export default function AdminReportsAwaitingApprovalPage() {
     );
   };
 
-  const handleSelectAll = () => {
-    // Force re-render by creating a new array
-    const allReports = [...reports];
-    setSelectedReports(allReports);
-    setSelectAll(true);
-
-    // Force a re-render after a short delay to ensure UI updates
-    setTimeout(() => {
-      setSelectAll((state) => state);
-    }, 50);
-  };
-
-  const handleClearSelection = () => {
-    setSelectedReports([]);
-    setSelectAll(false);
-
-    // Force a re-render after a short delay to ensure UI updates
-    setTimeout(() => {
-      setSelectAll((state) => state);
-    }, 50);
-  };
+  // Selection is handled by the table's checkbox header
 
   const handleBulkApprove = async () => {
     if (selectedReports.length === 0) return;
@@ -177,60 +157,49 @@ export default function AdminReportsAwaitingApprovalPage() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {selectedReports.length > 0 ? (
+            {selectedReports.length > 0 && (
               <>
                 <span className="text-sm font-medium">
                   {selectedReports.length} report
                   {selectedReports.length !== 1 ? "s" : ""} selected
                 </span>
-                <Button
-                  onClick={handleClearSelection}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  Clear
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-green-500 text-green-500 hover:bg-green-50 hover:text-green-600"
-                  onClick={handleBulkApprove}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <div className="flex items-center gap-2">
-                      <Loader size="sm" />
-                      <span>Approving...</span>
-                    </div>
-                  ) : (
-                    "Approve All"
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-red-500 text-red-500 hover:bg-red-50"
-                  onClick={handleBulkReject}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <div className="flex items-center gap-2">
-                      <Loader size="sm" />
-                      <span>Rejecting...</span>
-                    </div>
-                  ) : (
-                    "Reject All"
-                  )}
-                </Button>
+                
+                {/* Action buttons in the same row */}
+                <div className="flex gap-2 ml-4">
+                  <Button
+                    variant="outline"
+                    className="border-green-500 text-green-500 hover:bg-green-50 hover:text-green-600"
+                    onClick={handleBulkApprove}
+                    disabled={isProcessing}
+                    size="sm"
+                  >
+                    {isProcessing ? (
+                      <div className="flex items-center gap-2">
+                        <Loader size="sm" />
+                        <span>Approving...</span>
+                      </div>
+                    ) : (
+                      "Approve"
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-red-500 text-red-500 hover:bg-red-50"
+                    onClick={handleBulkReject}
+                    disabled={isProcessing}
+                    size="sm"
+                  >
+                    {isProcessing ? (
+                      <div className="flex items-center gap-2">
+                        <Loader size="sm" />
+                        <span>Rejecting...</span>
+                      </div>
+                    ) : (
+                      "Reject"
+                    )}
+                  </Button>
+                </div>
               </>
-            ) : (
-              <Button
-                onClick={handleSelectAll}
-                variant="ghost"
-                size="sm"
-                className="text-gray-500 hover:text-gray-700"
-              >
-                Select All
-              </Button>
             )}
           </div>
         </div>
