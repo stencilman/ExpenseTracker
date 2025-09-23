@@ -329,21 +329,14 @@ export default function ExpenseDetail({
   // Content to be rendered
   return (
     <>
-      {/* Edit Expense Dialog */}
-      {!isLocked && (
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogTitle className="sr-only">Edit Expense</DialogTitle>
-            {isEditOpen && (
-              <AddOrEditExpense
-                expense={expense}
-                isOpen={isEditOpen}
-                onClose={() => setIsEditOpen(false)}
-                mode="edit"
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+      {/* Edit Expense Drawer */}
+      {!isLocked && isEditOpen && (
+        <AddOrEditExpense
+          expense={expense}
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          mode="edit"
+        />
       )}
       {/* Delete Confirmation Dialog */}
       {!isLocked && (
