@@ -738,6 +738,7 @@ export default function AddOrEditExpense({
                 <div className="flex justify-end pt-2">
                   <Button
                     type="submit"
+                    variant="primary"
                     className="w-full"
                     disabled={
                       form.formState.isSubmitting ||

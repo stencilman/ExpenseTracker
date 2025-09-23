@@ -67,7 +67,7 @@ export default function ReportedExpensesTable({
               onFilterChange={setFilters}
             />
             <ExpensesSort onSortChange={setSort} />
-            <Button onClick={() => setIsAddExpenseOpen(true)}>
+            <Button variant="primary" onClick={() => setIsAddExpenseOpen(true)}>
               Add Expense
             </Button>
           </div>

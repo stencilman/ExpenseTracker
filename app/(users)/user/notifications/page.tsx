@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -41,6 +42,7 @@ const typeToBadge: Record<NotificationType, { color: string; label: string }> =
   };
 
 export default function NotificationsPage() {
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const {
     notifications,
     loading,
@@ -53,16 +55,35 @@ export default function NotificationsPage() {
   return (
     <div className="container mx-auto py-6 space-y-6 h-[calc(100vh-6rem)] overflow-y-auto">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Notifications</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Notifications</h1>
+          <p className="text-sm text-gray-500">
+            Total: {notifications.length} | Unread: {notifications.filter(n => !n.read).length}
+          </p>
+        </div>
         {notifications.some((n) => !n.read) && (
           <Button
-            variant="outline"
+            variant="blue-outline"
             size="sm"
-            onClick={markAllAsRead}
+            onClick={async () => {
+              setIsMarkingAllRead(true);
+              await markAllAsRead();
+              setIsMarkingAllRead(false);
+            }}
+            disabled={isMarkingAllRead}
             className="flex items-center gap-2"
           >
-            <Check className="h-4 w-4" />
-            Mark all as read
+            {isMarkingAllRead ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Marking...</span>
+              </>
+            ) : (
+              <>
+                <Check className="h-4 w-4" />
+                Mark all as read
+              </>
+            )}
           </Button>
         )}
       </div>

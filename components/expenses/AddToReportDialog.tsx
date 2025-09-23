@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useDebounce } from "@/hooks/use-debounce";
-import { Search, Loader } from "lucide-react";
+import { Search, Loader, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -214,8 +214,10 @@ export function AddToReportDialog({
               <div className="absolute top-full mt-2 w-full z-10 border rounded-md bg-white shadow-lg max-h-[200px] overflow-y-auto">
                 {isLoading ? (
                   <div className="flex items-center justify-center p-4">
-                    <Loader className="h-4 w-4 animate-spin mr-2" />
-                    <span>Loading reports...</span>
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Loading reports...</span>
+                    </div>
                   </div>
                 ) : reports.length === 0 && debouncedSearchQuery ? (
                   <div className="p-4 text-center text-sm text-muted-foreground">
@@ -243,12 +245,13 @@ export function AddToReportDialog({
             Cancel
           </Button>
           <Button
+            variant="primary"
             onClick={handleAddToReport}
             disabled={isAddingToReport || !selectedReportId}
           >
             {isAddingToReport ? (
               <>
-                <Loader className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2 text-white" />
                 Adding...
               </>
             ) : (

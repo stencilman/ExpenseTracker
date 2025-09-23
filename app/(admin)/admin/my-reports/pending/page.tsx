@@ -238,8 +238,7 @@ export default function AdminPendingReportsPage() {
             {selectedReports.length > 0 && (
               <div className="flex gap-2 ml-4">
                 <Button
-                  variant="outline"
-                  className="border-blue-500 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                  variant="blue-outline"
                   onClick={handleBulkSubmit}
                   disabled={isSubmitting || isDeleting || !selectedReports.some(report => report.expenseCount > 0)}
                   size="sm"
@@ -255,8 +254,7 @@ export default function AdminPendingReportsPage() {
                   )}
                 </Button>
                 <Button
-                  variant="outline"
-                  className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
+                  variant="red-outline"
                   onClick={() => setIsDeleteDialogOpen(true)}
                   disabled={isSubmitting || isDeleting}
                   size="sm"
@@ -276,7 +274,7 @@ export default function AdminPendingReportsPage() {
 
           {/* Right Side: New Report Button */}
           <div>
-            <Button variant="outline" onClick={() => setIsAddReportOpen(true)}>
+            <Button variant="primary" onClick={() => setIsAddReportOpen(true)}>
               New Report
             </Button>
           </div>

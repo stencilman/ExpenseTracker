@@ -62,7 +62,7 @@ export default function AllExpensesTableView({
           />
           <ExpensesSort onSortChange={setSort} />
           {!compact && (
-            <Button onClick={() => setIsAddExpenseOpen(true)}>
+            <Button variant="primary" onClick={() => setIsAddExpenseOpen(true)}>
               Add Expense
             </Button>
           )}

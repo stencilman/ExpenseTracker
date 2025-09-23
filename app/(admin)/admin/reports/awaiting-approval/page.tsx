@@ -20,7 +20,8 @@ export default function AdminReportsAwaitingApprovalPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedReports, setSelectedReports] = useState<Report[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -72,7 +73,7 @@ export default function AdminReportsAwaitingApprovalPage() {
     if (selectedReports.length === 0) return;
 
     try {
-      setIsProcessing(true);
+      setIsApproving(true);
       const response = await fetch("/api/admin/reports/bulk-approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,7 +96,7 @@ export default function AdminReportsAwaitingApprovalPage() {
       console.error("Error approving reports:", err);
       toast.error("Failed to approve reports. Please try again.");
     } finally {
-      setIsProcessing(false);
+      setIsApproving(false);
     }
   };
 
@@ -103,7 +104,7 @@ export default function AdminReportsAwaitingApprovalPage() {
     if (selectedReports.length === 0) return;
 
     try {
-      setIsProcessing(true);
+      setIsRejecting(true);
       const response = await fetch("/api/admin/reports/bulk-reject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -126,7 +127,7 @@ export default function AdminReportsAwaitingApprovalPage() {
       console.error("Error rejecting reports:", err);
       toast.error("Failed to reject reports. Please try again.");
     } finally {
-      setIsProcessing(false);
+      setIsRejecting(false);
     }
   };
 
@@ -167,13 +168,12 @@ export default function AdminReportsAwaitingApprovalPage() {
                 {/* Action buttons in the same row */}
                 <div className="flex gap-2 ml-4">
                   <Button
-                    variant="outline"
-                    className="border-green-500 text-green-500 hover:bg-green-50 hover:text-green-600"
+                    variant="blue-outline"
                     onClick={handleBulkApprove}
-                    disabled={isProcessing}
+                    disabled={isApproving || isRejecting}
                     size="sm"
                   >
-                    {isProcessing ? (
+                    {isApproving ? (
                       <div className="flex items-center gap-2">
                         <Loader size="sm" />
                         <span>Approving...</span>
@@ -183,15 +183,14 @@ export default function AdminReportsAwaitingApprovalPage() {
                     )}
                   </Button>
                   <Button
-                    variant="outline"
-                    className="border-red-500 text-red-500 hover:bg-red-50"
+                    variant="red-outline"
                     onClick={handleBulkReject}
-                    disabled={isProcessing}
+                    disabled={isApproving || isRejecting}
                     size="sm"
                   >
-                    {isProcessing ? (
+                    {isRejecting ? (
                       <div className="flex items-center gap-2">
-                        <Loader size="sm" />
+                        <Loader size="sm" className="text-red-500" />
                         <span>Rejecting...</span>
                       </div>
                     ) : (
@@ -218,7 +217,7 @@ export default function AdminReportsAwaitingApprovalPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-end space-x-2 mt-4">
             <Button
-              variant="outline"
+              variant="blue-outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage <= 1 || isLoading}
@@ -229,7 +228,7 @@ export default function AdminReportsAwaitingApprovalPage() {
               Page {currentPage} of {totalPages}
             </div>
             <Button
-              variant="outline"
+              variant="blue-outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage >= totalPages || isLoading}

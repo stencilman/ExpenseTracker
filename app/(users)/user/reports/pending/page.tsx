@@ -234,8 +234,7 @@ export default function PendingReportsPage() {
                 {/* Action buttons in the same row */}
                 <div className="flex gap-2 ml-4">
                   <Button
-                    variant="outline"
-                    className="border-blue-500 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
+                    variant="blue-outline"
                     onClick={handleBulkSubmit}
                     disabled={isSubmitting || selectedReports.every(report => report.expenseCount === 0)}
                     title={selectedReports.every(report => report.expenseCount === 0) ? "Reports must have at least one expense to submit" : ""}
@@ -251,8 +250,7 @@ export default function PendingReportsPage() {
                     )}
                   </Button>
                   <Button
-                    variant="outline"
-                    className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
+                    variant="red-outline"
                     onClick={() => setIsDeleteDialogOpen(true)}
                     disabled={isSubmitting || isDeleting}
                     size="sm"
@@ -273,7 +271,7 @@ export default function PendingReportsPage() {
 
           {/* Right Side: New Report Button */}
           <div>
-            <Button variant="outline" onClick={() => setIsAddReportOpen(true)}>
+            <Button variant="primary" onClick={() => setIsAddReportOpen(true)}>
               New Report
             </Button>
           </div>

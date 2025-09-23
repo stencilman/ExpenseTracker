@@ -1,4 +1,5 @@
-import { Bell, Check } from "lucide-react";
+import { Bell, Check, Loader2 } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -17,6 +18,7 @@ import { useIsAdmin } from "@/hooks/use-current-user";
 
 export default function NotificationsDropdown() {
   const isAdmin = useIsAdmin();
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const { 
     notifications, 
     unreadCount, 
@@ -48,12 +50,25 @@ export default function NotificationsDropdown() {
           <DropdownMenuLabel className="py-0">Notifications</DropdownMenuLabel>
           {unreadCount > 0 && (
             <Button 
-              variant="ghost" 
+              variant="blue-outline" 
               size="sm" 
               className="h-8 text-xs flex gap-1 items-center" 
-              onClick={() => markAllAsRead()}
+              onClick={async () => {
+                setIsMarkingAllRead(true);
+                await markAllAsRead();
+                setIsMarkingAllRead(false);
+              }}
+              disabled={isMarkingAllRead}
             >
-              <Check className="h-3 w-3" /> Mark all as read
+              {isMarkingAllRead ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" /> Marking...
+                </>
+              ) : (
+                <>
+                  <Check className="h-3 w-3" /> Mark all as read
+                </>
+              )}
             </Button>
           )}
         </div>
