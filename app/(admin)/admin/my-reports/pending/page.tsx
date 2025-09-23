@@ -51,6 +51,7 @@ export default function AdminPendingReportsPage() {
   const [isAddReportOpen, setIsAddReportOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -140,6 +141,7 @@ export default function AdminPendingReportsPage() {
 
   const handleBulkSubmit = async () => {
     setIsSubmitting(true);
+    setIsDeleting(false); // Reset other loading state
     try {
       // Filter out reports with no expenses
       const reportsWithExpenses = selectedReports.filter(report => report.expenseCount > 0);
@@ -187,7 +189,8 @@ export default function AdminPendingReportsPage() {
 
   const handleBulkDelete = async () => {
     setIsDeleteDialogOpen(false);
-    setIsSubmitting(true); // Use the same loading state
+    setIsDeleting(true);
+    setIsSubmitting(false); // Reset other loading state
     try {
       const reportIds = selectedReports.map((r) => parseInt(r.id, 10));
       const response = await fetch("/api/reports/bulk-delete", {
@@ -210,7 +213,7 @@ export default function AdminPendingReportsPage() {
       console.error("Error deleting reports:", error);
       toast.error("Failed to delete reports. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setIsDeleting(false);
     }
   };
 
@@ -235,8 +238,10 @@ export default function AdminPendingReportsPage() {
             {selectedReports.length > 0 && (
               <div className="flex gap-2 ml-4">
                 <Button
+                  variant="outline"
+                  className="border-blue-500 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
                   onClick={handleBulkSubmit}
-                  disabled={isSubmitting || !selectedReports.some(report => report.expenseCount > 0)}
+                  disabled={isSubmitting || isDeleting || !selectedReports.some(report => report.expenseCount > 0)}
                   size="sm"
                   title={!selectedReports.some(report => report.expenseCount > 0) ? "Selected reports have no expenses" : ""}
                 >
@@ -251,14 +256,14 @@ export default function AdminPendingReportsPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  className="border-red-500 text-red-500 hover:bg-red-50"
+                  className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
                   onClick={() => setIsDeleteDialogOpen(true)}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isDeleting}
                   size="sm"
                 >
-                  {isSubmitting ? (
+                  {isDeleting ? (
                     <div className="flex items-center gap-2">
-                      <Loader size="sm" />
+                      <Loader size="sm" className="text-red-500" />
                       <span>Deleting...</span>
                     </div>
                   ) : (
@@ -336,7 +341,7 @@ export default function AdminPendingReportsPage() {
           onOpenChange={setIsDeleteDialogOpen}
           onConfirm={handleBulkDelete}
           reportsCount={selectedReports.length}
-          isPending={isSubmitting}
+          isPending={isDeleting}
         />
       </div>
     </div>

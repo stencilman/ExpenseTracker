@@ -267,9 +267,9 @@ export function DataTable<TData, TValue>({
       </div>
 
       {showPagination && (
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-end">
           {enableRowSelection && (
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground mr-auto">
               {Object.keys(rowSelection).length} of{" "}
               {table.getFilteredRowModel().rows.length} row(s) selected
             </div>

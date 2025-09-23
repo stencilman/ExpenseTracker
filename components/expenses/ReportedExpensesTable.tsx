@@ -36,8 +36,7 @@ export default function ReportedExpensesTable({
     (expense: ExpenseWithUI) => expense.reportId && expense.reportName
   );
 
-  // Use a local state for selected expenses IDs
-  const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
+  // Row selection is disabled for admin
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
 
   // Use the expense route helper to get the correct route
@@ -82,9 +81,8 @@ export default function ReportedExpensesTable({
       ) : (
         <ExpensesTable
           data={reportedExpenses}
-          onSelectedRowsChange={setSelectedExpenseIds}
           onRowClick={handleRowClick}
-          enableRowSelection={true}
+          enableRowSelection={false}
           showPagination={true}
         />
       )}

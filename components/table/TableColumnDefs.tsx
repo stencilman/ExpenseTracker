@@ -321,27 +321,5 @@ export function getExpensesPageColumns(
         </div>
       ),
     },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => {
-        const report = row.original;
-        return (
-          <div className="flex justify-end">
-            {/* Import and use the ReportActions component */}
-            {React.createElement(
-              require("@/components/admin/ReportActions").ReportActions,
-              {
-                report,
-                onActionComplete: (updatedReport: Report) => {
-                  // This will be handled by the parent component refreshing the data
-                  console.log("Action completed", updatedReport);
-                },
-              }
-            )}
-          </div>
-        );
-      },
-    },
   ];
 }
