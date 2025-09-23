@@ -371,14 +371,14 @@ export default function ReportDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white border rounded-lg p-6">
+          <div className="bg-white border rounded-lg p-6 overflow-x-auto">
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
             <p className="text-sm text-gray-500 mb-6">
               Duration: {formatDateRange(report.startDate, report.endDate)}
             </p>
 
-            <Tabs defaultValue="expenses" onValueChange={handleTabChange}>
-              <TabsList className="mb-4">
+            <Tabs defaultValue="expenses" onValueChange={handleTabChange} className="min-w-[350px]">
+              <TabsList className="mb-4 w-full">
                 <TabsTrigger value="expenses" className="relative w-64">
                   EXPENSES
                   {report.expenses.length > 0 && (
@@ -390,7 +390,7 @@ export default function ReportDetailPage() {
                 <TabsTrigger value="history">HISTORY</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="expenses" className="space-y-4">
+              <TabsContent value="expenses" className="space-y-4 overflow-x-auto">
                 {report.expenses.length > 0 ? (
                   report.expenses.map((expense) => (
                     <ReportExpenseCard
@@ -433,7 +433,7 @@ export default function ReportDetailPage() {
                 )}
               </TabsContent>
 
-              <TabsContent value="history">
+              <TabsContent value="history" className="overflow-x-auto">
                 {isLoadingHistory ? (
                   <div className="flex justify-center items-center py-8">
                     <Loader size="md" text="Loading history..." />
