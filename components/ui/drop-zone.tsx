@@ -75,7 +75,7 @@ export function DropZone({
       className={cn(
         "border-2 border-dashed rounded-xl transition-all duration-200",
         size === "sm"
-          ? "h-[100px] px-6 flex flex-row items-center justify-between gap-4"
+          ? "min-h-[100px] px-6 py-3 flex flex-row items-center justify-between gap-4"
           : "flex flex-col items-center justify-center p-8 text-center",
         isDragActive
           ? "border-blue-500 bg-blue-50 scale-[1.02]"
@@ -97,7 +97,7 @@ export function DropZone({
                   <Upload className="h-6 w-6 text-blue-500" />
                 </div>
                 <div className="text-left">
-                  <h3 className="text-sm font-medium">{title}</h3>
+                  <h3 className="text-sm font-medium break-words max-w-[200px] sm:max-w-none">{title}</h3>
                 </div>
               </div>
               <input

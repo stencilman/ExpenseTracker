@@ -162,14 +162,6 @@ export default function UnreportedExpenseCard({
                       >
                         Add To Report
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 text-gray-500"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal className="h-5 w-5" />
-                      </Button>
                     </div>
                   </div>
                 </div>

@@ -183,14 +183,14 @@ export default function UnreportedExpensesView({
           <Button
             onClick={handleBulkAddToReport}
             variant="outline"
-            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+            className="border-blue-500 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
           >
             Add To Report
           </Button>
           <Button
             onClick={handleBulkDelete}
             variant="outline"
-            className="border-red-500 text-red-500 hover:bg-red-50"
+            className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600"
           >
             Delete Expenses
           </Button>
