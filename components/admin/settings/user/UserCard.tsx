@@ -8,7 +8,7 @@ import {
   Edit,
   Trash2,
   AlertTriangle,
-  Ban, 
+  Ban,
   CheckCircle,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -163,7 +163,7 @@ export default function UserCard({
                 <Edit className="h-4 w-4" />
                 Edit
               </DropdownMenuItem>
-              
+
               {!localEmailVerified && (
                 <DropdownMenuItem
                   className="flex items-center gap-2 cursor-pointer"
@@ -177,7 +177,7 @@ export default function UserCard({
                         },
                         body: JSON.stringify({ verify: true }),
                       });
-                      
+
                       if (response.ok) {
                         // Update local state instead of refreshing the page
                         setLocalEmailVerified(new Date());

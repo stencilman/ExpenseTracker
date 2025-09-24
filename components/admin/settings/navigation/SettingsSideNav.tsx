@@ -5,7 +5,7 @@ import SettingsNavigationSection from "./SettingsNavigationSection";
 
 export default function SettingsSideNav() {
   return (
-    <div className="w-full max-w-[250px] border-r pr-4 h-[calc(100vh-4rem)] overflow-y-auto">
+    <div className="hidden sm:block w-full max-w-[250px] border-r pr-4 h-[calc(100vh-4rem)] overflow-y-auto">
       <SettingsNavigationSection
         header="Organization"
         icon={Building}

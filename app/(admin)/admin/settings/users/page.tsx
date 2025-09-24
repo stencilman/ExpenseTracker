@@ -33,7 +33,7 @@ export interface UserData {
 export default function UsersPage() {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
-  
+
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
   const [usersList, setUsersList] = useState<UserData[]>([]);
@@ -130,16 +130,18 @@ export default function UsersPage() {
   const handleDeleteUser = async (userId: string) => {
     try {
       const response = await fetch(`/api/admin/users/${userId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete user');
+        throw new Error("Failed to delete user");
       }
 
       // Update local state after successful deletion
-      setUsersList((prevUsers) => prevUsers.filter((user) => user.id !== userId));
-      
+      setUsersList((prevUsers) =>
+        prevUsers.filter((user) => user.id !== userId)
+      );
+
       // Also remove from selection if selected
       if (selectedUsers.has(userId)) {
         const newSelected = new Set(selectedUsers);
