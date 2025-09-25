@@ -4,13 +4,11 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -31,7 +29,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
   User,
@@ -44,6 +42,7 @@ import {
   Save,
   Pencil,
   X,
+  LogOut,
 } from "lucide-react";
 import { useCurrentUser } from "@/hooks/use-current-user";
 import SignoutButton from "@/components/auth/signout-button";
@@ -54,12 +53,100 @@ import {
 } from "@/lib/validations/user";
 import { toast } from "sonner";
 
-export default function SettingsPage() {
+export default function MePage() {
   const currentUser = useCurrentUser();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [userSettings, setUserSettings] = useState<any>(null);
-  // Approvers are managed by admins, not by users themselves
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [originalValues, setOriginalValues] =
+    useState<UserSettingsFormValues | null>(null);
+
+  // State to track if form has changes
+  const [hasChanges, setHasChanges] = useState(false);
+
+  // Function to check if form has actual changes
+  const hasFormChanges = () => {
+    if (!originalValues) return false;
+
+    const currentValues = form.getValues();
+    console.log("Checking form changes:", { currentValues, originalValues });
+
+    // Compare each field
+    if (currentValues.firstName !== originalValues.firstName) {
+      console.log(
+        "firstName changed:",
+        currentValues.firstName,
+        originalValues.firstName
+      );
+      return true;
+    }
+    if (currentValues.lastName !== originalValues.lastName) {
+      console.log(
+        "lastName changed:",
+        currentValues.lastName,
+        originalValues.lastName
+      );
+      return true;
+    }
+    if (currentValues.employeeId !== originalValues.employeeId) {
+      console.log(
+        "employeeId changed:",
+        currentValues.employeeId,
+        originalValues.employeeId
+      );
+      return true;
+    }
+    if (currentValues.mobile !== originalValues.mobile) {
+      console.log(
+        "mobile changed:",
+        currentValues.mobile,
+        originalValues.mobile
+      );
+      return true;
+    }
+    if (currentValues.department !== originalValues.department) {
+      console.log(
+        "department changed:",
+        currentValues.department,
+        originalValues.department
+      );
+      return true;
+    }
+    if (currentValues.designation !== originalValues.designation) {
+      console.log(
+        "designation changed:",
+        currentValues.designation,
+        originalValues.designation
+      );
+      return true;
+    }
+
+    // Compare dates - handle null/undefined cases
+    const currentJoining = currentValues.dateOfJoining
+      ? new Date(currentValues.dateOfJoining).toISOString()
+      : null;
+    const originalJoining = originalValues.dateOfJoining
+      ? new Date(originalValues.dateOfJoining).toISOString()
+      : null;
+    if (currentJoining !== originalJoining) {
+      console.log("dateOfJoining changed:", currentJoining, originalJoining);
+      return true;
+    }
+
+    const currentBirth = currentValues.dateOfBirth
+      ? new Date(currentValues.dateOfBirth).toISOString()
+      : null;
+    const originalBirth = originalValues.dateOfBirth
+      ? new Date(originalValues.dateOfBirth).toISOString()
+      : null;
+    if (currentBirth !== originalBirth) {
+      console.log("dateOfBirth changed:", currentBirth, originalBirth);
+      return true;
+    }
+
+    console.log("No changes detected");
+    return false;
+  };
 
   // Initialize form
   const form = useForm<UserSettingsFormValues>({
@@ -78,9 +165,9 @@ export default function SettingsPage() {
     },
   });
 
-  // Fetch user settings
+  // Fetch user profile
   useEffect(() => {
-    const fetchUserSettings = async () => {
+    const fetchUserProfile = async () => {
       try {
         setIsLoading(true);
         const response = await fetch("/api/user/settings");
@@ -88,15 +175,15 @@ export default function SettingsPage() {
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           const errorMessage =
-            errorData.error || "Failed to fetch user settings";
+            errorData.error || "Failed to fetch user profile";
           throw new Error(errorMessage);
         }
 
         const data = await response.json();
-        setUserSettings(data);
+        setUserProfile(data);
 
-        // Update form values
-        form.reset({
+        // Create initial values object
+        const initialValues = {
           firstName: data.firstName || "",
           lastName: data.lastName || "",
           employeeId: data.employeeId || "",
@@ -111,25 +198,63 @@ export default function SettingsPage() {
           designation: data.designation || "",
           roleName: data.roleName ?? undefined,
           approverId: data.approverId || "",
-        });
+        };
+
+        // Store original values for comparison
+        setOriginalValues(initialValues);
+
+        // Update form values
+        form.reset(initialValues);
       } catch (error: any) {
-        console.error("Error fetching user settings:", error);
-        toast.error(error.message || "Failed to load user settings");
+        console.error("Error fetching user profile:", error);
+        toast.error(error.message || "Failed to load user profile");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchUserSettings();
-  }, [form]);
+    fetchUserProfile();
+  }, [form]); // Close the first useEffect hook
+
+  // Watch for form changes
+  useEffect(() => {
+    // Subscribe to form changes
+    const subscription = form.watch((value, { name, type }) => {
+      console.log(`Form field changed: ${name}, type: ${type}`);
+      
+      // Force check for changes after a short delay to ensure values are updated
+      setTimeout(() => {
+        const changes = hasFormChanges();
+        console.log("Form watch - has changes:", changes);
+        setHasChanges(changes);
+      }, 10);
+    });
+    
+    // Cleanup subscription
+    return () => subscription.unsubscribe();
+  }, [originalValues, form]); // Re-run when originalValues or form changes
 
   // Handle form submission
   const onSubmit = async (values: UserSettingsFormValues) => {
     try {
+      // Log form values to help with debugging
+      console.log("Form submitted with values:", values);
+      console.log("Form validation state:", form.formState);
+
       setIsLoading(true);
 
       // Create a copy of the values to submit
       const dataToSubmit = { ...values };
+
+      // Fix roleName format if needed
+      if (typeof dataToSubmit.roleName === "string") {
+        const roleUpper = dataToSubmit.roleName.toUpperCase();
+        if (roleUpper === "SUBMITTER") {
+          dataToSubmit.roleName = "Submitter";
+        } else if (roleUpper === "APPROVER") {
+          dataToSubmit.roleName = "Approver";
+        }
+      }
 
       // Don't send empty approverId to avoid foreign key constraint issues
       if (!dataToSubmit.approverId || dataToSubmit.approverId.trim() === "") {
@@ -137,21 +262,28 @@ export default function SettingsPage() {
       }
 
       // Handle date fields - ensure they're valid dates or null
-      if (dataToSubmit.dateOfJoining) {
-        // Ensure it's a valid date object
-        dataToSubmit.dateOfJoining = new Date(dataToSubmit.dateOfJoining);
-      } else {
-        dataToSubmit.dateOfJoining = null;
+      try {
+        if (dataToSubmit.dateOfJoining) {
+          // Ensure it's a valid date object
+          dataToSubmit.dateOfJoining = new Date(dataToSubmit.dateOfJoining);
+        } else {
+          dataToSubmit.dateOfJoining = null;
+        }
+
+        if (dataToSubmit.dateOfBirth) {
+          // Ensure it's a valid date object
+          dataToSubmit.dateOfBirth = new Date(dataToSubmit.dateOfBirth);
+        } else {
+          dataToSubmit.dateOfBirth = null;
+        }
+      } catch (dateError) {
+        console.error("Error processing dates:", dateError);
+        toast.error("Invalid date format. Please check date fields.");
+        setIsLoading(false);
+        return;
       }
 
-      if (dataToSubmit.dateOfBirth) {
-        // Ensure it's a valid date object
-        dataToSubmit.dateOfBirth = new Date(dataToSubmit.dateOfBirth);
-      } else {
-        dataToSubmit.dateOfBirth = null;
-      }
-
-      console.log("Submitting data:", dataToSubmit);
+      console.log("Sending data to API:", dataToSubmit);
 
       const response = await fetch("/api/user/settings", {
         method: "PATCH",
@@ -161,30 +293,76 @@ export default function SettingsPage() {
         body: JSON.stringify(dataToSubmit),
       });
 
+      console.log("API response status:", response.status);
+
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error("API error response:", errorData);
         const errorMessage =
-          errorData.error || "Failed to update user settings";
+          errorData.error ||
+          `Failed to update user profile (Status: ${response.status})`;
         throw new Error(errorMessage);
       }
 
-      const updatedSettings = await response.json();
-      setUserSettings(updatedSettings);
-      toast.success("User settings updated successfully");
+      const updatedProfile = await response.json();
+      console.log("Updated profile data:", updatedProfile);
+
+      // Update the user profile state
+      setUserProfile(updatedProfile);
+
+      // Create new original values from updated profile
+      const newOriginalValues = {
+        firstName: updatedProfile.firstName || "",
+        lastName: updatedProfile.lastName || "",
+        employeeId: updatedProfile.employeeId || "",
+        mobile: updatedProfile.mobile || "",
+        department: updatedProfile.department || "",
+        dateOfJoining: updatedProfile.dateOfJoining
+          ? new Date(updatedProfile.dateOfJoining)
+          : undefined,
+        dateOfBirth: updatedProfile.dateOfBirth
+          ? new Date(updatedProfile.dateOfBirth)
+          : undefined,
+        designation: updatedProfile.designation || "",
+        roleName: updatedProfile.roleName ?? undefined,
+        approverId: updatedProfile.approverId || "",
+      };
+
+      // Update original values for future comparisons
+      setOriginalValues(newOriginalValues);
+
+      // Reset form with new values
+      form.reset(newOriginalValues, {
+        keepDirty: false,
+        keepTouched: false,
+        keepIsValid: true,
+        keepIsSubmitted: false,
+        keepErrors: false,
+        keepValues: true,
+        keepDefaultValues: false
+      });
+
+      // Reset changes state
+      setHasChanges(false);
+      
+      // Log the state after reset
+      console.log("Form reset after save, isDirty:", form.formState.isDirty);
+
+      toast.success("Profile updated successfully");
       setIsEditing(false);
     } catch (error: any) {
-      console.error("Error updating user settings:", error);
-      toast.error(error.message || "Failed to update user settings");
+      console.error("Error updating user profile:", error);
+      toast.error(error.message || "Failed to update profile");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Show loading state when initially loading settings
-  if (isLoading && !userSettings) {
+  // Show loading state when initially loading profile
+  if (isLoading && !userProfile) {
     return (
       <div className="p-4 flex justify-center items-center min-h-[400px]">
-        <Loader />
+        <Loader text="Loading profile..." />
       </div>
     );
   }
@@ -194,21 +372,60 @@ export default function SettingsPage() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 justify-between">
-            <div className="flex flex-col sm:flex-row sm:justify-end items-stretch gap-2">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
               <User className="h-5 w-5 text-slate-500" />
-              <CardTitle>Personal Details</CardTitle>
+              <CardTitle>My Profile</CardTitle>
             </div>
             <div className="flex flex-col sm:flex-row sm:justify-end items-stretch gap-2">
-              <SignoutButton className="flex items-center" />
               {!isEditing ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditing(true)}
-                  className="w-full sm:w-auto flex items-center gap-1"
-                >
-                  <Pencil className="h-4 w-4" />
-                  Edit
-                </Button>
+                <>
+                  <SignoutButton
+                    variant="outline"
+                    className="flex items-center gap-1"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </SignoutButton>
+                  <Button
+                    variant="default"
+                    onClick={() => {
+                      // Reset hasChanges when entering edit mode
+                      setHasChanges(false);
+                      
+                      // Make sure form values match current profile data
+                      if (userProfile) {
+                        const currentValues = {
+                          firstName: userProfile.firstName || "",
+                          lastName: userProfile.lastName || "",
+                          employeeId: userProfile.employeeId || "",
+                          mobile: userProfile.mobile || "",
+                          department: userProfile.department || "",
+                          dateOfJoining: userProfile.dateOfJoining
+                            ? new Date(userProfile.dateOfJoining)
+                            : undefined,
+                          dateOfBirth: userProfile.dateOfBirth
+                            ? new Date(userProfile.dateOfBirth)
+                            : undefined,
+                          designation: userProfile.designation || "",
+                          roleName: userProfile.roleName ?? undefined,
+                          approverId: userProfile.approverId || "",
+                        };
+                        
+                        // Update original values for comparison
+                        setOriginalValues(currentValues);
+                        
+                        // Reset form with current values
+                        form.reset(currentValues);
+                      }
+                      
+                      setIsEditing(true);
+                    }}
+                    className="flex items-center gap-1"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit Profile
+                  </Button>
+                </>
               ) : null}
             </div>
           </div>
@@ -230,7 +447,22 @@ export default function SettingsPage() {
                         <FormItem>
                           <FormLabel>First Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="First name" {...field} />
+                            <Input
+                              placeholder="First name"
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Manually check for changes after field update
+                                setTimeout(() => {
+                                  const hasFieldChanges = hasFormChanges();
+                                  console.log(
+                                    "First name changed, form has changes:",
+                                    hasFieldChanges
+                                  );
+                                  setHasChanges(hasFieldChanges);
+                                }, 0);
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -244,7 +476,22 @@ export default function SettingsPage() {
                         <FormItem>
                           <FormLabel>Last Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Last name" {...field} />
+                            <Input
+                              placeholder="Last name"
+                              {...field}
+                              onChange={(e) => {
+                                field.onChange(e);
+                                // Manually check for changes after field update
+                                setTimeout(() => {
+                                  const hasFieldChanges = hasFormChanges();
+                                  console.log(
+                                    "Last name changed, form has changes:",
+                                    hasFieldChanges
+                                  );
+                                  setHasChanges(hasFieldChanges);
+                                }, 0);
+                              }}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -286,7 +533,10 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
+                  </div>
 
+                  {/* Right column */}
+                  <div className="space-y-4">
                     <FormField
                       control={form.control}
                       name="department"
@@ -304,10 +554,7 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-                  </div>
 
-                  {/* Right column */}
-                  <div className="space-y-4">
                     <FormField
                       control={form.control}
                       name="dateOfJoining"
@@ -429,8 +676,6 @@ export default function SettingsPage() {
                         </FormItem>
                       )}
                     />
-
-                    {/* Approver is set by admins, not by users themselves */}
                   </div>
                 </div>
 
@@ -440,38 +685,50 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => {
                       setIsEditing(false);
-                      if (userSettings) {
-                        form.reset({
-                          firstName: userSettings.firstName || "",
-                          lastName: userSettings.lastName || "",
-                          employeeId: userSettings.employeeId || "",
-                          mobile: userSettings.mobile || "",
-                          department: userSettings.department || "",
-                          dateOfJoining: userSettings.dateOfJoining
-                            ? new Date(userSettings.dateOfJoining)
-                            : undefined,
-                          dateOfBirth: userSettings.dateOfBirth
-                            ? new Date(userSettings.dateOfBirth)
-                            : undefined,
-                          designation: userSettings.designation || "",
-                          roleName: userSettings.roleName ?? undefined,
-                          approverId: userSettings.approverId || "",
-                        });
+                      if (originalValues) {
+                        // Reset to original values
+                        form.reset(originalValues);
                       }
                     }}
-                    className="w-full sm:w-auto flex items-center gap-1"
+                    className="flex items-center gap-1"
                   >
                     <X className="h-4 w-4" />
                     Cancel
                   </Button>
                   <Button
-                    type="submit"
-                    className="w-full sm:w-auto flex items-center gap-1"
-                    disabled={!form.formState.isDirty || isLoading}
+                    type="button"
+                    className="flex items-center gap-1"
+                    onClick={() => {
+                      console.log("Save button clicked");
+                      console.log("Form state:", form.formState);
+                      console.log("Is form dirty:", form.formState.isDirty);
+                      console.log("Has changes (state):", hasChanges);
+                      console.log("Has changes (function):", hasFormChanges());
+
+                      // Get current form values
+                      const formValues = form.getValues();
+                      console.log("Form values:", formValues);
+                      console.log("Original values:", originalValues);
+
+                      // Fix roleName if needed (convert to proper format)
+                      // TypeScript safe way to handle the conversion
+                      const roleValue = String(
+                        formValues.roleName
+                      ).toUpperCase();
+                      if (roleValue === "SUBMITTER") {
+                        formValues.roleName = "Submitter";
+                      } else if (roleValue === "APPROVER") {
+                        formValues.roleName = "Approver";
+                      }
+
+                      // Force submit regardless of validation state
+                      onSubmit(formValues);
+                    }}
+                    disabled={!hasChanges || isLoading}
                   >
                     {isLoading ? (
                       <>
-                        <Loader className="h-4 w-4 animate-spin" />
+                        <Loader size="sm" className="text-white" />
                         Saving...
                       </>
                     ) : (
@@ -489,82 +746,114 @@ export default function SettingsPage() {
               {/* Left column - Personal details */}
               <div className="space-y-6">
                 <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Name</div>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Name</div>
+                  </div>
                   <div>
-                    {userSettings?.firstName && userSettings?.lastName
-                      ? `${userSettings?.firstName} ${userSettings?.lastName}`
-                      : userSettings?.name || "-"}
+                    {userProfile?.firstName && userProfile?.lastName
+                      ? `${userProfile?.firstName} ${userProfile?.lastName}`
+                      : userProfile?.name || "-"}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Email Address</div>
-                  <div>{userSettings?.email}</div>
-                </div>
-
-                <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Employee ID</div>
-                  <div>{userSettings?.employeeId || "-"}</div>
-                </div>
-
-                <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Mobile</div>
-                  <div>{userSettings?.mobile || "-"}</div>
-                </div>
-
-                <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Department</div>
-                  <div>{userSettings?.department || "-"}</div>
-                </div>
-
-                <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Date of joining</div>
-                  <div>
-                    {userSettings?.dateOfJoining
-                      ? format(new Date(userSettings.dateOfJoining), "PPP")
-                      : "-"}
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Email Address</div>
                   </div>
+                  <div>{userProfile?.email}</div>
                 </div>
 
                 <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Date of birth</div>
-                  <div>
-                    {userSettings?.dateOfBirth
-                      ? format(new Date(userSettings.dateOfBirth), "PPP")
-                      : "-"}
+                  <div className="flex items-center gap-2">
+                    <Briefcase className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Employee ID</div>
                   </div>
+                  <div>{userProfile?.employeeId || "-"}</div>
                 </div>
 
                 <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Designation</div>
-                  <div>{userSettings?.designation || "-"}</div>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Mobile</div>
+                  </div>
+                  <div>{userProfile?.mobile || "-"}</div>
+                </div>
+
+                <div className="grid grid-cols-2 items-center">
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Department</div>
+                  </div>
+                  <div>{userProfile?.department || "-"}</div>
                 </div>
               </div>
 
-              {/* Right column - Role details */}
+              {/* Right column - Additional details */}
               <div className="space-y-6">
                 <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Role Name</div>
-                  <div>{userSettings?.roleName || "Submitter"}</div>
+                  <div className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">
+                      Date of Joining
+                    </div>
+                  </div>
+                  <div>
+                    {userProfile?.dateOfJoining
+                      ? format(new Date(userProfile.dateOfJoining), "PPP")
+                      : "-"}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 items-center">
-                  <div className="text-sm text-slate-500">Submits To</div>
-                  {userSettings?.approver ? (
+                  <div className="flex items-center gap-2">
+                    <CalendarIcon className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Date of Birth</div>
+                  </div>
+                  <div>
+                    {userProfile?.dateOfBirth
+                      ? format(new Date(userProfile.dateOfBirth), "PPP")
+                      : "-"}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 items-center">
+                  <div className="flex items-center gap-2">
+                    <Award className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Designation</div>
+                  </div>
+                  <div>{userProfile?.designation || "-"}</div>
+                </div>
+
+                <div className="grid grid-cols-2 items-center">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Role</div>
+                  </div>
+                  <div>{userProfile?.roleName || "Submitter"}</div>
+                </div>
+
+                <div className="grid grid-cols-2 items-center">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-slate-500" />
+                    <div className="text-sm text-slate-500">Submits To</div>
+                  </div>
+                  {userProfile?.approver ? (
                     <div className="flex items-center gap-2">
                       <Avatar className="h-8 w-8 bg-pink-100 flex-shrink-0">
                         <AvatarFallback className="text-pink-500">
-                          {userSettings.approver.firstName?.[0] || ""}
-                          {userSettings.approver.lastName?.[0] || ""}
+                          {userProfile.approver.firstName?.[0] || ""}
+                          {userProfile.approver.lastName?.[0] || ""}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div>
-                          {userSettings.approver.firstName}{" "}
-                          {userSettings.approver.lastName}
+                          {userProfile.approver.firstName}{" "}
+                          {userProfile.approver.lastName}
                         </div>
                         <div className="text-xs text-slate-500">
-                          {userSettings.approver.email}
+                          {userProfile.approver.email}
                         </div>
                       </div>
                     </div>
