@@ -551,8 +551,8 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-2 items-center">
                   <div className="text-sm text-slate-500">Submits To</div>
                   {userSettings?.approver ? (
-                    <div className="flex flex-col sm:flex-row sm:justify-end items-stretch gap-2">
-                      <Avatar className="h-8 w-8 bg-pink-100">
+                    <div className="flex items-center gap-2">
+                      <Avatar className="h-8 w-8 bg-pink-100 flex-shrink-0">
                         <AvatarFallback className="text-pink-500">
                           {userSettings.approver.firstName?.[0] || ""}
                           {userSettings.approver.lastName?.[0] || ""}

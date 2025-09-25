@@ -53,7 +53,6 @@ export const StatusCell = ({ status }: { status?: Report["status"] }) => {
       : (status as any);
   if (!display) return null;
 
-
   const getStatusClasses = (color: string): { bg: string; text: string } => {
     switch (color) {
       case "green":

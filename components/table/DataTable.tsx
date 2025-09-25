@@ -124,18 +124,19 @@ export function DataTable<TData, TValue>({
       } else if (selectedRows) {
         // Clear current selection
         table.resetRowSelection();
-        
+
         // Set new selection based on selectedRows prop
         const rowIds: Record<number, boolean> = {};
         selectedRows.forEach((row) => {
           // Find the row index in the current data
-          const rowIndex = data.findIndex(item => 
-            JSON.stringify(item) === JSON.stringify(row));
+          const rowIndex = data.findIndex(
+            (item) => JSON.stringify(item) === JSON.stringify(row)
+          );
           if (rowIndex >= 0) {
             rowIds[rowIndex] = true;
           }
         });
-        
+
         table.setRowSelection(rowIds);
       }
     }
@@ -173,7 +174,7 @@ export function DataTable<TData, TValue>({
   }, [table, rowSelection, onSelectedRowsChange, enableRowSelection]);
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={`space-y-4 ${className} `}>
       <div className="rounded-md border overflow-x-auto">
         <Table className="w-full table-fixed">
           <TableHeader>
