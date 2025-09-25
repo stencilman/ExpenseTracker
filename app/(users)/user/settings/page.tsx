@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Head from "next/head";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -368,8 +369,12 @@ export default function MePage() {
   }
 
   return (
-    <div className="p-4">
-      <Card>
+    <>
+      <Head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+      </Head>
+      <div className="p-4 overflow-y-auto max-h-[100vh] pb-20 w-full">
+      <Card className="overflow-visible">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-2 justify-between">
             <div className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -430,14 +435,14 @@ export default function MePage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="overflow-visible">
           {isEditing ? (
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
+                className="space-y-6 overflow-visible"
               >
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-visible">
                   {/* Left column */}
                   <div className="space-y-4">
                     <FormField
@@ -742,123 +747,123 @@ export default function MePage() {
               </form>
             </Form>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 overflow-visible">
               {/* Left column - Personal details */}
               <div className="space-y-6">
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Name</div>
                   </div>
-                  <div>
+                  <div className="pl-0 sm:pl-0">
                     {userProfile?.firstName && userProfile?.lastName
                       ? `${userProfile?.firstName} ${userProfile?.lastName}`
                       : userProfile?.name || "-"}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Email Address</div>
                   </div>
-                  <div>{userProfile?.email}</div>
+                  <div className="pl-0 sm:pl-0">{userProfile?.email}</div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <Briefcase className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Employee ID</div>
                   </div>
-                  <div>{userProfile?.employeeId || "-"}</div>
+                  <div className="pl-0 sm:pl-0">{userProfile?.employeeId || "-"}</div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <Phone className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Mobile</div>
                   </div>
-                  <div>{userProfile?.mobile || "-"}</div>
+                  <div className="pl-0 sm:pl-0">{userProfile?.mobile || "-"}</div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <Building className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Department</div>
                   </div>
-                  <div>{userProfile?.department || "-"}</div>
+                  <div className="pl-0 sm:pl-0">{userProfile?.department || "-"}</div>
                 </div>
               </div>
 
               {/* Right column - Additional details */}
               <div className="space-y-6">
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <CalendarDays className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">
                       Date of Joining
                     </div>
                   </div>
-                  <div>
+                  <div className="pl-0 sm:pl-0">
                     {userProfile?.dateOfJoining
                       ? format(new Date(userProfile.dateOfJoining), "PPP")
                       : "-"}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Date of Birth</div>
                   </div>
-                  <div>
+                  <div className="pl-0 sm:pl-0">
                     {userProfile?.dateOfBirth
                       ? format(new Date(userProfile.dateOfBirth), "PPP")
                       : "-"}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <Award className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Designation</div>
                   </div>
-                  <div>{userProfile?.designation || "-"}</div>
+                  <div className="pl-0 sm:pl-0">{userProfile?.designation || "-"}</div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Role</div>
                   </div>
-                  <div>{userProfile?.roleName || "Submitter"}</div>
+                  <div className="pl-0 sm:pl-0">{userProfile?.roleName || "Submitter"}</div>
                 </div>
 
-                <div className="grid grid-cols-2 items-center">
+                <div className="grid grid-cols-1 sm:grid-cols-2 items-start sm:items-center gap-1 sm:gap-0 break-words">
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4 text-slate-500" />
                     <div className="text-sm text-slate-500">Submits To</div>
                   </div>
                   {userProfile?.approver ? (
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-row items-center gap-2 pl-0 sm:pl-0 mt-1 sm:mt-0">
                       <Avatar className="h-8 w-8 bg-pink-100 flex-shrink-0">
                         <AvatarFallback className="text-pink-500">
                           {userProfile.approver.firstName?.[0] || ""}
                           {userProfile.approver.lastName?.[0] || ""}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <div>
+                      <div className="overflow-hidden">
+                        <div className="truncate">
                           {userProfile.approver.firstName}{" "}
                           {userProfile.approver.lastName}
                         </div>
-                        <div className="text-xs text-slate-500">
+                        <div className="text-xs text-slate-500 truncate">
                           {userProfile.approver.email}
                         </div>
                       </div>
                     </div>
                   ) : (
-                    <div>-</div>
+                    <div className="pl-0 sm:pl-0">-</div>
                   )}
                 </div>
               </div>
@@ -867,5 +872,6 @@ export default function MePage() {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 }
