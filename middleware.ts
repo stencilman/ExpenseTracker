@@ -26,8 +26,7 @@ export default auth((req) => {
   if(session?.user?.email?.includes("prabal@fastcode.ai") ||
     // session?.user?.email?.includes("abdul") ||
     session?.user?.email?.includes("priyanka@fastcode.ai") ||
-    session?.user?.email?.includes("arjun@fastcode.ai") ||
-    session?.user?.email?.includes("admin@fastcode.ai")
+    session?.user?.email?.includes("arjun@fastcode.ai") 
   ){
     adminEmails = true;
   }
