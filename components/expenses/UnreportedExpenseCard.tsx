@@ -152,7 +152,7 @@ export default function UnreportedExpenseCard({
                     </div>
                     <div className="flex items-center space-x-1 sm:space-x-2">
                       <Button
-                        variant="outline"
+                        variant="blue-outline"
                         size="sm"
                         className="whitespace-nowrap"
                         onClick={(e) => {
@@ -161,14 +161,6 @@ export default function UnreportedExpenseCard({
                         }}
                       >
                         Add To Report
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 text-gray-500"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <MoreHorizontal className="h-5 w-5" />
                       </Button>
                     </div>
                   </div>

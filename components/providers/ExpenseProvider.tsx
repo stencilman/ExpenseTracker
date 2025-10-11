@@ -200,12 +200,10 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
           setUnreportedExpenses((prev) => [...prev, newExpense]);
         }
 
-        toast.success("Expense created successfully");
         return newExpense;
       } catch (error: any) {
         console.error("Error creating expense:", error);
         setError(error.message || "Failed to create expense");
-        toast.error("Failed to create expense");
         throw error;
       } finally {
         stopLoading();
@@ -275,12 +273,10 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
           return prev;
         });
 
-        toast.success("Expense updated successfully");
         return updatedExpense;
       } catch (error: any) {
         console.error(`Error updating expense ${id}:`, error);
         setError(error.message || `Failed to update expense ${id}`);
-        toast.error("Failed to update expense");
         throw error;
       } finally {
         stopLoading();
@@ -317,7 +313,7 @@ export function ExpensesProvider({ children }: { children: ReactNode }) {
         prev.filter((expense: ExpenseWithUI) => String(expense.id) !== idStr)
       );
 
-      toast.success("Expense deleted successfully");
+      // Toast is shown in the component
       return true;
     } catch (error: any) {
       console.error(`Error deleting expense ${id}:`, error);

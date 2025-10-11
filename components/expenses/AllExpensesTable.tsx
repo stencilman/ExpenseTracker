@@ -1,7 +1,8 @@
 "use client";
 import { useLoading } from "@/components/providers/LoadingProvider";
-import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useExpenseRoutes } from "@/components/expenses/ExpenseRouteHelper";
 import { useExpenses } from "@/components/providers/ExpenseProvider";
 import { ExpensesTable } from "@/components/expenses/ExpensesTable";
 import { Button } from "@/components/ui/button";
@@ -31,12 +32,14 @@ export default function AllExpensesTableView({
     isLoading,
   } = useExpenses();
 
-  // Use a local state for selected expenses IDs
-  const [selectedExpenseIds, setSelectedExpenseIds] = useState<string[]>([]);
+  // Row selection is disabled for admin
+
+  // Use the expense route helper to get the correct route
+  const { getExpenseDetailRoute } = useExpenseRoutes();
 
   // Handle row click to navigate to expense detail
   const handleRowClick = (expenseId: string) => {
-    router.push(`/user/expenses/all/${expenseId}`);
+    router.push(getExpenseDetailRoute(expenseId));
   };
 
   // Only stop loading from the LoadingProvider when we're done with our data loading
@@ -59,7 +62,7 @@ export default function AllExpensesTableView({
           />
           <ExpensesSort onSortChange={setSort} />
           {!compact && (
-            <Button onClick={() => setIsAddExpenseOpen(true)}>
+            <Button variant="primary" onClick={() => setIsAddExpenseOpen(true)}>
               Add Expense
             </Button>
           )}
@@ -72,9 +75,8 @@ export default function AllExpensesTableView({
       ) : (
         <ExpensesTable
           data={processedAllExpenses}
-          onSelectedRowsChange={setSelectedExpenseIds}
           onRowClick={handleRowClick}
-          enableRowSelection={true}
+          enableRowSelection={false}
           showPagination={true}
         />
       )}

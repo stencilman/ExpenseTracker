@@ -20,7 +20,8 @@ export default function AdminReportsAwaitingApprovalPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedReports, setSelectedReports] = useState<Report[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -66,33 +67,13 @@ export default function AdminReportsAwaitingApprovalPage() {
     );
   };
 
-  const handleSelectAll = () => {
-    // Force re-render by creating a new array
-    const allReports = [...reports];
-    setSelectedReports(allReports);
-    setSelectAll(true);
-
-    // Force a re-render after a short delay to ensure UI updates
-    setTimeout(() => {
-      setSelectAll((state) => state);
-    }, 50);
-  };
-
-  const handleClearSelection = () => {
-    setSelectedReports([]);
-    setSelectAll(false);
-
-    // Force a re-render after a short delay to ensure UI updates
-    setTimeout(() => {
-      setSelectAll((state) => state);
-    }, 50);
-  };
+  // Selection is handled by the table's checkbox header
 
   const handleBulkApprove = async () => {
     if (selectedReports.length === 0) return;
 
     try {
-      setIsProcessing(true);
+      setIsApproving(true);
       const response = await fetch("/api/admin/reports/bulk-approve", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,7 +96,7 @@ export default function AdminReportsAwaitingApprovalPage() {
       console.error("Error approving reports:", err);
       toast.error("Failed to approve reports. Please try again.");
     } finally {
-      setIsProcessing(false);
+      setIsApproving(false);
     }
   };
 
@@ -123,7 +104,7 @@ export default function AdminReportsAwaitingApprovalPage() {
     if (selectedReports.length === 0) return;
 
     try {
-      setIsProcessing(true);
+      setIsRejecting(true);
       const response = await fetch("/api/admin/reports/bulk-reject", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -146,7 +127,7 @@ export default function AdminReportsAwaitingApprovalPage() {
       console.error("Error rejecting reports:", err);
       toast.error("Failed to reject reports. Please try again.");
     } finally {
-      setIsProcessing(false);
+      setIsRejecting(false);
     }
   };
 
@@ -177,60 +158,47 @@ export default function AdminReportsAwaitingApprovalPage() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {selectedReports.length > 0 ? (
+            {selectedReports.length > 0 && (
               <>
                 <span className="text-sm font-medium">
                   {selectedReports.length} report
                   {selectedReports.length !== 1 ? "s" : ""} selected
                 </span>
-                <Button
-                  onClick={handleClearSelection}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  Clear
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-green-500 text-green-500 hover:bg-green-50 hover:text-green-600"
-                  onClick={handleBulkApprove}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <div className="flex items-center gap-2">
-                      <Loader size="sm" />
-                      <span>Approving...</span>
-                    </div>
-                  ) : (
-                    "Approve All"
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-red-500 text-red-500 hover:bg-red-50"
-                  onClick={handleBulkReject}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? (
-                    <div className="flex items-center gap-2">
-                      <Loader size="sm" />
-                      <span>Rejecting...</span>
-                    </div>
-                  ) : (
-                    "Reject All"
-                  )}
-                </Button>
+                
+                {/* Action buttons in the same row */}
+                <div className="flex gap-2 ml-4">
+                  <Button
+                    variant="blue-outline"
+                    onClick={handleBulkApprove}
+                    disabled={isApproving || isRejecting}
+                    size="sm"
+                  >
+                    {isApproving ? (
+                      <div className="flex items-center gap-2">
+                        <Loader size="sm" />
+                        <span>Approving...</span>
+                      </div>
+                    ) : (
+                      "Approve"
+                    )}
+                  </Button>
+                  <Button
+                    variant="red-outline"
+                    onClick={handleBulkReject}
+                    disabled={isApproving || isRejecting}
+                    size="sm"
+                  >
+                    {isRejecting ? (
+                      <div className="flex items-center gap-2">
+                        <Loader size="sm" className="text-red-500" />
+                        <span>Rejecting...</span>
+                      </div>
+                    ) : (
+                      "Reject"
+                    )}
+                  </Button>
+                </div>
               </>
-            ) : (
-              <Button
-                onClick={handleSelectAll}
-                variant="ghost"
-                size="sm"
-                className="text-gray-500 hover:text-gray-700"
-              >
-                Select All
-              </Button>
             )}
           </div>
         </div>
@@ -249,7 +217,7 @@ export default function AdminReportsAwaitingApprovalPage() {
         {totalPages > 1 && (
           <div className="flex items-center justify-end space-x-2 mt-4">
             <Button
-              variant="outline"
+              variant="blue-outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage <= 1 || isLoading}
@@ -260,7 +228,7 @@ export default function AdminReportsAwaitingApprovalPage() {
               Page {currentPage} of {totalPages}
             </div>
             <Button
-              variant="outline"
+              variant="blue-outline"
               size="sm"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage >= totalPages || isLoading}

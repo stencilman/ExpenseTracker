@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { errorResponse, jsonResponse } from "@/lib/api-utils";
 import { ReportEventType, ReportStatus, UserRole } from "@prisma/client";
 import { createReportHistoryEntry } from "@/data/report-history";
+import { sendReportApprovedEmail, formatDateForEmail } from "@/lib/email-service";
+import { sendReportStatusNotification } from "@/lib/services/notification-service";
 
 /**
  * POST /api/admin/reports/bulk-approve
@@ -35,7 +37,7 @@ export async function POST(req: Request) {
     // Log for debugging
     console.log("Processing report IDs:", reportIdsInt);
     
-    // First, get all the reports that need to be updated
+    // First, get all the reports that need to be updated with user data for notifications
     const reportsToUpdate = await db.report.findMany({
       where: {
         id: {
@@ -43,6 +45,9 @@ export async function POST(req: Request) {
         },
         status: ReportStatus.SUBMITTED, // Only approve reports that are in SUBMITTED status
       },
+      include: {
+        user: true // Include user data for email notifications
+      }
     });
     
     // Get the IDs of reports that are eligible for approval
@@ -84,6 +89,36 @@ export async function POST(req: Request) {
           performedById: session.user.id,
         })
       )
+    );
+
+    // Send notifications for each approved report
+    await Promise.all(
+      reportsToUpdate.map(async (report) => {
+        // Send in-app notification
+        await sendReportStatusNotification(
+          report.id,
+          ReportStatus.APPROVED,
+          session.user.id
+        );
+
+        // Send email notification if user has an email
+        if (report.user && report.user.email) {
+          const userName = `${report.user.firstName || ''} ${report.user.lastName || ''}`.trim() || 'User';
+          
+          await sendReportApprovedEmail(
+            report.user.email,
+            {
+              report_id: report.id,
+              report_title: report.title,
+              report_amount: report.totalAmount || 0,
+              user_name: userName,
+              submission_date: formatDateForEmail(report.submittedAt)
+            }
+          ).catch(error => {
+            console.error(`Failed to send approval email for report ${report.id}:`, error);
+          });
+        }
+      })
     );
 
     return jsonResponse({

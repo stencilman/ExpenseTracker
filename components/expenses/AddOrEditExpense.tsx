@@ -129,10 +129,16 @@ export default function AddOrEditExpense({
   const { createExpense, updateExpense, isLoading } = useExpenses();
   const isEditMode = mode === "edit" && expense;
 
-  // Fetch categories from the API
+  // Fetch categories from the API - using a ref to prevent duplicate calls
+  const categoriesFetched = React.useRef(false);
+
   useEffect(() => {
     const fetchCategories = async () => {
+      // Skip if we've already fetched categories and have data
+      if (categoriesFetched.current && categories.length > 0) return;
+
       try {
+        categoriesFetched.current = true;
         const response = await fetch("/api/expenses/categories");
         if (!response.ok) throw new Error("Failed to fetch categories");
         const data = await response.json();
@@ -143,7 +149,7 @@ export default function AddOrEditExpense({
       }
     };
     fetchCategories();
-  }, []);
+  }, [categories.length]);
 
   // Search for reports based on the debounced search term
   useEffect(() => {
@@ -206,21 +212,11 @@ export default function AddOrEditExpense({
           claimReimbursement: (expense as any).claimReimbursement ?? true,
         };
 
-        // If there's a reportId, fetch the report details to display the title
+        // If there's a reportId, use the reportName from the expense object
         if (expense.reportId) {
-          const fetchReportDetails = async () => {
-            try {
-              const response = await fetch(`/api/reports/${expense.reportId}`);
-              if (response.ok) {
-                const reportData = await response.json();
-                setSelectedReportTitle(reportData.title);
-                setSearchTerm(reportData.title);
-              }
-            } catch (error) {
-              console.error("Failed to fetch report details:", error);
-            }
-          };
-          fetchReportDetails();
+          const reportTitle = expense.reportName || "";
+          setSelectedReportTitle(reportTitle);
+          setSearchTerm(reportTitle);
         } else {
           setSelectedReportTitle("");
           setSearchTerm("");
@@ -273,7 +269,7 @@ export default function AddOrEditExpense({
         setHasChanges(false);
       }
     }
-  }, [isOpen, isEditMode, expense, form, categories]);
+  }, [isOpen, isEditMode, expense?.id, form]);
 
   // Effect to handle clicks outside the dropdown
   useEffect(() => {
@@ -738,6 +734,7 @@ export default function AddOrEditExpense({
                 <div className="flex justify-end pt-2">
                   <Button
                     type="submit"
+                    variant="primary"
                     className="w-full"
                     disabled={
                       form.formState.isSubmitting ||

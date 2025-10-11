@@ -51,6 +51,7 @@ export default function PendingReportsPage() {
   const [isAddReportOpen, setIsAddReportOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isAllSelected, setIsAllSelected] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -138,18 +139,11 @@ export default function PendingReportsPage() {
     }
   };
 
-  const handleSelectAll = () => {
-    setSelectedReports(reports);
-    setIsAllSelected(true);
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedReports([]);
-    setIsAllSelected(false);
-  };
+  // Selection is handled by the table's checkbox header
 
   const handleBulkSubmit = async () => {
     setIsSubmitting(true);
+    setIsDeleting(false); // Reset other loading state
     try {
       // Filter out reports with no expenses
       const reportsWithExpenses = selectedReports.filter(report => report.expenseCount > 0);
@@ -197,7 +191,8 @@ export default function PendingReportsPage() {
 
   const handleBulkDelete = async () => {
     setIsDeleteDialogOpen(false);
-    setIsSubmitting(true); // Use the same loading state
+    setIsDeleting(true);
+    setIsSubmitting(false); // Reset other loading state
     try {
       const reportIds = selectedReports.map((r) => parseInt(r.id, 10));
       const response = await fetch("/api/reports/bulk-delete", {
@@ -220,7 +215,7 @@ export default function PendingReportsPage() {
       console.error("Error deleting reports:", error);
       toast.error("Failed to delete reports. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      setIsDeleting(false);
     }
   };
 
@@ -229,67 +224,54 @@ export default function PendingReportsPage() {
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            {selectedReports.length > 0 ? (
+            {selectedReports.length > 0 && (
               <>
                 <span className="text-sm font-medium">
                   {selectedReports.length} report
                   {selectedReports.length !== 1 ? "s" : ""} selected
                 </span>
-                <Button
-                  onClick={handleDeselectAll}
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  Clear
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-blue-500 text-blue-500 hover:bg-blue-50 hover:text-blue-600"
-                  onClick={handleBulkSubmit}
-                  disabled={isSubmitting || selectedReports.every(report => report.expenseCount === 0)}
-                  title={selectedReports.every(report => report.expenseCount === 0) ? "Reports must have at least one expense to submit" : ""}
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <Loader size="sm" />
-                      <span>Submitting...</span>
-                    </div>
-                  ) : (
-                    "Submit"
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-red-500 text-red-500 hover:bg-red-50"
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <div className="flex items-center gap-2">
-                      <Loader size="sm" />
-                      <span>Deleting...</span>
-                    </div>
-                  ) : (
-                    "Delete Reports"
-                  )}
-                </Button>
+                
+                {/* Action buttons in the same row */}
+                <div className="flex gap-2 ml-4">
+                  <Button
+                    variant="blue-outline"
+                    onClick={handleBulkSubmit}
+                    disabled={isSubmitting || selectedReports.every(report => report.expenseCount === 0)}
+                    title={selectedReports.every(report => report.expenseCount === 0) ? "Reports must have at least one expense to submit" : ""}
+                    size="sm"
+                  >
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <Loader size="sm" />
+                        <span>Submitting...</span>
+                      </div>
+                    ) : (
+                      "Submit"
+                    )}
+                  </Button>
+                  <Button
+                    variant="red-outline"
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    disabled={isSubmitting || isDeleting}
+                    size="sm"
+                  >
+                    {isDeleting ? (
+                      <div className="flex items-center gap-2">
+                        <Loader size="sm" className="text-red-500" />
+                        <span>Deleting...</span>
+                      </div>
+                    ) : (
+                      "Delete"
+                    )}
+                  </Button>
+                </div>
               </>
-            ) : reports.length > 0 ? (
-              <Button
-                onClick={handleSelectAll}
-                variant="ghost"
-                size="sm"
-                className="text-gray-500 hover:text-gray-700"
-              >
-                Select All
-              </Button>
-            ) : null}
+            )}
           </div>
 
           {/* Right Side: New Report Button */}
           <div>
-            <Button variant="outline" onClick={() => setIsAddReportOpen(true)}>
+            <Button variant="primary" onClick={() => setIsAddReportOpen(true)}>
               New Report
             </Button>
           </div>
@@ -353,7 +335,7 @@ export default function PendingReportsPage() {
           onOpenChange={setIsDeleteDialogOpen}
           onConfirm={handleBulkDelete}
           reportsCount={selectedReports.length}
-          isPending={isSubmitting}
+          isPending={isDeleting}
         />
       </div>
     </div>

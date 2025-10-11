@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   AlertCircle,
   FileText,
+  Lock,
   MoreHorizontal,
   Pencil,
   Send,
@@ -28,6 +29,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DeleteReportsDialog } from "@/components/reports/DeleteReportsDialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Define the history item type
 interface ReportHistoryItem {
@@ -340,45 +346,70 @@ export default function ReportDetailPage() {
               )}
             </Button>
           )}
+
+          {isLocked ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-gray-500 cursor-default"
+                >
+                  <Lock className="h-5 w-5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {report.status === ReportStatus.APPROVED
+                    ? "Approved"
+                    : "Reimbursed"}{" "}
+                  reports cannot be edited
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <MoreHorizontal className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
+                  <Pencil className="h-4 w-4 mr-2" />
+                  Edit Report
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeleteDialogOpen(true)}
+                  className="text-red-600 hover:text-red-700 focus:text-red-700 hover:bg-red-50 focus:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-2 text-red-600" />
+                  Delete Report
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-5 w-5" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {!isLocked ? (
-                <>
-                  <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-                    <Pencil className="h-4 w-4 mr-2" />
-                    Edit Report
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setDeleteDialogOpen(true)}>
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Delete Report
-                  </DropdownMenuItem>
-                </>
-              ) : (
-                <DropdownMenuItem disabled>Report locked</DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white border rounded-lg p-6">
+          <div className="bg-white border rounded-lg p-6 overflow-x-auto">
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
             <p className="text-sm text-gray-500 mb-6">
               Duration: {formatDateRange(report.startDate, report.endDate)}
             </p>
 
-            <Tabs defaultValue="expenses" onValueChange={handleTabChange}>
-              <TabsList className="mb-4">
+            <Tabs
+              defaultValue="expenses"
+              onValueChange={handleTabChange}
+              className="min-w-[350px]"
+            >
+              <TabsList className="mb-4 w-full">
                 <TabsTrigger value="expenses" className="relative w-64">
                   EXPENSES
                   {report.expenses.length > 0 && (
@@ -390,7 +421,10 @@ export default function ReportDetailPage() {
                 <TabsTrigger value="history">HISTORY</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="expenses" className="space-y-4">
+              <TabsContent
+                value="expenses"
+                className="space-y-4 overflow-x-auto"
+              >
                 {report.expenses.length > 0 ? (
                   report.expenses.map((expense) => (
                     <ReportExpenseCard
@@ -433,7 +467,7 @@ export default function ReportDetailPage() {
                 )}
               </TabsContent>
 
-              <TabsContent value="history">
+              <TabsContent value="history" className="overflow-x-auto">
                 {isLoadingHistory ? (
                   <div className="flex justify-center items-center py-8">
                     <Loader size="md" text="Loading history..." />

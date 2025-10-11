@@ -23,7 +23,7 @@ export function DropZone({
   size = "lg",
   title = "Drag and drop files here",
   description = "Supports JPG, PNG, and PDF files up to 10MB each",
-  icon = <Upload className="h-14 w-14 text-blue-500" />,
+  icon = <Upload className="h-14 w-14 text-blue-600" />,
   buttonText = "Browse Files",
   acceptedFileTypes = "image/jpeg,image/png,application/pdf",
   className,
@@ -75,11 +75,11 @@ export function DropZone({
       className={cn(
         "border-2 border-dashed rounded-xl transition-all duration-200",
         size === "sm"
-          ? "h-[100px] px-6 flex flex-row items-center justify-between gap-4"
+          ? "min-h-[100px] px-6 py-3 flex flex-row items-center justify-between gap-4"
           : "flex flex-col items-center justify-center p-8 text-center",
         isDragActive
-          ? "border-blue-500 bg-blue-50 scale-[1.02]"
-          : "border-gray-300 hover:border-blue-400 hover:bg-blue-50/50",
+          ? "border-blue-600 bg-blue-50 scale-[1.02]"
+          : "border-gray-300 hover:border-blue-500 hover:bg-blue-50/50",
         className
       )}
       onDragEnter={handleDrag}
@@ -94,10 +94,10 @@ export function DropZone({
             <>
               <div className="flex items-center gap-3">
                 <div className="p-3 bg-blue-50 rounded-full">
-                  <Upload className="h-6 w-6 text-blue-500" />
+                  <Upload className="h-6 w-6 text-blue-600" />
                 </div>
                 <div className="text-left">
-                  <h3 className="text-sm font-medium">{title}</h3>
+                  <h3 className="text-sm font-medium break-words max-w-[200px] sm:max-w-none">{title}</h3>
                 </div>
               </div>
               <input
@@ -110,7 +110,7 @@ export function DropZone({
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="blue-outline"
                 size="sm"
                 className="px-4 flex-shrink-0"
                 onClick={handleButtonClick}
@@ -135,7 +135,7 @@ export function DropZone({
               />
               <Button
                 type="button"
-                variant="outline"
+                variant="blue-outline"
                 size="lg"
                 className="px-8"
                 onClick={handleButtonClick}

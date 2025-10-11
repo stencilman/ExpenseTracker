@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import {
   DropdownMenu,
@@ -19,7 +17,6 @@ const NavbarOptions = () => {
   const isAdmin = useIsAdmin();
   const session = useSession();
   const user = session.data?.user;
-  console.log("user", user);
   return (
     <>
       <DropdownMenu>
@@ -46,9 +43,9 @@ const NavbarOptions = () => {
               </DropdownMenuItem>
             </Link>
           )}
-          
+
           <form action={handleSignOut}>
-            <DropdownMenuItem 
+            <DropdownMenuItem
               className="cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
               asChild
             >

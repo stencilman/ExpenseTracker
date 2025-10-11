@@ -329,21 +329,14 @@ export default function ExpenseDetail({
   // Content to be rendered
   return (
     <>
-      {/* Edit Expense Dialog */}
-      {!isLocked && (
-        <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogTitle className="sr-only">Edit Expense</DialogTitle>
-            {isEditOpen && (
-              <AddOrEditExpense
-                expense={expense}
-                isOpen={isEditOpen}
-                onClose={() => setIsEditOpen(false)}
-                mode="edit"
-              />
-            )}
-          </DialogContent>
-        </Dialog>
+      {/* Edit Expense Drawer */}
+      {!isLocked && isEditOpen && (
+        <AddOrEditExpense
+          expense={expense}
+          isOpen={isEditOpen}
+          onClose={() => setIsEditOpen(false)}
+          mode="edit"
+        />
       )}
       {/* Delete Confirmation Dialog */}
       {!isLocked && (
@@ -407,7 +400,7 @@ export default function ExpenseDetail({
               </Button>
             )}
             <Button
-              variant="outline"
+              variant="blue-outline"
               onClick={() => setIsFilePreviewOpen(false)}
             >
               Close
@@ -429,7 +422,7 @@ export default function ExpenseDetail({
             ) : !isLocked ? (
               <>
                 <Button
-                  variant="outline"
+                  variant="blue-outline"
                   size="sm"
                   onClick={() => setIsEditOpen(true)}
                   className="flex items-center gap-1"
@@ -438,10 +431,10 @@ export default function ExpenseDetail({
                   Edit
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="red-outline"
                   size="sm"
                   onClick={() => setIsDeleteDialogOpen(true)}
-                  className="flex items-center gap-1 text-red-500 hover:text-red-600"
+                  className="flex items-center gap-1"
                 >
                   <Trash2 className="h-4 w-4" />
                   Delete
@@ -690,7 +683,7 @@ export default function ExpenseDetail({
                     <AlertCircle className="h-8 w-8 text-red-500 mb-2" />
                     <p>{historyError}</p>
                     <Button
-                      variant="outline"
+                      variant="blue-outline"
                       size="sm"
                       className="mt-4"
                       onClick={() => fetchExpenseHistory(expense.id)}

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useExpenseRoutes } from "@/components/expenses/ExpenseRouteHelper";
 import { useExpenses } from "@/components/providers/ExpenseProvider";
 import { useLoading } from "@/components/providers/LoadingProvider";
 import { Button } from "@/components/ui/button";
@@ -45,9 +46,12 @@ export default function UnreportedExpensesView({
     fetchExpenses,
   } = useExpenses();
 
+  // Use the expense route helper to get the correct route
+  const { getExpenseDetailRoute } = useExpenseRoutes();
+
   // Handle card click to navigate to expense detail
   const handleCardClick = (id: string | number) => {
-    router.push(`/user/expenses/unreported/${id}`);
+    router.push(getExpenseDetailRoute(id));
   };
 
   // Handle checkbox selection
@@ -178,15 +182,13 @@ export default function UnreportedExpensesView({
           </Button>
           <Button
             onClick={handleBulkAddToReport}
-            variant="outline"
-            className="border-blue-500 text-blue-500 hover:bg-blue-50"
+            variant="blue-outline"
           >
             Add To Report
           </Button>
           <Button
             onClick={handleBulkDelete}
-            variant="outline"
-            className="border-red-500 text-red-500 hover:bg-red-50"
+            variant="red-outline"
           >
             Delete Expenses
           </Button>

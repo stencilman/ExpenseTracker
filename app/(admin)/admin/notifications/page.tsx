@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
-import { Check, Trash2 } from "lucide-react";
+import { Check, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -40,6 +41,7 @@ const typeToBadge: Record<NotificationType, { color: string; label: string }> = 
 };
 
 export default function AdminNotificationsPage() {
+  const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const {
     notifications,
     loading,
@@ -55,13 +57,27 @@ export default function AdminNotificationsPage() {
         <h1 className="text-2xl font-bold">Notifications</h1>
         {notifications.some((n) => !n.read) && (
           <Button
-            variant="outline"
+            variant="blue-outline"
             size="sm"
-            onClick={markAllAsRead}
+            onClick={async () => {
+              setIsMarkingAllRead(true);
+              await markAllAsRead();
+              setIsMarkingAllRead(false);
+            }}
+            disabled={isMarkingAllRead}
             className="flex items-center gap-2"
           >
-            <Check className="h-4 w-4" />
-            Mark all as read
+            {isMarkingAllRead ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Marking...</span>
+              </>
+            ) : (
+              <>
+                <Check className="h-4 w-4" />
+                Mark all as read
+              </>
+            )}
           </Button>
         )}
       </div>

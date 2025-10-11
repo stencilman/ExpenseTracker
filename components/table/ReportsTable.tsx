@@ -21,6 +21,7 @@ interface ReportsTableProps {
   className?: string;
   isAllRowsSelected?: boolean;
   onReportActionComplete?: (updatedReport: Report) => void;
+  onRowClick?: (reportId: string) => void;
 }
 
 export function ReportsTable({
@@ -32,6 +33,7 @@ export function ReportsTable({
   className = "",
   isAllRowsSelected = false,
   onReportActionComplete,
+  onRowClick,
 }: ReportsTableProps) {
   // Track selected rows internally to sync with parent component
   const [selectedRows, setSelectedRows] = React.useState<Report[]>([]);
@@ -50,24 +52,28 @@ export function ReportsTable({
 
   const handleRowClick = React.useCallback(
     (row: Report) => {
-      // Navigate to the report detail page
-      router.push(`/user/reports/${row.id}`);
-      if (pathname.includes("admin")) {
+      // If custom onRowClick is provided, use that
+      if (onRowClick) {
+        onRowClick(row.id);
+        return;
+      }
+      
+      // Otherwise use default navigation
+      if (pathname.includes("/admin/my-reports")) {
+        router.push(`/admin/my-reports/${row.id}`);
+      } else if (pathname.includes("/admin/reports")) {
         router.push(`/admin/reports/${row.id}`);
       } else {
         router.push(`/user/reports/${row.id}`);
       }
     },
-    [router]
+    [router, pathname, onRowClick]
   );
 
-  // Get the appropriate columns based on the variant
+  // Use the same columns for both admin and user reports
   const columns = React.useMemo(() => {
-    if (pathname.includes("admin")) {
-      return getAdminReportTableColumns(onReportActionComplete);
-    }
     return getReportsColumns();
-  }, [variant, pathname, onReportActionComplete]);
+  }, []);
 
   // Effect to update internal state when external selection changes
   React.useEffect(() => {

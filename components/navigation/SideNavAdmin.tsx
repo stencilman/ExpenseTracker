@@ -6,6 +6,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
+  Receipt,
+  ClipboardList,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -35,6 +37,8 @@ export default function SideNavAdmin({ onNavItemClick }: SideNavAdminProps) {
   const navItems = [
     { name: "Home", href: "/admin/dashboard", icon: Home },
     { name: "Reports", href: "/admin/reports", icon: FileText },
+    { name: "My Reports", href: "/admin/my-reports", icon: ClipboardList },
+    { name: "My Expenses", href: "/admin/my-expenses", icon: Receipt },
     { name: "Settings", href: "/admin/settings", icon: Settings },
   ];
 

@@ -97,7 +97,7 @@ export function DeleteExpenseDialog({
           {/* Use a regular button instead of AlertDialogAction to keep the dialog open until deletion completes */}
           <Button
             onClick={handleDelete}
-            className="bg-red-500 hover:bg-red-600"
+            variant="destructive"
             disabled={isDeleting}
           >
             {isDeleting ? (

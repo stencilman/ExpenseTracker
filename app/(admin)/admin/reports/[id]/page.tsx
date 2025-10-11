@@ -35,7 +35,8 @@ export default function ReportDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [historyItems, setHistoryItems] = useState<any[]>([]);
 
-  const [isActionLoading, setIsActionLoading] = useState(false);
+  const [isApproveLoading, setIsApproveLoading] = useState(false);
+  const [isRejectLoading, setIsRejectLoading] = useState(false);
 
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [dialogAction, setDialogAction] = useState<"approve" | "reject">(
@@ -151,7 +152,7 @@ export default function ReportDetailPage() {
 
   const handleApprove = async () => {
     try {
-      setIsActionLoading(true);
+      setIsApproveLoading(true);
       const response = await fetch(`/api/admin/reports/${reportId}/approve`, {
         method: "POST",
         headers: {
@@ -204,13 +205,13 @@ export default function ReportDetailPage() {
         error instanceof Error ? error.message : "Failed to approve report"
       );
     } finally {
-      setIsActionLoading(false);
+      setIsApproveLoading(false);
     }
   };
 
   const handleReimbursement = async (paymentReference: string) => {
     try {
-      setIsActionLoading(true);
+      setIsApproveLoading(true);
       const response = await fetch(`/api/admin/reports/${reportId}/reimburse`, {
         method: "POST",
         headers: {
@@ -264,13 +265,13 @@ export default function ReportDetailPage() {
         error instanceof Error ? error.message : "Failed to reimburse report"
       );
     } finally {
-      setIsActionLoading(false);
+      setIsApproveLoading(false);
     }
   };
 
   const handleReject = async (reason: string) => {
     try {
-      setIsActionLoading(true);
+      setIsRejectLoading(true);
       const response = await fetch(`/api/admin/reports/${reportId}/reject`, {
         method: "POST",
         headers: {
@@ -324,7 +325,7 @@ export default function ReportDetailPage() {
         error instanceof Error ? error.message : "Failed to reject report"
       );
     } finally {
-      setIsActionLoading(false);
+      setIsRejectLoading(false);
     }
   };
 
@@ -436,9 +437,9 @@ export default function ReportDetailPage() {
               variant={getPrimaryButtonVariant()}
               onClick={handlePrimaryActionClick}
               className="flex items-center gap-1"
-              disabled={isActionLoading}
+              disabled={isApproveLoading || isRejectLoading}
             >
-              {isActionLoading ? (
+              {isApproveLoading ? (
                 <Loader className="h-4 w-4 animate-spin mr-2 text-white" />
               ) : (
                 <Check className="h-4 w-4 mr-1" />
@@ -463,8 +464,11 @@ export default function ReportDetailPage() {
               variant="outline"
               onClick={handleRejectClick}
               className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-              disabled={isActionLoading}
+              disabled={isApproveLoading || isRejectLoading}
             >
+              {isRejectLoading ? (
+                <Loader className="h-4 w-4 animate-spin mr-2 text-red-500" />
+              ) : null}
               Reject
             </Button>
           )}
@@ -505,7 +509,7 @@ export default function ReportDetailPage() {
             <X className="h-5 w-5" />
           </Button>
         </div>
-        
+
         {/* Second row: Action Buttons */}
         <div className="grid grid-cols-1 gap-2">
           {statusLabel !== "REIMBURSED" && statusLabel !== "REJECTED" && (
@@ -513,9 +517,9 @@ export default function ReportDetailPage() {
               variant={getPrimaryButtonVariant()}
               onClick={handlePrimaryActionClick}
               className="flex items-center gap-1"
-              disabled={isActionLoading}
+              disabled={isApproveLoading || isRejectLoading}
             >
-              {isActionLoading ? (
+              {isApproveLoading ? (
                 <Loader className="h-4 w-4 animate-spin mr-2 text-white" />
               ) : (
                 <Check className="h-4 w-4 mr-1" />
@@ -540,8 +544,11 @@ export default function ReportDetailPage() {
               variant="outline"
               onClick={handleRejectClick}
               className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600"
-              disabled={isActionLoading}
+              disabled={isApproveLoading || isRejectLoading}
             >
+              {isRejectLoading ? (
+                <Loader className="h-4 w-4 animate-spin mr-2 text-red-500" />
+              ) : null}
               Reject
             </Button>
           )}

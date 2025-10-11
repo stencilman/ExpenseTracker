@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { formatReportForUI } from "@/lib/format-utils";
 import { createReportHistoryEntry } from "@/data/report-history";
 import { sendReportStatusNotification } from "@/lib/services/notification-service";
+import { sendReportApprovedEmail, formatDateForEmail } from "@/lib/email-service";
 
 /**
  * POST /api/admin/reports/[id]/approve
@@ -99,12 +100,28 @@ export async function POST(
       performedById: session.user.id,
     });
 
-    // Send notification to the report submitter
+    // Send in-app notification to the report submitter
     await sendReportStatusNotification(
       reportId,
       ReportStatus.APPROVED,
       session.user.id
     );
+    
+    // Send email notification
+    if (updatedReport.user && updatedReport.user.email) {
+      const userName = `${updatedReport.user.firstName || ''} ${updatedReport.user.lastName || ''}`.trim() || 'User';
+      
+      await sendReportApprovedEmail(
+        updatedReport.user.email,
+        {
+          report_id: reportId,
+          report_title: updatedReport.title,
+          report_amount: updatedReport.totalAmount || 0,
+          user_name: userName,
+          submission_date: formatDateForEmail(updatedReport.submittedAt)
+        }
+      );
+    }
 
     // Format the report for UI
     const formattedReport = formatReportForUI(updatedReport as any);
