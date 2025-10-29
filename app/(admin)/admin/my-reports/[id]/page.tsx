@@ -3,7 +3,14 @@
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, FileText, MoreHorizontal, X, AlertCircle } from "lucide-react";
+import {
+  Check,
+  FileText,
+  MoreHorizontal,
+  X,
+  AlertCircle,
+  Send,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -132,7 +139,81 @@ export default function ReportDetailPage() {
     router.back();
   };
 
+  const handleSubmitReport = async () => {
+    if (!reportId || !report) return;
+
+    if (!report.expenses || report.expenses.length === 0) {
+      toast.error("Cannot submit a report with no expenses");
+      return;
+    }
+
+    try {
+      setIsActionLoading(true);
+      const response = await fetch(`/api/reports/${reportId}/submit`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      let responseData: any = null;
+      try {
+        responseData = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse submit response:", parseError);
+      }
+
+      if (!response.ok) {
+        const errorMessage =
+          responseData?.message ||
+          responseData?.error ||
+          "Failed to submit report";
+        throw new Error(errorMessage);
+      }
+
+      if (!responseData) {
+        throw new Error("Failed to submit report");
+      }
+
+      const normalizedReport = normalizeReportStatus(responseData);
+
+      const mergedReport =
+        !report?.expenses || normalizedReport?.expenses
+          ? normalizedReport
+          : { ...normalizedReport, expenses: report.expenses };
+
+      setReport(mergedReport);
+      toast.success("Report submitted successfully");
+
+      const historyResponse = await fetch(
+        `/api/admin/reports/${reportId}/history`
+      );
+      if (historyResponse.ok) {
+        const historyData = await historyResponse.json();
+        setHistoryItems(historyData.data);
+      }
+    } catch (error) {
+      console.error("Error submitting report:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit report"
+      );
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
   const handlePrimaryActionClick = () => {
+    const isPendingSubmission =
+      report?.status === ReportStatus.PENDING ||
+      report?.status === "PENDING" ||
+      report?.status === "PENDING SUBMISSION" ||
+      statusLabel === "PENDING SUBMISSION";
+
+    if (isPendingSubmission) {
+      handleSubmitReport();
+      return;
+    }
+
     if (statusLabel === "SUBMITTED") {
       setDialogAction("approve");
       setConfirmDialogOpen(true);
@@ -333,6 +414,7 @@ export default function ReportDetailPage() {
 
   // Determine main action button text based on status
   const getPrimaryButtonText = () => {
+    if (statusLabel === "PENDING SUBMISSION") return "Submit Report";
     if (statusLabel === "SUBMITTED") return "Approve";
     if (statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "APPROVED")
       return "Record Reimbursement";
@@ -436,10 +518,16 @@ export default function ReportDetailPage() {
               variant={getPrimaryButtonVariant()}
               onClick={handlePrimaryActionClick}
               className="flex items-center gap-1"
-              disabled={isActionLoading}
+              disabled={
+                isActionLoading ||
+                (statusLabel === "PENDING SUBMISSION" &&
+                  (!report.expenses || report.expenses.length === 0))
+              }
             >
               {isActionLoading ? (
                 <Loader className="h-4 w-4 animate-spin mr-2 text-white" />
+              ) : statusLabel === "PENDING SUBMISSION" ? (
+                <Send className="h-4 w-4 mr-1" />
               ) : (
                 <Check className="h-4 w-4 mr-1" />
               )}
@@ -513,10 +601,16 @@ export default function ReportDetailPage() {
               variant={getPrimaryButtonVariant()}
               onClick={handlePrimaryActionClick}
               className="flex items-center gap-1"
-              disabled={isActionLoading}
+              disabled={
+                isActionLoading ||
+                (statusLabel === "PENDING SUBMISSION" &&
+                  (!report.expenses || report.expenses.length === 0))
+              }
             >
               {isActionLoading ? (
                 <Loader className="h-4 w-4 animate-spin mr-2 text-white" />
+              ) : statusLabel === "PENDING SUBMISSION" ? (
+                <Send className="h-4 w-4 mr-1" />
               ) : (
                 <Check className="h-4 w-4 mr-1" />
               )}

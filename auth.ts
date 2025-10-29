@@ -33,7 +33,7 @@ export const {
       // console.log("isNewUser----->", isNewUser);
       if (
         user.email?.includes("prabal@fastcode.ai") ||
-        // user.email?.includes("abdul") ||
+        // user.email?.includes("admin@fastcode.ai") ||
         user.email?.includes("priyanka@fastcode.ai") ||
         user.email?.includes("arjun@fastcode.ai") 
       ) {
