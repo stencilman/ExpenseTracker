@@ -1,32 +1,34 @@
-import sgMail from '@sendgrid/mail';
-import { User } from '@prisma/client';
+import sgMail from "@sendgrid/mail";
+import { User } from "@prisma/client";
 
 // Initialize SendGrid with API key
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
 
 // Get sender email from environment variables
-const SENDER_EMAIL = process.env.SENDGRID_SENDER_EMAIL || '';
+const SENDER_EMAIL = process.env.SENDGRID_SENDER_EMAIL || "";
 
 // Get the app URL from environment or use localhost as fallback
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 /**
  * Format a date safely for display in emails
  */
-export function formatDateForEmail(date: Date | string | null | undefined): string {
-  if (!date) return 'N/A';
+export function formatDateForEmail(
+  date: Date | string | null | undefined
+): string {
+  if (!date) return "N/A";
   try {
     const dateObj = new Date(date);
-    return dateObj.toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
+    return dateObj.toLocaleString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
       hour12: true,
     });
   } catch (e) {
-    return 'Invalid date';
+    return "Invalid date";
   }
 }
 
@@ -321,9 +323,12 @@ const REPORT_REIMBURSED_TEMPLATE = `
 /**
  * Helper function to process templates with conditionals and variables
  */
-function replaceTemplateVariables(template: string, data: Record<string, any>): string {
+function replaceTemplateVariables(
+  template: string,
+  data: Record<string, any>
+): string {
   // Process template line by line for better control
-  const lines = template.split('\n');
+  const lines = template.split("\n");
   let processedLines: string[] = [];
   let skipUntilEndIf = false;
   let skipUntilElse = false;
@@ -340,7 +345,7 @@ function replaceTemplateVariables(template: string, data: Record<string, any>): 
       // Check if condition is true
       if (data[condition]) {
         // Remove the {{#if condition}} part
-        line = line.replace(/\{\{#if\s+([^\}]+)\}\}/, '');
+        line = line.replace(/\{\{#if\s+([^\}]+)\}\}/, "");
         skipUntilElse = false;
       } else {
         // Skip until we find {{else}} or {{/if}}
@@ -351,12 +356,12 @@ function replaceTemplateVariables(template: string, data: Record<string, any>): 
     }
 
     // Check for else
-    if (line.includes('{{else}}')) {
+    if (line.includes("{{else}}")) {
       if (skipUntilElse) {
         // We were skipping, but now we found else, so stop skipping
         skipUntilElse = false;
         // Remove the {{else}} part
-        line = line.replace(/\{\{else\}\}/, '');
+        line = line.replace(/\{\{else\}\}/, "");
       } else {
         // We weren't skipping, so now skip until end if
         skipUntilEndIf = true;
@@ -366,12 +371,12 @@ function replaceTemplateVariables(template: string, data: Record<string, any>): 
     }
 
     // Check for conditional end
-    if (line.includes('{{/if}}')) {
+    if (line.includes("{{/if}}")) {
       // Reset flags
       skipUntilEndIf = false;
       skipUntilElse = false;
       // Remove the {{/if}} part
-      line = line.replace(/\{\{\/if\}\}/, '');
+      line = line.replace(/\{\{\/if\}\}/, "");
     }
 
     // Skip if we're in a skip state
@@ -382,8 +387,12 @@ function replaceTemplateVariables(template: string, data: Record<string, any>): 
 
     // Replace variables in the line
     for (const [key, value] of Object.entries(data)) {
-      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-        const regex = new RegExp(`\{\{${key}\}\}`, 'g');
+      if (
+        typeof value === "string" ||
+        typeof value === "number" ||
+        typeof value === "boolean"
+      ) {
+        const regex = new RegExp(`\{\{${key}\}\}`, "g");
         line = line.replace(regex, String(value));
       }
     }
@@ -393,7 +402,7 @@ function replaceTemplateVariables(template: string, data: Record<string, any>): 
     i++;
   }
 
-  return processedLines.join('\n');
+  return processedLines.join("\n");
 }
 
 /**
@@ -419,18 +428,21 @@ export async function sendReportApprovedEmail(
 ): Promise<boolean> {
   try {
     console.log(`Attempting to send approval email to ${userEmail}`);
-    
+
     // Create view URL
     const viewUrl = `${APP_URL}/user/reports/${data.report_id}`;
-    
+
     // Prepare complete data
     const templateData = {
       ...data,
-      view_url: viewUrl
+      view_url: viewUrl,
     };
 
     // Replace template variables
-    const html = replaceTemplateVariables(REPORT_APPROVED_TEMPLATE, templateData);
+    const html = replaceTemplateVariables(
+      REPORT_APPROVED_TEMPLATE,
+      templateData
+    );
 
     const msg = {
       to: userEmail,
@@ -443,11 +455,11 @@ export async function sendReportApprovedEmail(
     console.log(`Report approval email sent to: ${userEmail}`);
     return true;
   } catch (error: any) {
-    console.error('Failed to send report approval email:', error);
+    console.error("Failed to send report approval email:", error);
     if (error.response) {
-      console.error('SendGrid API error:', {
+      console.error("SendGrid API error:", {
         status: error.response.status,
-        body: error.response.body
+        body: error.response.body,
       });
     }
     return false;
@@ -463,18 +475,21 @@ export async function sendReportRejectedEmail(
 ): Promise<boolean> {
   try {
     console.log(`Attempting to send rejection email to ${userEmail}`);
-    
+
     // Create view URL
     const viewUrl = `${APP_URL}/user/reports/${data.report_id}`;
-    
+
     // Prepare complete data
     const templateData = {
       ...data,
-      view_url: viewUrl
+      view_url: viewUrl,
     };
 
     // Replace template variables
-    const html = replaceTemplateVariables(REPORT_REJECTED_TEMPLATE, templateData);
+    const html = replaceTemplateVariables(
+      REPORT_REJECTED_TEMPLATE,
+      templateData
+    );
 
     const msg = {
       to: userEmail,
@@ -487,11 +502,11 @@ export async function sendReportRejectedEmail(
     console.log(`Report rejection email sent to: ${userEmail}`);
     return true;
   } catch (error: any) {
-    console.error('Failed to send report rejection email:', error);
+    console.error("Failed to send report rejection email:", error);
     if (error.response) {
-      console.error('SendGrid API error:', {
+      console.error("SendGrid API error:", {
         status: error.response.status,
-        body: error.response.body
+        body: error.response.body,
       });
     }
     return false;
@@ -507,18 +522,21 @@ export async function sendReportReimbursedEmail(
 ): Promise<boolean> {
   try {
     console.log(`Attempting to send reimbursement email to ${userEmail}`);
-    
+
     // Create view URL
     const viewUrl = `${APP_URL}/user/reports/${data.report_id}`;
-    
+
     // Prepare complete data
     const templateData = {
       ...data,
-      view_url: viewUrl
+      view_url: viewUrl,
     };
 
     // Replace template variables
-    const html = replaceTemplateVariables(REPORT_REIMBURSED_TEMPLATE, templateData);
+    const html = replaceTemplateVariables(
+      REPORT_REIMBURSED_TEMPLATE,
+      templateData
+    );
 
     const msg = {
       to: userEmail,
@@ -531,11 +549,11 @@ export async function sendReportReimbursedEmail(
     console.log(`Report reimbursement email sent to: ${userEmail}`);
     return true;
   } catch (error: any) {
-    console.error('Failed to send report reimbursement email:', error);
+    console.error("Failed to send report reimbursement email:", error);
     if (error.response) {
-      console.error('SendGrid API error:', {
+      console.error("SendGrid API error:", {
         status: error.response.status,
-        body: error.response.body
+        body: error.response.body,
       });
     }
     return false;
