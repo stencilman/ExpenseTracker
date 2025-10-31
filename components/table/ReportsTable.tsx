@@ -57,7 +57,7 @@ export function ReportsTable({
         onRowClick(row.id);
         return;
       }
-      
+
       // Otherwise use default navigation
       if (pathname.includes("/admin/my-reports")) {
         router.push(`/admin/my-reports/${row.id}`);
@@ -72,14 +72,19 @@ export function ReportsTable({
 
   // Use the same columns for both admin and user reports
   const columns = React.useMemo(() => {
-    return getReportsColumns();
-  }, []);
+    const includeSubmitter =
+      pathname.includes("/admin/reports") &&
+      !pathname.includes("/admin/my-reports");
+
+    return getReportsColumns({ includeSubmitter });
+  }, [pathname]);
 
   // Effect to update internal state when external selection changes
   React.useEffect(() => {
     if (isAllRowsSelected) {
       setSelectedRows([...data]);
-    } else if (isAllRowsSelected === false) { // Explicitly check for false
+    } else if (isAllRowsSelected === false) {
+      // Explicitly check for false
       setSelectedRows([]);
     }
   }, [isAllRowsSelected, data]);

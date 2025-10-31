@@ -91,10 +91,12 @@ export const ReportDetailsCell = ({
   iconType,
   title,
   dateRange,
+  submitter,
 }: {
   iconType: Report["iconType"];
   title: string;
   dateRange: string;
+  submitter?: string;
 }) => {
   const Icon = getIconComponent(iconType);
   return (
@@ -105,6 +107,9 @@ export const ReportDetailsCell = ({
       <div>
         <div className="text-blue-500 font-medium">{title}</div>
         <div className="text-xs text-muted-foreground">{dateRange}</div>
+        {submitter && (
+          <div className="text-xs text-muted-foreground">{submitter}</div>
+        )}
       </div>
     </div>
   );
@@ -129,41 +134,52 @@ export const TotalCell = ({
 };
 
 // Define the columns for the reports table with full details
-export const getReportsColumns = (): ColumnDef<Report>[] => [
-  {
-    accessorKey: "details",
-    header: "REPORT DETAILS",
-    cell: ({ row }) => (
-      <ReportDetailsCell
-        iconType={row.original.iconType}
-        title={row.original.title}
-        dateRange={row.original.dateRange}
-      />
-    ),
-  },
-  {
-    accessorKey: "total",
-    header: () => <div className="text-right">TOTAL</div>,
-    cell: ({ row }) => (
-      <TotalCell
-        total={row.original.total}
-        expenseCount={row.original.expenseCount}
-      />
-    ),
-  },
-  {
-    accessorKey: "toBeReimbursed",
-    header: () => <div className="text-right">TO BE REIMBURSED</div>,
-    cell: ({ row }) => (
-      <div className="text-right">{row.original.toBeReimbursed}</div>
-    ),
-  },
-  {
-    accessorKey: "status",
-    header: () => <div className="text-right">STATUS</div>,
-    cell: ({ row }) => <StatusCell status={row.original.status} />,
-  },
-];
+interface ReportsColumnsOptions {
+  includeSubmitter?: boolean;
+}
+
+export const getReportsColumns = (
+  options: ReportsColumnsOptions = {}
+): ColumnDef<Report>[] => {
+  const { includeSubmitter = false } = options;
+
+  return [
+    {
+      accessorKey: "details",
+      header: "REPORT DETAILS",
+      cell: ({ row }) => (
+        <ReportDetailsCell
+          iconType={row.original.iconType}
+          title={row.original.title}
+          dateRange={row.original.dateRange}
+          submitter={includeSubmitter ? row.original.submitter : undefined}
+        />
+      ),
+    },
+    {
+      accessorKey: "total",
+      header: () => <div className="text-right">TOTAL</div>,
+      cell: ({ row }) => (
+        <TotalCell
+          total={row.original.total}
+          expenseCount={row.original.expenseCount}
+        />
+      ),
+    },
+    {
+      accessorKey: "toBeReimbursed",
+      header: () => <div className="text-right">TO BE REIMBURSED</div>,
+      cell: ({ row }) => (
+        <div className="text-right">{row.original.toBeReimbursed}</div>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: () => <div className="text-right">STATUS</div>,
+      cell: ({ row }) => <StatusCell status={row.original.status} />,
+    },
+  ];
+};
 
 // Using the shared Expense type from types/expense.ts
 export const getAdminReportTableColumns = (
