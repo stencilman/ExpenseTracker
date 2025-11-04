@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
+  BookOpen,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -38,6 +39,7 @@ export default function SideNav({ onNavItemClick }: SideNavProps) {
     { name: "Home", href: "/user/dashboard", icon: Home },
     { name: "Expenses", href: "/user/expenses", icon: Receipt },
     { name: "Reports", href: "/user/reports", icon: FileText },
+    { name: "How to use", href: "/user/how-to-use", icon: BookOpen },
     { name: "Settings", href: "/user/settings", icon: Settings },
   ];
 
