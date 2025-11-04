@@ -145,7 +145,18 @@ Returns all available expense categories.
 - **Response**: Array of expense category strings
   ```json
   {
-    "categories": ["TRAVEL", "MEALS", "ACCOMMODATION", "SUPPLIES", "SERVICES", "ENTERTAINMENT", "TRANSPORTATION", "UTILITIES", "OFFICE", "OTHER"]
+    "categories": [
+      "TRAVEL",
+      "MEALS",
+      "ACCOMMODATION",
+      "SUPPLIES",
+      "SERVICES",
+      "ENTERTAINMENT",
+      "TRANSPORTATION",
+      "UTILITIES",
+      "OFFICE",
+      "OTHER"
+    ]
   }
   ```
 
@@ -197,7 +208,7 @@ Deletes a file from S3 storage.
     "key": "https://expense-tracker-receipts.s3.amazonaws.com/1627484930-receipt.jpg"
   }
   ```
-- **Notes**: 
+- **Notes**:
   - The key can be either the full URL or just the filename
   - If a full URL is provided, the filename will be extracted automatically
 - **Response**: Success confirmation
@@ -430,4 +441,3 @@ The application implements middleware to:
 - Use the existing UI components in `/components/ui` for consistent styling
 - Follow the established patterns for forms, tables, and other UI elements
 - Use server actions for data mutations
-
