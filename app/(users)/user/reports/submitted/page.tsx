@@ -73,7 +73,7 @@ export default function SubmittedReportsPage() {
         setCurrentPage(meta.page);
         // Adjust total pages based on filtered count
         const filteredTotalItems = reportsArray.length;
-        const pageSize = meta.pageSize || 10;
+        const pageSize = meta.pageSize || 20;
         const adjustedPageCount = Math.max(1, Math.ceil(filteredTotalItems / pageSize));
         setTotalPages(adjustedPageCount);
       }

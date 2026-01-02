@@ -26,7 +26,7 @@ Returns a list of expenses for the authenticated user with optional filtering an
 - **Authentication**: Required
 - **Query Parameters**:
   - `page`: Page number (default: 1)
-  - `pageSize`: Number of items per page (default: 10)
+  - `pageSize`: Number of items per page (default: 20)
   - `startDate`: Filter expenses after this date (YYYY-MM-DD)
   - `endDate`: Filter expenses before this date (YYYY-MM-DD)
   - `search`: Search term for expense description or merchant

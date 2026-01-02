@@ -10,7 +10,7 @@ export async function getExpenses(
   userId: string,
   filter?: ExpenseFilter,
   page: number = 1,
-  pageSize: number = 10
+  pageSize: number = 20
 ) {
   try {
     // Build filter conditions
