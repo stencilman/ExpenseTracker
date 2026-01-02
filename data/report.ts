@@ -68,7 +68,7 @@ export async function getReports(
     userId: string,
     {
         page = 1,
-        pageSize = 10,
+        pageSize = 20,
         status,
         search,
         startDate,

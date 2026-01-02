@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
     // Parse query parameters
     const { searchParams } = new URL(req.url);
     const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "10");
+    const pageSize = parseInt(searchParams.get("pageSize") || "20");
     const search = searchParams.get("search");
 
     // Build where clause for filtering

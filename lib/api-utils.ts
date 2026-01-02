@@ -45,10 +45,10 @@ export function parseQueryParams(url: URL) {
  */
 export function parsePaginationParams(url: URL) {
   const page = parseInt(url.searchParams.get('page') || '1');
-  const pageSize = parseInt(url.searchParams.get('pageSize') || '10');
+  const pageSize = parseInt(url.searchParams.get('pageSize') || '20');
   
   return {
     page: isNaN(page) ? 1 : Math.max(1, page),
-    pageSize: isNaN(pageSize) ? 10 : Math.min(100, Math.max(1, pageSize)),
+    pageSize: isNaN(pageSize) ? 20 : Math.min(100, Math.max(1, pageSize)),
   };
 }

@@ -2,10 +2,11 @@
 
 import * as React from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Calendar, FileText, Receipt, CreditCard } from "lucide-react";
+import { Calendar, FileText, Receipt, CreditCard, Eye } from "lucide-react";
 import { ReportStatus } from "@prisma/client";
 import { mapReportStatusToDisplay } from "@/lib/report-status-utils";
 import { ExpenseWithUI } from "@/types/expense";
+import { Button } from "@/components/ui/button";
 
 // Define the Report type
 export interface Report {
@@ -92,11 +93,13 @@ export const ReportDetailsCell = ({
   title,
   dateRange,
   submitter,
+  onClick,
 }: {
   iconType: Report["iconType"];
   title: string;
   dateRange: string;
   submitter?: string;
+  onClick?: () => void;
 }) => {
   const Icon = getIconComponent(iconType);
   return (
@@ -105,7 +108,19 @@ export const ReportDetailsCell = ({
         <Icon className="h-5 w-5 text-muted-foreground" />
       </div>
       <div>
-        <div className="text-blue-500 font-medium">{title}</div>
+        <div
+          className={`text-blue-500 font-medium ${
+            onClick ? "cursor-pointer hover:underline" : ""
+          }`}
+          onClick={(e) => {
+            if (onClick) {
+              e.stopPropagation();
+              onClick();
+            }
+          }}
+        >
+          {title}
+        </div>
         <div className="text-xs text-muted-foreground">{dateRange}</div>
         {submitter && (
           <div className="text-xs text-muted-foreground">{submitter}</div>
@@ -136,12 +151,13 @@ export const TotalCell = ({
 // Define the columns for the reports table with full details
 interface ReportsColumnsOptions {
   includeSubmitter?: boolean;
+  onRowClick?: (report: Report) => void;
 }
 
 export const getReportsColumns = (
   options: ReportsColumnsOptions = {}
 ): ColumnDef<Report>[] => {
-  const { includeSubmitter = false } = options;
+  const { includeSubmitter = false, onRowClick } = options;
 
   return [
     {
@@ -153,6 +169,7 @@ export const getReportsColumns = (
           title={row.original.title}
           dateRange={row.original.dateRange}
           submitter={includeSubmitter ? row.original.submitter : undefined}
+          onClick={() => onRowClick && onRowClick(row.original)}
         />
       ),
     },
@@ -177,6 +194,24 @@ export const getReportsColumns = (
       accessorKey: "status",
       header: () => <div className="text-right">STATUS</div>,
       cell: ({ row }) => <StatusCell status={row.original.status} />,
+    },
+    {
+      id: "actions",
+      header: () => <div className="text-right">VIEW</div>,
+      cell: ({ row }) => (
+        <div className="text-right">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRowClick && onRowClick(row.original);
+            }}
+          >
+            <Eye className="h-4 w-4 text-muted-foreground hover:text-foreground hover:cursor-pointer" />
+          </Button>
+        </div>
+      ),
     },
   ];
 };

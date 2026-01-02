@@ -44,7 +44,7 @@ export function DataTable<TData, TValue>({
   columns,
   data,
   showPagination = false,
-  pageSize = 10,
+  pageSize = 20,
   enableRowSelection = false,
   onSelectedRowsChange,
   onRowClick,

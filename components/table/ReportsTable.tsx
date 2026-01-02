@@ -76,8 +76,11 @@ export function ReportsTable({
       pathname.includes("/admin/reports") &&
       !pathname.includes("/admin/my-reports");
 
-    return getReportsColumns({ includeSubmitter });
-  }, [pathname]);
+    return getReportsColumns({
+      includeSubmitter,
+      onRowClick: handleRowClick, // Pass the row click handler to the columns
+    });
+  }, [pathname, handleRowClick]);
 
   // Effect to update internal state when external selection changes
   React.useEffect(() => {
@@ -96,7 +99,7 @@ export function ReportsTable({
       showPagination={showPagination}
       enableRowSelection={enableRowSelection}
       onSelectedRowsChange={handleSelectedRowsChange}
-      onRowClick={handleRowClick}
+      onRowClick={undefined}
       className={className}
       isAllRowsSelected={isAllRowsSelected}
       selectedRows={selectedRows}
