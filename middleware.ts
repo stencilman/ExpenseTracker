@@ -10,10 +10,11 @@ import {
   DEFAULT_USER_REDIRECT,
 } from "./routes";
 import { UserRole } from "@prisma/client";
+import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 
 
 
-export default auth((req) => {
+const authMiddleware = auth((req) => {
   const nextUrl = req.nextUrl;
   const {
     nextUrl: { pathname },
@@ -78,6 +79,14 @@ export default auth((req) => {
   return null;
 });
 
+export default function middleware(req: NextRequest, event: NextFetchEvent) {
+  if (req.nextUrl.pathname.startsWith("/api/public")) {
+    return NextResponse.next();
+  }
+
+  return authMiddleware(req, event);
+}
+
 export const config = {
-  matcher: ["/((?!.+\\.[\\w]+$|_next).*)", "/", "/(api|trpc)(.*)"],
+  matcher: ["/((?!api/public|.+\\.[\\w]+$|_next).*)", "/"],
 };
