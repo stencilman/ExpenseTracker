@@ -13,7 +13,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ChevronLeft, ChevronRight, Mail, FlaskConical } from "lucide-react";
 
 export default function AdminReportsAwaitingApprovalPage() {
   const [reports, setReports] = useState<Report[]>([]);
@@ -22,6 +23,9 @@ export default function AdminReportsAwaitingApprovalPage() {
   const [selectedReports, setSelectedReports] = useState<Report[]>([]);
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
+  const [isSendingDigest, setIsSendingDigest] = useState(false);
+  const [testDialogOpen, setTestDialogOpen] = useState(false);
+  const [testEmail, setTestEmail] = useState("");
   const [selectAll, setSelectAll] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -131,6 +135,31 @@ export default function AdminReportsAwaitingApprovalPage() {
     }
   };
 
+  const handleSendDigest = async (overrideEmail?: string) => {
+    try {
+      setIsSendingDigest(true);
+      const response = await fetch("/api/cron/pending-reimbursements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(overrideEmail ? { email: overrideEmail } : {}),
+      });
+      if (!response.ok) throw new Error("Failed to send digest");
+      const result = await response.json();
+      toast.success(`Digest sent to ${result.sentTo} (${result.count} report${result.count !== 1 ? "s" : ""})`);
+    } catch {
+      toast.error("Failed to send digest email. Please try again.");
+    } finally {
+      setIsSendingDigest(false);
+    }
+  };
+
+  const handleSendTestDigest = async () => {
+    if (!testEmail) return;
+    await handleSendDigest(testEmail);
+    setTestDialogOpen(false);
+    setTestEmail("");
+  };
+
   // Handle report action completion (approve, reject, reimburse)
   const handleReportActionComplete = useCallback(
     (updatedReport: Report) => {
@@ -164,7 +193,7 @@ export default function AdminReportsAwaitingApprovalPage() {
                   {selectedReports.length} report
                   {selectedReports.length !== 1 ? "s" : ""} selected
                 </span>
-                
+
                 {/* Action buttons in the same row */}
                 <div className="flex gap-2 ml-4">
                   <Button
@@ -201,7 +230,64 @@ export default function AdminReportsAwaitingApprovalPage() {
               </>
             )}
           </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="blue-outline"
+              size="sm"
+              onClick={() => handleSendDigest()}
+              disabled={isSendingDigest}
+            >
+              {isSendingDigest ? (
+                <div className="flex items-center gap-2">
+                  <Loader size="sm" />
+                  <span>Sending...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>Send Digest Email</span>
+                </div>
+              )}
+            </Button>
+            <Button
+              variant="blue-outline"
+              size="sm"
+              onClick={() => setTestDialogOpen(true)}
+              disabled={isSendingDigest}
+            >
+              <div className="flex items-center gap-2">
+                <FlaskConical className="h-4 w-4" />
+                <span>Test</span>
+              </div>
+            </Button>
+          </div>
         </div>
+
+        <Dialog open={testDialogOpen} onOpenChange={setTestDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Send Test Digest</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              Send a test copy of the pending-approval digest to a specific email address.
+            </p>
+            <Input
+              type="email"
+              placeholder="test@example.com"
+              value={testEmail}
+              onChange={(e) => setTestEmail(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendTestDigest()}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setTestDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSendTestDigest} disabled={!testEmail || isSendingDigest}>
+                {isSendingDigest ? "Sending..." : "Send"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <ReportsTable
           data={reports}

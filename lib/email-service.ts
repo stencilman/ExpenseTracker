@@ -1,11 +1,8 @@
-import sgMail from "@sendgrid/mail";
-import { User } from "@prisma/client";
+import { Resend } from "resend";
 
-// Initialize SendGrid with API key
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Get sender email from environment variables
-const SENDER_EMAIL = process.env.SENDGRID_SENDER_EMAIL || "";
+const SENDER_EMAIL = process.env.RESEND_SENDER_EMAIL || "noreply@fastcode.ai";
 
 // Get the app URL from environment or use localhost as fallback
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -451,17 +448,11 @@ export async function sendReportApprovedEmail(
       html: html,
     };
 
-    await sgMail.send(msg);
+    await resend.emails.send(msg);
     console.log(`Report approval email sent to: ${userEmail}`);
     return true;
   } catch (error: any) {
     console.error("Failed to send report approval email:", error);
-    if (error.response) {
-      console.error("SendGrid API error:", {
-        status: error.response.status,
-        body: error.response.body,
-      });
-    }
     return false;
   }
 }
@@ -498,17 +489,147 @@ export async function sendReportRejectedEmail(
       html: html,
     };
 
-    await sgMail.send(msg);
+    await resend.emails.send(msg);
     console.log(`Report rejection email sent to: ${userEmail}`);
     return true;
   } catch (error: any) {
     console.error("Failed to send report rejection email:", error);
-    if (error.response) {
-      console.error("SendGrid API error:", {
-        status: error.response.status,
-        body: error.response.body,
-      });
+    return false;
+  }
+}
+
+/**
+ * Build and send a daily digest of SUBMITTED reports awaiting approval to admin
+ */
+export async function sendPendingApprovalDigestEmail(
+  reports: Array<{
+    id: number | string;
+    title: string;
+    totalAmount: number;
+    submittedAt: Date | string | null;
+    user: { firstName: string | null; lastName: string | null; email: string } | null;
+  }>,
+  recipientEmail = "hello@fastcode.ai"
+): Promise<boolean> {
+  try {
+    const total = reports.reduce((sum, r) => sum + (r.totalAmount ?? 0), 0);
+    const dateStr = new Date().toLocaleString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      dateStyle: "full",
+      timeStyle: "short",
+    });
+
+    const rows = reports
+      .map(
+        (r, i) => `
+      <tr class="report-row" style="border-bottom:1px solid #e2e8f0">
+        <td class="report-cell" data-label="#" style="padding:10px 12px;color:#64748b;vertical-align:top">${i + 1}</td>
+        <td class="report-cell" data-label="Employee" style="padding:10px 12px;vertical-align:top">
+          ${r.user ? `${r.user.firstName ?? ""} ${r.user.lastName ?? ""}`.trim() : "—"}
+          <br><span style="font-size:11px;color:#94a3b8">${r.user?.email ?? ""}</span>
+        </td>
+        <td class="report-cell" data-label="Report Title" style="padding:10px 12px;vertical-align:top">${r.title}</td>
+        <td class="report-cell" data-label="Amount" style="padding:10px 12px;vertical-align:top;white-space:nowrap">₹${Number(r.totalAmount).toLocaleString("en-IN", { minimumFractionDigits: 2 })}</td>
+        <td class="report-cell" data-label="Submitted" style="padding:10px 12px;vertical-align:top;color:#64748b;white-space:nowrap">${r.submittedAt ? formatDateForEmail(r.submittedAt) : "—"}</td>
+      </tr>`
+      )
+      .join("");
+
+    const tableHtml =
+      reports.length > 0
+        ? `<table class="report-table" style="width:100%;border-collapse:collapse;margin:20px 0;font-size:13px">
+        <thead class="report-thead">
+          <tr style="background-color:#f1f5f9">
+            <th style="text-align:left;padding:10px 12px;color:#64748b;border-bottom:2px solid #e2e8f0;white-space:nowrap">#</th>
+            <th style="text-align:left;padding:10px 12px;color:#64748b;border-bottom:2px solid #e2e8f0;white-space:nowrap">Employee</th>
+            <th style="text-align:left;padding:10px 12px;color:#64748b;border-bottom:2px solid #e2e8f0;white-space:nowrap">Report Title</th>
+            <th style="text-align:left;padding:10px 12px;color:#64748b;border-bottom:2px solid #e2e8f0;white-space:nowrap">Amount</th>
+            <th style="text-align:left;padding:10px 12px;color:#64748b;border-bottom:2px solid #e2e8f0;white-space:nowrap">Submitted</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>`
+        : `<p style="color:#64748b;font-style:italic">No reports are currently awaiting approval.</p>`;
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pending Approvals – Daily Digest</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .email-wrapper { padding: 8px !important; }
+      .email-header { padding: 16px !important; }
+      .email-header h1 { font-size: 18px !important; }
+      .email-body { padding: 16px !important; }
+      .report-thead { display: none !important; }
+      .report-row {
+        display: block !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 8px !important;
+        margin-bottom: 12px !important;
+        background: #f8fafc !important;
+        overflow: hidden !important;
+      }
+      .report-cell {
+        display: block !important;
+        padding: 8px 12px !important;
+        text-align: left !important;
+        white-space: normal !important;
+        border-bottom: 1px solid #f1f5f9 !important;
+      }
+      .report-cell:last-child { border-bottom: none !important; }
+      .report-cell:before {
+        content: attr(data-label);
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 2px;
+      }
+      .cta-button { display: block !important; text-align: center !important; }
     }
+  </style>
+</head>
+<body style="font-family:Arial,sans-serif;line-height:1.6;color:#333;margin:0;padding:0;background:#f1f5f9">
+  <div class="email-wrapper" style="max-width:700px;margin:0 auto;padding:20px">
+    <div class="email-header" style="background-color:#2563EB;color:white;padding:24px;text-align:center;border-radius:6px 6px 0 0">
+      <h1 style="margin:0 0 6px;font-size:22px">Daily Digest: Pending Approvals</h1>
+      <p style="margin:0;opacity:0.85;font-size:14px">${dateStr} IST</p>
+    </div>
+    <div class="email-body" style="padding:24px;background:#ffffff;border:1px solid #e2e8f0;border-top:none">
+      <div style="background:#eff6ff;border-left:4px solid #2563EB;padding:15px;margin-bottom:20px;border-radius:0 4px 4px 0">
+        <p style="margin:0"><strong>${reports.length} report${reports.length !== 1 ? "s" : ""}</strong> awaiting approval</p>
+        <p style="margin:4px 0 0;color:#1e40af"><strong>Total Amount: ₹${total.toLocaleString("en-IN", { minimumFractionDigits: 2 })}</strong></p>
+      </div>
+      ${tableHtml}
+      <a href="${APP_URL}admin/reports/awaiting-approval" class="cta-button"
+         style="display:inline-block;background-color:#2563EB;color:white;text-decoration:none;padding:12px 24px;border-radius:4px;margin-top:8px;font-weight:bold;font-size:14px">
+        Review in Admin Panel
+      </a>
+    </div>
+    <div style="background:#f6f6f6;padding:15px;text-align:center;font-size:12px;color:#666;border-radius:0 0 6px 6px">
+      <p style="margin:0">This is an automated daily digest from the Expense Tracker system.</p>
+      <p style="margin:4px 0 0">© 2025 Expense Tracker. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+    await resend.emails.send({
+      from: SENDER_EMAIL,
+      to: recipientEmail,
+      subject: `[Daily Digest] ${reports.length} Report${reports.length !== 1 ? "s" : ""} Awaiting Approval`,
+      html,
+    });
+
+    console.log(`Pending approval digest sent to ${recipientEmail} (${reports.length} reports)`);
+    return true;
+  } catch (error: any) {
+    console.error("Failed to send pending approval digest email:", error);
     return false;
   }
 }
@@ -545,17 +666,11 @@ export async function sendReportReimbursedEmail(
       html: html,
     };
 
-    await sgMail.send(msg);
+    await resend.emails.send(msg);
     console.log(`Report reimbursement email sent to: ${userEmail}`);
     return true;
   } catch (error: any) {
     console.error("Failed to send report reimbursement email:", error);
-    if (error.response) {
-      console.error("SendGrid API error:", {
-        status: error.response.status,
-        body: error.response.body,
-      });
-    }
     return false;
   }
 }

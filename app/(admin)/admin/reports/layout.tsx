@@ -6,7 +6,7 @@ export default function AdminReportsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-screen sm:w-auto">
+    <div className="w-full">
       <TabNavigation
         tabs={[
           {

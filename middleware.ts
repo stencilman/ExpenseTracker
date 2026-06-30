@@ -80,7 +80,10 @@ const authMiddleware = auth((req) => {
 });
 
 export default function middleware(req: NextRequest, event: NextFetchEvent) {
-  if (req.nextUrl.pathname.startsWith("/api/public")) {
+  const { pathname } = req.nextUrl;
+
+  // Bypass auth middleware for public API routes and Vercel Cron endpoints
+  if (pathname.startsWith("/api/public") || pathname.startsWith("/api/cron")) {
     return NextResponse.next();
   }
 

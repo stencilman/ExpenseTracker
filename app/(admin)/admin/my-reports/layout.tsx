@@ -9,7 +9,7 @@ export default function AdminReportsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="w-screen sm:w-auto h-[calc(100vh-4rem)] flex flex-col">
+    <div className="w-full h-[calc(100vh-4rem)] flex flex-col">
       <div className="flex-none">
         <TabNavigation
           tabs={[
