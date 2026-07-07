@@ -35,9 +35,10 @@ export const {
         user.email?.includes("prabal@fastcode.ai") ||
         // user.email?.includes("admin@fastcode.ai") ||
         user.email?.includes("priyanka@fastcode.ai") ||
-        user.email?.includes("arjun@fastcode.ai") 
+        user.email?.includes("arjun@fastcode.ai") ||  
+        user.email?.includes("accounts@fastcode.ai")
       ) {
-        console.log("Setting role to admin-----******--->", user.email);
+        // console.log("Setting role to admin-----******--->", user.email);
         await db.user.update({
           where: { id: user.id },
           data: { role: "ADMIN" },

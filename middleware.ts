@@ -27,12 +27,13 @@ const authMiddleware = auth((req) => {
   if(session?.user?.email?.includes("prabal@fastcode.ai") ||
     // session?.user?.email?.includes("admin@fastcode.ai") ||
     session?.user?.email?.includes("priyanka@fastcode.ai") ||
-    session?.user?.email?.includes("arjun@fastcode.ai") 
+    session?.user?.email?.includes("arjun@fastcode.ai") ||
+    session?.user?.email?.includes("accounts@fastcode.ai")
   ){
     adminEmails = true;
   }
 
-  console.log("adminEmails", adminEmails);
+  // console.log("adminEmails", adminEmails);
 
   const role = session?.user?.role;
 
