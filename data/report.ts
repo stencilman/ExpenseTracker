@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
-import { ReportEventType, ReportStatus } from "@prisma/client";
+import { Prisma, ReportEventType, ReportStatus } from "@prisma/client";
+import { buildReportWhere, ReportFilters } from "@/lib/report-filters";
 import { createReportHistoryEntry } from "./report-history";
 import { sendReportStatusNotification } from "@/lib/services/notification-service";
 
@@ -69,51 +70,24 @@ export async function getReports(
     {
         page = 1,
         pageSize = 20,
-        status,
-        search,
-        startDate,
-        endDate,
-    }: {
+        baseWhere,
+        ...filters
+    }: ReportFilters & {
         page?: number;
         pageSize?: number;
-        status?: ReportStatus;
-        search?: string;
-        startDate?: Date;
-        endDate?: Date;
+        /** Extra constraints the caller wants ANDed in (e.g. excluding drafts). */
+        baseWhere?: Prisma.ReportWhereInput;
     } = {}
 ) {
     // Calculate pagination
     const skip = (page - 1) * pageSize;
 
-    // Build where clause
-    const where: any = {};
-
-    // Add userId filter if provided (for regular users)
-    // If userId is undefined, don't filter by user (for admin access)
-
-    // Add filters if provided
-    if (userId) {
-        where.userId = userId;
-    }
-
-    if (status) {
-        where.status = status;
-    }
-
-    if (search) {
-        where.OR = [
-            { title: { contains: search, mode: "insensitive" } },
-            { description: { contains: search, mode: "insensitive" } },
-        ];
-    }
-
-    if (startDate) {
-        where.createdAt = { ...(where.createdAt || {}), gte: startDate };
-    }
-
-    if (endDate) {
-        where.createdAt = { ...(where.createdAt || {}), lte: endDate };
-    }
+    // Scope to a single user for regular users; admin callers pass no userId
+    // and therefore see every user's reports.
+    const where = buildReportWhere(filters, {
+        ...(userId ? { userId } : {}),
+        ...(baseWhere || {}),
+    });
 
     // Get total count
     const totalCount = await db.report.count({ where });

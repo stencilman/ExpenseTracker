@@ -22,8 +22,14 @@ export const ReportUpdateSchema = z.object({
 export const ReportFilterSchema = z.object({
   status: z.enum(Object.values(ReportStatus) as [string, ...string[]]).optional(),
   search: z.string().optional(),
+  submitterId: z.string().optional(),
+  minAmount: z.number().nonnegative().optional(),
+  maxAmount: z.number().nonnegative().optional(),
   startDate: z.coerce.date().optional(),
   endDate: z.coerce.date().optional(),
+  dateField: z
+    .enum(["createdAt", "submittedAt", "approvedAt", "reimbursedAt"])
+    .optional(),
   page: z.number().int().positive().optional(),
   pageSize: z.number().int().positive().optional(),
 });

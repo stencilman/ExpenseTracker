@@ -15,6 +15,8 @@ export type { Report } from "./TableColumnDefs";
 interface ReportsTableProps {
   data: Report[];
   showPagination?: boolean;
+  /** Rows rendered per page. Lists that paginate server-side pass their full page size. */
+  pageSize?: number;
   enableRowSelection?: boolean;
   onSelectedRowsChange?: (selectedRows: Report[]) => void;
   variant?: "dashboard" | "page";
@@ -27,6 +29,7 @@ interface ReportsTableProps {
 export function ReportsTable({
   data,
   showPagination = false,
+  pageSize,
   enableRowSelection = false,
   onSelectedRowsChange,
   variant = "dashboard",
@@ -97,6 +100,7 @@ export function ReportsTable({
       columns={columns}
       data={data}
       showPagination={showPagination}
+      pageSize={pageSize}
       enableRowSelection={enableRowSelection}
       onSelectedRowsChange={handleSelectedRowsChange}
       onRowClick={undefined}
