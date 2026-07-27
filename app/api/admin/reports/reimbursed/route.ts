@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { ReportStatus } from "@prisma/client";
 import { auth } from "@/auth";
+import { parsePaginationParams } from "@/lib/api-utils";
 import { formatReportForUI } from "@/lib/format-utils";
+import { buildReportWhere, parseReportFilters } from "@/lib/report-filters";
 
 /**
  * GET /api/admin/reports/reimbursed
@@ -18,23 +20,14 @@ export async function GET(req: NextRequest) {
     }
 
     // Parse query parameters
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const pageSize = parseInt(searchParams.get("pageSize") || "20");
-    const search = searchParams.get("search");
+    const url = new URL(req.url);
+    const { page, pageSize } = parsePaginationParams(url);
 
-    // Build where clause for filtering
-    const where: any = {
-      status: ReportStatus.REIMBURSED // Only get REIMBURSED reports
-    };
-
-    // Add search filter if provided
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-      ];
-    }
+    // Build where clause: REIMBURSED reports only, narrowed by the admin's filters
+    const where = buildReportWhere(
+      { ...parseReportFilters(url), status: undefined, dateField: "reimbursedAt" },
+      { status: ReportStatus.REIMBURSED }
+    );
 
     // Calculate pagination
     const skip = (page - 1) * pageSize;

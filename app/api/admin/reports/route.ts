@@ -1,7 +1,8 @@
 import { auth } from "@/auth";
 import { getReports } from "@/data/report";
-import { errorResponse, jsonResponse, parsePaginationParams, parseQueryParams } from "@/lib/api-utils";
+import { errorResponse, jsonResponse, parsePaginationParams } from "@/lib/api-utils";
 import { formatReportForUI } from "@/lib/format-utils";
+import { parseReportFilters } from "@/lib/report-filters";
 import { ReportFilterSchema } from "@/schemas/report";
 import { ReportStatus } from "@prisma/client";
 
@@ -26,32 +27,26 @@ export async function GET(req: Request) {
     // Parse query parameters
     const url = new URL(req.url);
     const { page, pageSize } = parsePaginationParams(url);
-    const queryParams = parseQueryParams(url);
-
-    // Parse and validate filters
-    const filterParams: any = {
-      page,
-      pageSize,
-    };
-
-    if (queryParams.startDate) filterParams.startDate = new Date(queryParams.startDate);
-    if (queryParams.endDate) filterParams.endDate = new Date(queryParams.endDate);
-    if (queryParams.search) filterParams.search = queryParams.search;
-
-    if (queryParams.status && Object.values(ReportStatus).includes(queryParams.status as ReportStatus)) {
-      filterParams.status = queryParams.status as ReportStatus;
-    }
 
     // Validate filters
-    const filterResult = ReportFilterSchema.safeParse(filterParams);
+    const filterResult = ReportFilterSchema.safeParse({
+      ...parseReportFilters(url),
+      page,
+      pageSize,
+    });
     if (!filterResult.success) {
       return errorResponse(`Invalid filter parameters: ${filterResult.error.message}`, 400);
     }
 
-    // Get reports with filters - pass undefined for userId to get all reports (admin access)
-    // We need to modify the where clause in the data layer to handle this case
-    const reports = await getReports(undefined as any, filterResult.data as any);
-    
+    // Get reports with filters - pass undefined for userId to get all reports (admin access).
+    // Drafts belong to their owner only, so they never show up in the admin list.
+    const reports = await getReports(undefined as any, {
+      ...(filterResult.data as any),
+      // Admins think of these reports by when they were submitted, not created
+      dateField: filterResult.data.dateField ?? "submittedAt",
+      baseWhere: { status: { not: ReportStatus.PENDING } },
+    });
+
     // Format each report for UI consumption with proper status objects
     const formattedReports = {
       data: reports.data.map((report) => formatReportForUI(report as any)),
