@@ -21,6 +21,7 @@ export default function AdminReportsAwaitingReimbursementPage() {
     setCurrentPage,
     totalPages,
     totalCount,
+    queryString,
     refresh,
   } = useAdminReports({
     endpoint: "/api/admin/reports/awaiting-reimbursement",
@@ -91,6 +92,8 @@ export default function AdminReportsAwaitingReimbursementPage() {
           onFiltersChange={setFilters}
           onReset={resetFilters}
           dateLabel="Approved"
+          exportScope="awaiting-reimbursement"
+          exportQuery={queryString}
           totalCount={totalCount}
           isLoading={isLoading}
         />

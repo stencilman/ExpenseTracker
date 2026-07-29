@@ -21,6 +21,7 @@ export default function AdminReportsAllPage() {
     setCurrentPage,
     totalPages,
     totalCount,
+    queryString,
     refresh,
   } = useAdminReports({ endpoint: "/api/admin/reports" });
 
@@ -46,6 +47,8 @@ export default function AdminReportsAllPage() {
         onReset={resetFilters}
         dateLabel="Submitted"
         showStatusFilter
+        exportScope="all"
+        exportQuery={queryString}
         totalCount={totalCount}
         isLoading={isLoading}
       />

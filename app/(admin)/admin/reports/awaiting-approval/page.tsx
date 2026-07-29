@@ -21,6 +21,7 @@ export default function AdminReportsAwaitingApprovalPage() {
     setCurrentPage,
     totalPages,
     totalCount,
+    queryString,
     refresh,
   } = useAdminReports({ endpoint: "/api/admin/reports/awaiting-approval" });
 
@@ -123,6 +124,8 @@ export default function AdminReportsAwaitingApprovalPage() {
           onFiltersChange={setFilters}
           onReset={resetFilters}
           dateLabel="Submitted"
+          exportScope="awaiting-approval"
+          exportQuery={queryString}
           totalCount={totalCount}
           isLoading={isLoading}
         />

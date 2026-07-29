@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { ReportStatus } from "@prisma/client";
 import { auth } from "@/auth";
 import { parsePaginationParams } from "@/lib/api-utils";
 import { formatReportForUI } from "@/lib/format-utils";
-import { buildReportWhere, parseReportFilters } from "@/lib/report-filters";
+import {
+  buildReportWhere,
+  parseReportFilters,
+  REPORT_LIST_SCOPES,
+} from "@/lib/report-filters";
 
 /**
  * GET /api/admin/reports/awaiting-approval
@@ -24,9 +27,10 @@ export async function GET(req: NextRequest) {
     const { page, pageSize } = parsePaginationParams(url);
 
     // Build where clause: SUBMITTED reports only, narrowed by the admin's filters
+    const scope = REPORT_LIST_SCOPES["awaiting-approval"];
     const where = buildReportWhere(
-      { ...parseReportFilters(url), status: undefined, dateField: "submittedAt" },
-      { status: ReportStatus.SUBMITTED }
+      { ...parseReportFilters(url), status: undefined, dateField: scope.dateField },
+      scope.baseWhere
     );
 
     // Calculate pagination
@@ -65,9 +69,7 @@ export async function GET(req: NextRequest) {
           },
         },
       },
-      orderBy: {
-        submittedAt: "desc", // Order by submission date
-      },
+      orderBy: scope.orderBy,
       skip,
       take: pageSize,
     });

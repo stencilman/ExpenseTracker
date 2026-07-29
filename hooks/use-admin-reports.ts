@@ -143,6 +143,8 @@ export function useAdminReports({
     reports,
     isLoading,
     error,
+    /** Active filters as a query string, for callers that need the same scope (e.g. export). */
+    queryString,
     filters,
     setFilters,
     resetFilters,

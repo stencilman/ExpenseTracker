@@ -28,6 +28,61 @@ const DATE_FIELDS: ReportDateField[] = [
   "reimbursedAt",
 ];
 
+/** The admin report tabs, each scoped to a status. */
+export type ReportListScope =
+  | "all"
+  | "awaiting-approval"
+  | "awaiting-reimbursement"
+  | "reimbursed";
+
+interface ReportListScopeConfig {
+  label: string;
+  /** Status scope the tab is locked to; user filters are ANDed on top. */
+  baseWhere: Prisma.ReportWhereInput;
+  /** Date column a date-range filter means on this tab. */
+  dateField: ReportDateField;
+  orderBy: Prisma.ReportOrderByWithRelationInput;
+}
+
+/**
+ * Single source of truth for how each admin report tab is scoped, shared by the
+ * list routes and the CSV export so the two can't drift apart.
+ */
+export const REPORT_LIST_SCOPES: Record<
+  ReportListScope,
+  ReportListScopeConfig
+> = {
+  all: {
+    label: "All Reports",
+    // Drafts belong to their owner only and never surface to admins.
+    baseWhere: { status: { not: ReportStatus.PENDING } },
+    dateField: "submittedAt",
+    orderBy: { createdAt: "desc" },
+  },
+  "awaiting-approval": {
+    label: "Awaiting Approval",
+    baseWhere: { status: ReportStatus.SUBMITTED },
+    dateField: "submittedAt",
+    orderBy: { submittedAt: "desc" },
+  },
+  "awaiting-reimbursement": {
+    label: "Awaiting Reimbursement",
+    baseWhere: { status: ReportStatus.APPROVED },
+    dateField: "approvedAt",
+    orderBy: { approvedAt: "desc" },
+  },
+  reimbursed: {
+    label: "Reimbursed",
+    baseWhere: { status: ReportStatus.REIMBURSED },
+    dateField: "reimbursedAt",
+    orderBy: { reimbursedAt: "desc" },
+  },
+};
+
+export function isReportListScope(value: unknown): value is ReportListScope {
+  return typeof value === "string" && value in REPORT_LIST_SCOPES;
+}
+
 function parseNumber(value: string | null) {
   if (!value) return undefined;
   const parsed = parseFloat(value);

@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { getReports } from "@/data/report";
 import { errorResponse, jsonResponse, parsePaginationParams } from "@/lib/api-utils";
 import { formatReportForUI } from "@/lib/format-utils";
-import { parseReportFilters } from "@/lib/report-filters";
+import { parseReportFilters, REPORT_LIST_SCOPES } from "@/lib/report-filters";
 import { ReportFilterSchema } from "@/schemas/report";
 import { ReportStatus } from "@prisma/client";
 
@@ -40,11 +40,12 @@ export async function GET(req: Request) {
 
     // Get reports with filters - pass undefined for userId to get all reports (admin access).
     // Drafts belong to their owner only, so they never show up in the admin list.
+    const scope = REPORT_LIST_SCOPES["all"];
     const reports = await getReports(undefined as any, {
       ...(filterResult.data as any),
       // Admins think of these reports by when they were submitted, not created
-      dateField: filterResult.data.dateField ?? "submittedAt",
-      baseWhere: { status: { not: ReportStatus.PENDING } },
+      dateField: filterResult.data.dateField ?? scope.dateField,
+      baseWhere: scope.baseWhere,
     });
 
     // Format each report for UI consumption with proper status objects
