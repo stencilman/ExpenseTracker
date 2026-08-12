@@ -15,7 +15,9 @@ export default function UserLayout({
         <div className="hidden md:block">
           <SideNav />
         </div>
-        <main className="flex-1  p-2 sm:p-4">{children}</main>
+        <main className="flex-1 min-w-0 overflow-y-auto p-2 sm:p-4">
+          {children}
+        </main>
       </div>
     </div>
   );

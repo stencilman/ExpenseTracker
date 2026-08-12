@@ -398,7 +398,7 @@ export default function ReportDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
-          <div className="bg-white border rounded-lg p-6 overflow-x-auto">
+          <div className="bg-white border rounded-lg p-4 sm:p-6 min-w-0">
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
             <p className="text-sm text-gray-500 mb-6">
               Duration: {formatDateRange(report.startDate, report.endDate)}
@@ -407,10 +407,10 @@ export default function ReportDetailPage() {
             <Tabs
               defaultValue="expenses"
               onValueChange={handleTabChange}
-              className="min-w-[350px]"
+              className="w-full"
             >
               <TabsList className="mb-4 w-full">
-                <TabsTrigger value="expenses" className="relative w-64">
+                <TabsTrigger value="expenses" className="relative flex-1">
                   EXPENSES
                   {report.expenses.length > 0 && (
                     <span className="absolute -top-1 -right-0 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -515,7 +515,7 @@ export default function ReportDetailPage() {
         </div>
 
         <div className="space-y-4">
-          <div className="bg-white border rounded-lg p-6 space-y-4">
+          <div className="bg-white border rounded-lg p-4 sm:p-6 space-y-4">
             <div className="flex justify-between">
               <div className="text-sm text-gray-500">Total</div>
               <div className="font-bold">

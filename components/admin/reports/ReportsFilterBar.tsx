@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader } from "@/components/ui/loader";
 import {
   Popover,
   PopoverContent,
@@ -23,10 +24,20 @@ import {
   EMPTY_REPORT_FILTERS,
   ReportFilterValues,
 } from "@/hooks/use-admin-reports";
+// Type-only so the Prisma-backed module never reaches the client bundle.
+import type { ReportListScope } from "@/lib/report-filters";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { Check, ChevronsUpDown, ListFilter, Search, X } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  Download,
+  ListFilter,
+  Search,
+  X,
+} from "lucide-react";
 import React from "react";
+import { toast } from "sonner";
 
 interface Submitter {
   id: string;
@@ -43,6 +54,10 @@ interface ReportsFilterBarProps {
   dateLabel?: string;
   /** Only the "All Reports" tab spans multiple statuses. */
   showStatusFilter?: boolean;
+  /** Tab identifier the CSV export should scope to. */
+  exportScope?: ReportListScope;
+  /** Current filters as a query string, forwarded to the export endpoint. */
+  exportQuery?: string;
   totalCount?: number;
   isLoading?: boolean;
 }
@@ -65,11 +80,14 @@ export function ReportsFilterBar({
   onReset,
   dateLabel = "Date range",
   showStatusFilter = false,
+  exportScope,
+  exportQuery = "",
   totalCount,
   isLoading = false,
 }: ReportsFilterBarProps) {
   const [open, setOpen] = React.useState(false);
   const [submitters, setSubmitters] = React.useState<Submitter[]>([]);
+  const [isExporting, setIsExporting] = React.useState(false);
 
   // Draft state so the popover only applies on "Apply", but search stays live.
   const [draft, setDraft] = React.useState<ReportFilterValues>(filters);
@@ -108,6 +126,49 @@ export function ReportsFilterBar({
 
   const clearFilter = (patch: Partial<ReportFilterValues>) => {
     onFiltersChange({ ...filters, ...patch });
+  };
+
+  // Fetched as a blob rather than navigated to, so an error response shows a
+  // toast instead of dumping the admin on a broken page.
+  const handleExport = async () => {
+    if (!exportScope) return;
+
+    try {
+      setIsExporting(true);
+      const params = new URLSearchParams(exportQuery);
+      params.delete("page");
+      params.delete("pageSize");
+      params.set("scope", exportScope);
+
+      const response = await fetch(
+        `/api/admin/reports/export?${params.toString()}`
+      );
+      if (!response.ok) {
+        throw new Error(`Export failed with status ${response.status}`);
+      }
+
+      const blob = await response.blob();
+      const filename =
+        response
+          .headers.get("Content-Disposition")
+          ?.match(/filename="?([^"]+)"?/)?.[1] ?? "reports.csv";
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      toast.success("Export downloaded");
+    } catch (err) {
+      console.error("Error exporting reports:", err);
+      toast.error("Failed to export reports. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const dateRangeLabel = () => {
@@ -167,7 +228,10 @@ export function ReportsFilterBar({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[340px] p-4" align="start">
+          <PopoverContent
+            className="w-[calc(100vw-2rem)] max-w-[340px] p-4"
+            align="start"
+          >
             <div className="grid gap-4">
               {/* Date range */}
               <div className="grid gap-2">
@@ -259,7 +323,10 @@ export function ReportsFilterBar({
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[290px] p-0" align="start">
+                  <PopoverContent
+                    className="w-[calc(100vw-3rem)] max-w-[290px] p-0"
+                    align="start"
+                  >
                     <Command>
                       <CommandInput placeholder="Search people..." />
                       <CommandList>
@@ -358,13 +425,36 @@ export function ReportsFilterBar({
           </Button>
         )}
 
-        {typeof totalCount === "number" && (
-          <span className="ml-auto text-sm text-muted-foreground">
-            {isLoading
-              ? "Loading…"
-              : `${totalCount} report${totalCount === 1 ? "" : "s"}`}
-          </span>
-        )}
+        <div className="ml-auto flex items-center gap-3">
+          {typeof totalCount === "number" && (
+            <span className="text-sm text-muted-foreground">
+              {isLoading
+                ? "Loading…"
+                : `${totalCount} report${totalCount === 1 ? "" : "s"}`}
+            </span>
+          )}
+
+          {exportScope && (
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              disabled={isExporting || isLoading || totalCount === 0}
+              title="Download the reports matching the current filters"
+            >
+              {isExporting ? (
+                <>
+                  <Loader size="sm" />
+                  Exporting…
+                </>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  Export CSV
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
 
       {activeCount > 0 && (

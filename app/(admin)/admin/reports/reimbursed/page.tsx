@@ -20,6 +20,7 @@ export default function AdminReportsReimbursedPage() {
     setCurrentPage,
     totalPages,
     totalCount,
+    queryString,
   } = useAdminReports({ endpoint: "/api/admin/reports/reimbursed" });
 
   if (error) {
@@ -33,6 +34,8 @@ export default function AdminReportsReimbursedPage() {
         onFiltersChange={setFilters}
         onReset={resetFilters}
         dateLabel="Reimbursed"
+        exportScope="reimbursed"
+        exportQuery={queryString}
         totalCount={totalCount}
         isLoading={isLoading}
       />
