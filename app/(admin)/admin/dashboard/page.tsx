@@ -265,7 +265,7 @@ export default function AdminDashboardPage() {
   };
 
   return (
-    <div className="p-6 space-y-6 h-[calc(100vh-6rem)] overflow-y-auto">
+    <div className="p-4 sm:p-6 space-y-6 h-[calc(100vh-6rem)] overflow-y-auto">
       <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
 
       {/* Financial Overview */}
@@ -503,7 +503,7 @@ export default function AdminDashboardPage() {
             <DialogTitle>Select Date Range</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <h3 className="mb-2 text-sm font-medium">Start Date</h3>
                 <Popover>

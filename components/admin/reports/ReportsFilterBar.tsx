@@ -228,7 +228,10 @@ export function ReportsFilterBar({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-[340px] p-4" align="start">
+          <PopoverContent
+            className="w-[calc(100vw-2rem)] max-w-[340px] p-4"
+            align="start"
+          >
             <div className="grid gap-4">
               {/* Date range */}
               <div className="grid gap-2">
@@ -320,7 +323,10 @@ export function ReportsFilterBar({
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-[290px] p-0" align="start">
+                  <PopoverContent
+                    className="w-[calc(100vw-3rem)] max-w-[290px] p-0"
+                    align="start"
+                  >
                     <Command>
                       <CommandInput placeholder="Search people..." />
                       <CommandList>

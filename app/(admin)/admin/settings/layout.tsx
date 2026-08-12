@@ -31,7 +31,7 @@ export default function AdminSettingsLayout({
             </Button>
           </div>
         )}
-        <div className={`${!isRootSettingsPage ? "p-6" : ""}`}>
+        <div className={`${!isRootSettingsPage ? "p-4 sm:p-6" : ""}`}>
           {children}
         </div>
       </div>
