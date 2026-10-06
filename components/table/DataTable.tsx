@@ -175,7 +175,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div className={`space-y-4 ${className} `}>
-      <div className="rounded-md border overflow-x-auto">
+      <div className="rounded-md border overflow-x-auto max-h-[calc(100vh-8rem)] overflow-y-auto">
         <Table className="w-full table-fixed">
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
