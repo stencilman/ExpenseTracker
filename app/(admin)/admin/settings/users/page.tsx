@@ -10,6 +10,7 @@ import {
   MoreVertical,
   Loader2,
   Edit,
+  Download,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,6 +26,7 @@ import UserFormDialog, {
 import { useSession } from "next-auth/react";
 import { DataTable } from "@/components/table/DataTable";
 import { ColumnDef } from "@tanstack/react-table";
+import DownloadBillsDialog from "@/components/admin/DownloadBillsDialog";
 
 export interface UserData {
   id: string;
@@ -67,6 +69,7 @@ export default function UsersPage() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [billsUser, setBillsUser] = useState<UserData | null>(null);
 
   const toggleUserSelection = (userId: string) => {
     const newSelected = new Set(selectedUsers);
@@ -346,47 +349,52 @@ export default function UsersPage() {
         return (
           <div className="flex justify-center items-center w-full">
             <DropdownMenu>
-              <DropdownMenuTrigger asChild disabled={isCurrentUser}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  disabled={isCurrentUser}
-                >
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
                   <MoreVertical className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                {/* Admins can't edit themselves, but can download their own bills. */}
+                {!isCurrentUser && (
+                  <DropdownMenuItem
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => {
+                      // Prepare data for edit form
+                      const userData: UserFormValues = {
+                        name: `${user.firstName} ${user.lastName}`,
+                        email: user.email,
+                        role:
+                          user.role === "USER" && user.roleName === "SUBMITTER"
+                            ? ("SUBMITTER" as const)
+                            : user.role === "ADMIN"
+                            ? ("ADMIN" as const)
+                            : ("SUBMITTER" as const),
+                        approverId: user.approverId || "",
+                        employeeId: user.employeeId || "",
+                        mobile: user.mobile || "",
+                        department: user.department || "",
+                        designation: user.designation || "",
+                        dateOfJoining: user.dateOfJoining
+                          ? new Date(user.dateOfJoining)
+                          : undefined,
+                        dateOfBirth: user.dateOfBirth
+                          ? new Date(user.dateOfBirth)
+                          : undefined,
+                      };
+                      handleEditUser(user.id, userData);
+                    }}
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem
                   className="flex items-center gap-2 cursor-pointer"
-                  onClick={() => {
-                    // Prepare data for edit form
-                    const userData: UserFormValues = {
-                      name: `${user.firstName} ${user.lastName}`,
-                      email: user.email,
-                      role:
-                        user.role === "USER" && user.roleName === "SUBMITTER"
-                          ? ("SUBMITTER" as const)
-                          : user.role === "ADMIN"
-                          ? ("ADMIN" as const)
-                          : ("SUBMITTER" as const),
-                      approverId: user.approverId || "",
-                      employeeId: user.employeeId || "",
-                      mobile: user.mobile || "",
-                      department: user.department || "",
-                      designation: user.designation || "",
-                      dateOfJoining: user.dateOfJoining
-                        ? new Date(user.dateOfJoining)
-                        : undefined,
-                      dateOfBirth: user.dateOfBirth
-                        ? new Date(user.dateOfBirth)
-                        : undefined,
-                    };
-                    handleEditUser(user.id, userData);
-                  }}
+                  onClick={() => setBillsUser(user)}
                 >
-                  <Edit className="h-4 w-4" />
-                  Edit
+                  <Download className="h-4 w-4" />
+                  Download bills
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -420,6 +428,18 @@ export default function UsersPage() {
           defaultValues={currentEditUser.data}
         />
       )}
+
+      <DownloadBillsDialog
+        open={!!billsUser}
+        onOpenChange={(open) => !open && setBillsUser(null)}
+        userId={billsUser?.id}
+        subjectName={
+          billsUser
+            ? `${billsUser.firstName} ${billsUser.lastName}`.trim() ||
+              billsUser.email
+            : ""
+        }
+      />
     </div>
   );
 }

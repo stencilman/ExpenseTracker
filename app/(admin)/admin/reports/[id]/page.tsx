@@ -3,7 +3,14 @@
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Check, FileText, MoreHorizontal, X, AlertCircle } from "lucide-react";
+import {
+  Check,
+  FileText,
+  MoreHorizontal,
+  X,
+  AlertCircle,
+  Download,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,6 +24,7 @@ import ReportExpenseCard from "@/components/reports/ReportExpenseCard";
 
 import { useEffect, useState } from "react";
 import ApproveReportDialog from "@/components/admin/ApproveReportDialog";
+import DownloadBillsDialog from "@/components/admin/DownloadBillsDialog";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/loader";
 import { formatCurrency } from "@/lib/format-utils";
@@ -43,6 +51,7 @@ export default function ReportDetailPage() {
     "approve"
   );
   const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
+  const [downloadBillsOpen, setDownloadBillsOpen] = useState(false);
 
   // Expense dialog state
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
@@ -473,6 +482,15 @@ export default function ReportDetailPage() {
             </Button>
           )}
 
+          <Button
+            variant="outline"
+            onClick={() => setDownloadBillsOpen(true)}
+            className="flex items-center gap-1"
+          >
+            <Download className="h-4 w-4" />
+            Download bills
+          </Button>
+
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-5 w-5" />
           </Button>
@@ -552,6 +570,15 @@ export default function ReportDetailPage() {
               Reject
             </Button>
           )}
+
+          <Button
+            variant="outline"
+            onClick={() => setDownloadBillsOpen(true)}
+            className="flex items-center gap-1"
+          >
+            <Download className="h-4 w-4" />
+            Download bills
+          </Button>
 
           {/* Close button moved to first row */}
         </div>
@@ -755,6 +782,13 @@ export default function ReportDetailPage() {
         reportId={reportId}
         totalAmount={getAmountToBeReimbursed()}
         totalAdvance={0}
+      />
+
+      <DownloadBillsDialog
+        open={downloadBillsOpen}
+        onOpenChange={setDownloadBillsOpen}
+        reportId={reportId}
+        subjectName={`report ER-${reportId}`}
       />
     </div>
   );
