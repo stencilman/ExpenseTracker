@@ -136,3 +136,24 @@ export async function deleteFileFromS3(key: string): Promise<void> {
         throw new Error(`Failed to delete file from S3: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
+
+/**
+ * Fetch an S3 object as a Node stream, for piping into a response or archive.
+ * @param key The key (filename) of the object in S3
+ */
+export async function getS3ObjectStream(
+    key: string
+): Promise<{ body: NodeJS.ReadableStream; contentType?: string }> {
+    const response = await s3Client.send(
+        new GetObjectCommand({ Bucket: BUCKET_NAME, Key: key })
+    );
+
+    if (!response.Body) {
+        throw new Error(`S3 object ${key} has no body`);
+    }
+
+    return {
+        body: response.Body as NodeJS.ReadableStream,
+        contentType: response.ContentType,
+    };
+}
