@@ -331,13 +331,20 @@ export async function updateReport(id: number, data: ReportUpdateInput, userId?:
 /**
  * Delete a report and update associated expenses to UNREPORTED status
  */
-export async function deleteReport(id: number, userId?: string) {
-    // Disallow deletion if report is locked (APPROVED/REIMBURSED)
+export async function deleteReport(
+    id: number,
+    userId?: string,
+    options: { allowLocked?: boolean } = {}
+) {
+    // Disallow deletion if report is locked (APPROVED/REIMBURSED), unless an admin overrides
     const lockedCheck = await db.report.findUnique({ where: { id }, select: { status: true } });
     if (!lockedCheck) {
         throw new Error("Report not found");
     }
-    if (lockedCheck.status === "APPROVED" || lockedCheck.status === "REIMBURSED") {
+    if (
+        !options.allowLocked &&
+        (lockedCheck.status === "APPROVED" || lockedCheck.status === "REIMBURSED")
+    ) {
         throw new Error("Report is locked and cannot be deleted");
     }
     const where: any = { id };
@@ -495,6 +502,8 @@ export async function submitReport(id: number, userId: string) {
             status: "SUBMITTED",
             submittedAt: new Date(),
             totalAmount,
+            // The admin's resubmission note is addressed once the report is resubmitted
+            resubmissionNote: null,
             // Store calculated amounts in the database
             // We could add these fields to the schema if needed
         },

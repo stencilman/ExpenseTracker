@@ -8,6 +8,7 @@ import {
   XCircle,
   CreditCard,
   Send,
+  RotateCcw,
 } from "lucide-react";
 import { ExpenseEventType } from "@prisma/client";
 
@@ -48,6 +49,8 @@ export default function HistoryItemCard({
         return <CreditCard className="h-5 w-5 text-green-700" />;
       case "SUBMITTED":
         return <Send className="h-5 w-5 text-blue-500" />;
+      case "RESUBMISSION_REQUESTED":
+        return <RotateCcw className="h-5 w-5 text-orange-500" />;
       default:
         return <FileText className="h-5 w-5 text-gray-500" />;
     }
@@ -64,6 +67,8 @@ export default function HistoryItemCard({
         return report ? "Report Reimbursed" : "Expense Reimbursed";
       case "SUBMITTED":
         return "Report Submitted";
+      case "RESUBMISSION_REQUESTED":
+        return "Sent Back for Resubmission";
       default:
         // Handle report-specific events
         switch (eventType) {

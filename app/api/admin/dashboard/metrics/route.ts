@@ -222,6 +222,8 @@ export async function GET(request: Request) {
           { status: ReportStatus.APPROVED, approvedAt: { not: null } },
           { status: ReportStatus.REJECTED, rejectedAt: { not: null } },
           { status: ReportStatus.REIMBURSED, reimbursedAt: { not: null } },
+          // Sent back to the submitter for resubmission
+          { status: ReportStatus.PENDING, resubmissionNote: { not: null } },
         ],
       },
       orderBy: {
@@ -232,6 +234,7 @@ export async function GET(request: Request) {
         id: true,
         title: true,
         status: true,
+        resubmissionNote: true,
         updatedAt: true,
         user: {
           select: {
@@ -271,7 +274,13 @@ export async function GET(request: Request) {
         thisYear: thisYearReimbursed,
         allTime: allTimeReimbursed,
       },
-      recentActivity,
+      recentActivity: recentActivity.map(({ resubmissionNote, ...activity }) => ({
+        ...activity,
+        status:
+          activity.status === ReportStatus.PENDING && resubmissionNote
+            ? "RESUBMIT"
+            : activity.status,
+      })),
     });
   } catch (error) {
     console.error("Error fetching dashboard metrics:", error);

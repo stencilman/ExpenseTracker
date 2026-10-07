@@ -216,6 +216,104 @@ const REPORT_REJECTED_TEMPLATE = `
 </html>
 `;
 
+// Report sent back for resubmission email template
+const REPORT_RESUBMISSION_TEMPLATE = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Expense Report Needs Resubmission</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333333;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .header {
+      background-color: #FF9800;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .content {
+      padding: 20px;
+      background-color: #ffffff;
+    }
+    .footer {
+      background-color: #f6f6f6;
+      padding: 15px;
+      text-align: center;
+      font-size: 12px;
+      color: #666666;
+    }
+    .button {
+      display: inline-block;
+      background-color: #FF9800;
+      color: white !important;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .report-info {
+      background-color: #f9f9f9;
+      border-left: 4px solid #FF9800;
+      padding: 15px;
+      margin: 20px 0;
+    }
+    .report-info p {
+      margin: 5px 0;
+    }
+    .admin-note {
+      background-color: #fffbeb;
+      border: 1px solid #fbbf24;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Expense Report Needs Resubmission</h1>
+    </div>
+    <div class="content">
+      <p>Hello {{user_name}},</p>
+      <p>Your expense report <strong>{{report_title}}</strong> has been sent back to you for changes.</p>
+      
+      <div class="report-info">
+        <p><strong>Report ID:</strong> {{report_id}}</p>
+        <p><strong>Amount:</strong> {{report_amount}} INR</p>
+      </div>
+      
+      <div class="admin-note">
+        <p><strong>Note from your admin:</strong></p>
+        <p>{{resubmission_note}}</p>
+      </div>
+      
+      <p>Please update the report as requested and submit it again.</p>
+      
+      <a href="{{view_url}}" class="button" style="color: white !important; text-decoration: none;">View Report</a>
+      
+      <p>Thank you,<br>Expense Tracker Team</p>
+    </div>
+    <div class="footer">
+      <p>This is an automated message from the Expense Tracker system.</p>
+      <p>© 2025 Expense Tracker. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+`;
+
 // Report reimbursed email template
 const REPORT_REIMBURSED_TEMPLATE = `
 <!DOCTYPE html>
@@ -494,6 +592,61 @@ export async function sendReportRejectedEmail(
     return true;
   } catch (error: any) {
     console.error("Failed to send report rejection email:", error);
+    return false;
+  }
+}
+
+/**
+ * Escape user-written text before inserting it into an email template
+ */
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Send notification that an admin sent a report back for resubmission
+ */
+export async function sendReportResubmissionEmail(
+  userEmail: string,
+  data: ReportEmailData & { resubmission_note: string }
+): Promise<boolean> {
+  try {
+    console.log(`Attempting to send resubmission email to ${userEmail}`);
+
+    // Create view URL
+    const viewUrl = `${APP_URL}/user/reports/${data.report_id}`;
+
+    // The note is free text from the admin; escape it and keep its line breaks
+    const templateData = {
+      ...data,
+      report_title: escapeHtml(data.report_title),
+      resubmission_note: escapeHtml(data.resubmission_note).replace(/\n/g, "<br>"),
+      view_url: viewUrl,
+    };
+
+    // Replace template variables
+    const html = replaceTemplateVariables(
+      REPORT_RESUBMISSION_TEMPLATE,
+      templateData
+    );
+
+    const msg = {
+      to: userEmail,
+      from: SENDER_EMAIL,
+      subject: `Expense Report Needs Resubmission: ${data.report_title}`,
+      html: html,
+    };
+
+    await resend.emails.send(msg);
+    console.log(`Report resubmission email sent to: ${userEmail}`);
+    return true;
+  } catch (error: any) {
+    console.error("Failed to send report resubmission email:", error);
     return false;
   }
 }

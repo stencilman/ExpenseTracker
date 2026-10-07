@@ -25,6 +25,7 @@ import ReportExpenseCard from "@/components/reports/ReportExpenseCard";
 import { useEffect, useState } from "react";
 import ApproveReportDialog from "@/components/admin/ApproveReportDialog";
 import DownloadBillsDialog from "@/components/admin/DownloadBillsDialog";
+import ReportAdminMenu from "@/components/admin/ReportAdminMenu";
 import { toast } from "sonner";
 import { Loader } from "@/components/ui/loader";
 import { formatCurrency } from "@/lib/format-utils";
@@ -70,7 +71,8 @@ export default function ReportDetailPage() {
         reportData.submittedAt,
         reportData.approvedAt,
         reportData.rejectedAt,
-        reportData.reimbursedAt
+        reportData.reimbursedAt,
+        reportData.resubmissionNote
       );
     }
     return reportData;
@@ -107,7 +109,8 @@ export default function ReportDetailPage() {
             reportData.submittedAt,
             reportData.approvedAt,
             reportData.rejectedAt,
-            reportData.reimbursedAt
+            reportData.reimbursedAt,
+            reportData.resubmissionNote
           );
         }
 
@@ -188,7 +191,8 @@ export default function ReportDetailPage() {
           reportData.submittedAt,
           reportData.approvedAt,
           reportData.rejectedAt,
-          reportData.reimbursedAt
+          reportData.reimbursedAt,
+          reportData.resubmissionNote
         );
       }
 
@@ -248,7 +252,8 @@ export default function ReportDetailPage() {
           reportData.submittedAt,
           reportData.approvedAt,
           reportData.rejectedAt,
-          reportData.reimbursedAt
+          reportData.reimbursedAt,
+          reportData.resubmissionNote
         );
       }
 
@@ -308,7 +313,8 @@ export default function ReportDetailPage() {
           reportData.submittedAt,
           reportData.approvedAt,
           reportData.rejectedAt,
-          reportData.reimbursedAt
+          reportData.reimbursedAt,
+          reportData.resubmissionNote
         );
       }
 
@@ -340,6 +346,34 @@ export default function ReportDetailPage() {
 
   // Common helper to get label (works whether we have raw status string or statusDisplay)
   const statusLabel = report?.statusDisplay?.label ?? report?.status;
+
+  // Reimbursed reports are final; pending ones are already with the submitter
+  const canRequestResubmission =
+    statusLabel === "SUBMITTED" ||
+    statusLabel === "AWAITING REIMBURSEMENT" ||
+    statusLabel === "APPROVED" ||
+    statusLabel === "REJECTED";
+
+  const handleResubmissionRequested = async (reportData: any) => {
+    const normalized = normalizeReportStatus(reportData);
+    setReport(
+      !report?.expenses || normalized.expenses
+        ? normalized
+        : { ...normalized, expenses: report.expenses }
+    );
+
+    const historyResponse = await fetch(
+      `/api/admin/reports/${reportId}/history`
+    );
+    if (historyResponse.ok) {
+      const historyData = await historyResponse.json();
+      setHistoryItems(historyData.data);
+    }
+  };
+
+  const handleReportDeleted = () => {
+    router.push("/admin/reports");
+  };
 
   // Determine main action button text based on status
   const getPrimaryButtonText = () => {
@@ -428,7 +462,8 @@ export default function ReportDetailPage() {
             className={`text-xs font-medium px-2 py-1 rounded ${
               statusLabel === "SUBMITTED"
                 ? "bg-blue-100 text-blue-800"
-                : statusLabel === "AWAITING REIMBURSEMENT"
+                : statusLabel === "AWAITING REIMBURSEMENT" ||
+                  statusLabel === "RESUBMIT"
                 ? "bg-orange-100 text-orange-800"
                 : statusLabel === "REJECTED"
                 ? "bg-red-100 text-red-800"
@@ -441,7 +476,10 @@ export default function ReportDetailPage() {
           </div>
         </div>
         <div className="flex items-center space-x-2">
-          {statusLabel !== "REIMBURSED" && statusLabel !== "REJECTED" && (
+          {statusLabel !== "REIMBURSED" &&
+            statusLabel !== "REJECTED" &&
+            statusLabel !== "PENDING SUBMISSION" &&
+            statusLabel !== "RESUBMIT" && (
             <Button
               variant={getPrimaryButtonVariant()}
               onClick={handlePrimaryActionClick}
@@ -490,6 +528,13 @@ export default function ReportDetailPage() {
             <Download className="h-4 w-4" />
             Download bills
           </Button>
+
+          <ReportAdminMenu
+            reportId={reportId as string}
+            canRequestResubmission={canRequestResubmission}
+            onResubmissionRequested={handleResubmissionRequested}
+            onDeleted={handleReportDeleted}
+          />
 
           <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="h-5 w-5" />
@@ -511,7 +556,8 @@ export default function ReportDetailPage() {
               className={`text-xs font-medium px-2 py-1 rounded ${
                 statusLabel === "SUBMITTED"
                   ? "bg-blue-100 text-blue-800"
-                  : statusLabel === "AWAITING REIMBURSEMENT"
+                  : statusLabel === "AWAITING REIMBURSEMENT" ||
+                    statusLabel === "RESUBMIT"
                   ? "bg-orange-100 text-orange-800"
                   : statusLabel === "REJECTED"
                   ? "bg-red-100 text-red-800"
@@ -530,7 +576,10 @@ export default function ReportDetailPage() {
 
         {/* Second row: Action Buttons */}
         <div className="grid grid-cols-1 gap-2">
-          {statusLabel !== "REIMBURSED" && statusLabel !== "REJECTED" && (
+          {statusLabel !== "REIMBURSED" &&
+            statusLabel !== "REJECTED" &&
+            statusLabel !== "PENDING SUBMISSION" &&
+            statusLabel !== "RESUBMIT" && (
             <Button
               variant={getPrimaryButtonVariant()}
               onClick={handlePrimaryActionClick}
@@ -580,6 +629,14 @@ export default function ReportDetailPage() {
             Download bills
           </Button>
 
+          <ReportAdminMenu
+            reportId={reportId as string}
+            canRequestResubmission={canRequestResubmission}
+            onResubmissionRequested={handleResubmissionRequested}
+            onDeleted={handleReportDeleted}
+            fullWidth
+          />
+
           {/* Close button moved to first row */}
         </div>
       </div>
@@ -589,6 +646,17 @@ export default function ReportDetailPage() {
         {/* Left Column */}
         <div className="md:col-span-2 space-y-6">
           <div className="bg-white border rounded-lg p-6 overflow-y-auto">
+            {statusLabel === "RESUBMIT" && report.resubmissionNote && (
+              <div className="mb-4 flex gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium">
+                    Sent back to submitter for resubmission
+                  </div>
+                  <p className="whitespace-pre-wrap">{report.resubmissionNote}</p>
+                </div>
+              </div>
+            )}
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
             <p className="text-sm text-gray-500 mb-6">
               Duration:{" "}

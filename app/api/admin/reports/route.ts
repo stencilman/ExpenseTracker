@@ -39,12 +39,18 @@ export async function GET(req: Request) {
     }
 
     // Get reports with filters - pass undefined for userId to get all reports (admin access).
-    // Drafts belong to their owner only, so they never show up in the admin list.
+    // Drafts belong to their owner only, so they never show up in the admin list,
+    // except reports an admin sent back for resubmission.
     const reports = await getReports(undefined as any, {
       ...(filterResult.data as any),
       // Admins think of these reports by when they were submitted, not created
       dateField: filterResult.data.dateField ?? "submittedAt",
-      baseWhere: { status: { not: ReportStatus.PENDING } },
+      baseWhere: {
+        OR: [
+          { status: { not: ReportStatus.PENDING } },
+          { resubmissionNote: { not: null } },
+        ],
+      },
     });
 
     // Format each report for UI consumption with proper status objects

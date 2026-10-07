@@ -10,9 +10,17 @@ export type ReportDateField =
   | "approvedAt"
   | "reimbursedAt";
 
+/**
+ * Display-only status for a PENDING report an admin sent back with a note.
+ * It is not a ReportStatus value, so filtering on it is handled separately.
+ */
+export const RESUBMIT_STATUS = "RESUBMIT";
+
+export type ReportStatusFilter = ReportStatus | typeof RESUBMIT_STATUS;
+
 export interface ReportFilters {
   search?: string;
-  status?: ReportStatus;
+  status?: ReportStatusFilter;
   submitterId?: string;
   minAmount?: number;
   maxAmount?: number;
@@ -57,8 +65,9 @@ export function parseReportFilters(url: URL): ReportFilters {
   return {
     search: params.get("search")?.trim() || undefined,
     status:
-      status && Object.values(ReportStatus).includes(status as ReportStatus)
-        ? (status as ReportStatus)
+      status === RESUBMIT_STATUS ||
+      (status && Object.values(ReportStatus).includes(status as ReportStatus))
+        ? (status as ReportStatusFilter)
         : undefined,
     submitterId: params.get("submitterId") || undefined,
     minAmount: parseNumber(params.get("minAmount")),
@@ -119,7 +128,12 @@ export function buildReportWhere(
     conditions.push({ OR: buildSearchClause(filters.search) });
   }
 
-  if (filters.status) {
+  if (filters.status === RESUBMIT_STATUS) {
+    conditions.push({
+      status: ReportStatus.PENDING,
+      resubmissionNote: { not: null },
+    });
+  } else if (filters.status) {
     conditions.push({ status: filters.status });
   }
 
