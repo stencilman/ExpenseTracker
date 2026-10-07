@@ -16,6 +16,8 @@ export interface ReportStatusDisplay {
  * @param approvedAt Optional approved date for additional info
  * @param rejectedAt Optional rejected date for additional info
  * @param reimbursedAt Optional reimbursed date for additional info
+ * @param resubmissionNote Admin's note when a report was sent back; a pending
+ *   report with a note is shown as RESUBMIT
  * @returns A standardized status display object for UI
  */
 export function mapReportStatusToDisplay(
@@ -23,10 +25,18 @@ export function mapReportStatusToDisplay(
   submittedAt?: Date | null,
   approvedAt?: Date | null,
   rejectedAt?: Date | null,
-  reimbursedAt?: Date | null
+  reimbursedAt?: Date | null,
+  resubmissionNote?: string | null
 ): ReportStatusDisplay {
   switch (status) {
     case ReportStatus.PENDING:
+      if (resubmissionNote) {
+        return {
+          label: "RESUBMIT",
+          color: "orange",
+          additionalInfo: "Sent back by admin",
+        };
+      }
       return {
         label: "PENDING SUBMISSION",
         color: "orange",

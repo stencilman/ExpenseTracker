@@ -67,7 +67,8 @@ export default function ReportDetailPage() {
         reportData.submittedAt,
         reportData.approvedAt,
         reportData.rejectedAt,
-        reportData.reimbursedAt
+        reportData.reimbursedAt,
+        reportData.resubmissionNote
       );
     }
     return reportData;
@@ -104,7 +105,8 @@ export default function ReportDetailPage() {
             reportData.submittedAt,
             reportData.approvedAt,
             reportData.rejectedAt,
-            reportData.reimbursedAt
+            reportData.reimbursedAt,
+            reportData.resubmissionNote
           );
         }
 
@@ -207,7 +209,7 @@ export default function ReportDetailPage() {
       report?.status === ReportStatus.PENDING ||
       report?.status === "PENDING" ||
       report?.status === "PENDING SUBMISSION" ||
-      statusLabel === "PENDING SUBMISSION";
+      isPendingLabel;
 
     if (isPendingSubmission) {
       handleSubmitReport();
@@ -259,7 +261,8 @@ export default function ReportDetailPage() {
           reportData.submittedAt,
           reportData.approvedAt,
           reportData.rejectedAt,
-          reportData.reimbursedAt
+          reportData.reimbursedAt,
+          reportData.resubmissionNote
         );
       }
 
@@ -319,7 +322,8 @@ export default function ReportDetailPage() {
           reportData.submittedAt,
           reportData.approvedAt,
           reportData.rejectedAt,
-          reportData.reimbursedAt
+          reportData.reimbursedAt,
+          reportData.resubmissionNote
         );
       }
 
@@ -379,7 +383,8 @@ export default function ReportDetailPage() {
           reportData.submittedAt,
           reportData.approvedAt,
           reportData.rejectedAt,
-          reportData.reimbursedAt
+          reportData.reimbursedAt,
+          reportData.resubmissionNote
         );
       }
 
@@ -411,10 +416,13 @@ export default function ReportDetailPage() {
 
   // Common helper to get label (works whether we have raw status string or statusDisplay)
   const statusLabel = report?.statusDisplay?.label ?? report?.status;
+  // A report sent back by an admin (RESUBMIT) is still pending submission
+  const isPendingLabel =
+    statusLabel === "PENDING SUBMISSION" || statusLabel === "RESUBMIT";
 
   // Determine main action button text based on status
   const getPrimaryButtonText = () => {
-    if (statusLabel === "PENDING SUBMISSION") return "Submit Report";
+    if (isPendingLabel) return "Submit Report";
     if (statusLabel === "SUBMITTED") return "Approve";
     if (statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "APPROVED")
       return "Record Reimbursement";
@@ -500,7 +508,7 @@ export default function ReportDetailPage() {
             className={`text-xs font-medium px-2 py-1 rounded ${
               statusLabel === "SUBMITTED"
                 ? "bg-blue-100 text-blue-800"
-                : statusLabel === "AWAITING REIMBURSEMENT"
+                : statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "RESUBMIT"
                 ? "bg-orange-100 text-orange-800"
                 : statusLabel === "REJECTED"
                 ? "bg-red-100 text-red-800"
@@ -520,13 +528,13 @@ export default function ReportDetailPage() {
               className="flex items-center gap-1"
               disabled={
                 isActionLoading ||
-                (statusLabel === "PENDING SUBMISSION" &&
+                (isPendingLabel &&
                   (!report.expenses || report.expenses.length === 0))
               }
             >
               {isActionLoading ? (
                 <Loader className="h-4 w-4 animate-spin mr-2 text-white" />
-              ) : statusLabel === "PENDING SUBMISSION" ? (
+              ) : isPendingLabel ? (
                 <Send className="h-4 w-4 mr-1" />
               ) : (
                 <Check className="h-4 w-4 mr-1" />
@@ -577,7 +585,7 @@ export default function ReportDetailPage() {
               className={`text-xs font-medium px-2 py-1 rounded ${
                 statusLabel === "SUBMITTED"
                   ? "bg-blue-100 text-blue-800"
-                  : statusLabel === "AWAITING REIMBURSEMENT"
+                  : statusLabel === "AWAITING REIMBURSEMENT" || statusLabel === "RESUBMIT"
                   ? "bg-orange-100 text-orange-800"
                   : statusLabel === "REJECTED"
                   ? "bg-red-100 text-red-800"
@@ -603,13 +611,13 @@ export default function ReportDetailPage() {
               className="flex items-center gap-1"
               disabled={
                 isActionLoading ||
-                (statusLabel === "PENDING SUBMISSION" &&
+                (isPendingLabel &&
                   (!report.expenses || report.expenses.length === 0))
               }
             >
               {isActionLoading ? (
                 <Loader className="h-4 w-4 animate-spin mr-2 text-white" />
-              ) : statusLabel === "PENDING SUBMISSION" ? (
+              ) : isPendingLabel ? (
                 <Send className="h-4 w-4 mr-1" />
               ) : (
                 <Check className="h-4 w-4 mr-1" />
@@ -649,6 +657,20 @@ export default function ReportDetailPage() {
         {/* Left Column */}
         <div className="md:col-span-2 space-y-6">
           <div className="bg-white border rounded-lg p-6 overflow-y-auto">
+            {statusLabel === "RESUBMIT" && report.resubmissionNote && (
+              <div className="mb-4 flex gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium">
+                    This report was sent back for changes
+                  </div>
+                  <p className="whitespace-pre-wrap">{report.resubmissionNote}</p>
+                  <p className="mt-1 text-xs text-orange-700">
+                    Update the report and submit it again.
+                  </p>
+                </div>
+              </div>
+            )}
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
             <p className="text-sm text-gray-500 mb-6">
               Duration:{" "}

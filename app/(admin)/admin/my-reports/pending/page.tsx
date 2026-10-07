@@ -27,6 +27,7 @@ interface ApiReport {
   approvedAt?: Date;
   rejectedAt?: Date;
   reimbursedAt?: Date;
+  resubmissionNote?: string | null;
   expenses: {
     id: number;
     amount: number;
@@ -79,7 +80,8 @@ export default function AdminPendingReportsPage() {
       apiReport.submittedAt,
       apiReport.approvedAt,
       apiReport.rejectedAt,
-      apiReport.reimbursedAt
+      apiReport.reimbursedAt,
+      apiReport.resubmissionNote
     );
     const approverName = apiReport.approver ? apiReport.approver.name : undefined;
 

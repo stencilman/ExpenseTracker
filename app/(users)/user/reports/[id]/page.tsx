@@ -71,6 +71,7 @@ interface ApiReport {
   approvedAt?: Date;
   rejectedAt?: Date;
   reimbursedAt?: Date;
+  resubmissionNote?: string | null;
   expenses: {
     id: number;
     amount: number;
@@ -297,7 +298,8 @@ export default function ReportDetailPage() {
     report.submittedAt,
     report.approvedAt,
     report.rejectedAt,
-    report.reimbursedAt
+    report.reimbursedAt,
+    report.resubmissionNote
   );
 
   // Convert the status color to Tailwind classes
@@ -399,6 +401,23 @@ export default function ReportDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2 space-y-6">
           <div className="bg-white border rounded-lg p-6 overflow-x-auto">
+            {report.status === ReportStatus.PENDING &&
+              report.resubmissionNote && (
+                <div className="mb-4 flex gap-2 rounded-md border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900">
+                  <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+                  <div>
+                    <div className="font-medium">
+                      Your admin sent this report back for changes
+                    </div>
+                    <p className="whitespace-pre-wrap">
+                      {report.resubmissionNote}
+                    </p>
+                    <p className="mt-1 text-xs text-orange-700">
+                      Update the report and submit it again.
+                    </p>
+                  </div>
+                </div>
+              )}
             <h1 className="text-xl font-bold mb-1">{report.title}</h1>
             <p className="text-sm text-gray-500 mb-6">
               Duration: {formatDateRange(report.startDate, report.endDate)}

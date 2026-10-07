@@ -23,6 +23,7 @@ interface ApiReport {
   approvedAt?: Date;
   rejectedAt?: Date;
   reimbursedAt?: Date;
+  resubmissionNote?: string | null;
   expenses: {
     id: number;
     amount: number;
@@ -89,7 +90,8 @@ export default function SubmittedReportsPage() {
           report.submittedAt,
           report.approvedAt,
           report.rejectedAt,
-          report.reimbursedAt
+          report.reimbursedAt,
+          report.resubmissionNote
         );
 
         // Format date range

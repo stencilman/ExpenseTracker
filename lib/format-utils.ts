@@ -68,8 +68,15 @@ export function formatReportForUI(report: ReportWithRelations): ReportUI {
 
   switch (report.status) {
     case ReportStatus.PENDING:
-      statusLabel = "PENDING SUBMISSION";
-      statusColor = "blue";
+      if (report.resubmissionNote) {
+        // Sent back by an admin; still pending under the hood
+        statusLabel = "RESUBMIT";
+        statusColor = "orange";
+        additionalInfo = "Sent back by admin";
+      } else {
+        statusLabel = "PENDING SUBMISSION";
+        statusColor = "blue";
+      }
       break;
     case ReportStatus.SUBMITTED:
       statusLabel = "SUBMITTED";

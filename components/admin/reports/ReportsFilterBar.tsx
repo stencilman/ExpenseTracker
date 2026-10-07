@@ -52,6 +52,7 @@ const STATUS_OPTIONS = [
   { value: "APPROVED", label: "Awaiting Reimbursement" },
   { value: "REIMBURSED", label: "Reimbursed" },
   { value: "REJECTED", label: "Rejected" },
+  { value: "RESUBMIT", label: "Resubmit" },
 ];
 
 const submitterName = (user: Submitter) =>

@@ -20,7 +20,10 @@ export const ReportUpdateSchema = z.object({
 
 // Schema for filtering reports
 export const ReportFilterSchema = z.object({
-  status: z.enum(Object.values(ReportStatus) as [string, ...string[]]).optional(),
+  // RESUBMIT is a display status (PENDING with an admin note), see lib/report-filters
+  status: z
+    .enum(["RESUBMIT", ...Object.values(ReportStatus)] as [string, ...string[]])
+    .optional(),
   search: z.string().optional(),
   submitterId: z.string().optional(),
   minAmount: z.number().nonnegative().optional(),

@@ -35,6 +35,14 @@ const typeToBadge: Record<NotificationType, { color: string; label: string }> =
       color: "bg-purple-100 text-purple-800",
       label: "Reimbursed",
     },
+    REPORT_RESUBMISSION_REQUESTED: {
+      color: "bg-orange-100 text-orange-800",
+      label: "Resubmission Requested",
+    },
+    REPORT_DELETED: {
+      color: "bg-gray-100 text-gray-800",
+      label: "Report Deleted",
+    },
     SYSTEM_ANNOUNCEMENT: {
       color: "bg-yellow-100 text-yellow-800",
       label: "Announcement",

@@ -158,6 +158,9 @@ model Report {
   reimbursementMethod String?
   reimbursementRef    String?
   reimbursementNotes  String?
+
+  // Note from admin when sending a report back to the submitter for resubmission
+  resubmissionNote    String?
   
   // Timestamps
   createdAt       DateTime      @default(now())
@@ -179,6 +182,7 @@ enum ReportEventType {
   APPROVED
   REJECTED
   REIMBURSED
+  RESUBMISSION_REQUESTED
 }
 
 model ExpenseHistory {
@@ -240,6 +244,8 @@ enum NotificationType {
   REPORT_APPROVED
   REPORT_REJECTED
   REPORT_REIMBURSED
+  REPORT_RESUBMISSION_REQUESTED
+  REPORT_DELETED
   SYSTEM_ANNOUNCEMENT
 }
 
